@@ -59,6 +59,49 @@ class MainActivity : Activity() {
             setHasFixedSize(true)
             itemAnimator = null
             addOnScrollListener(SnapScrollListener())
+
+            // Add pie effect scroll listener
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    applyPieEffect(recyclerView)
+                }
+            })
+
+            // Apply pie effect on initial render
+            viewTreeObserver.addOnGlobalLayoutListener(object : android.view.ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    applyPieEffect(this@apply)
+                    if (childCount > 0) {
+                        viewTreeObserver.removeOnGlobalLayoutListener(this)
+                    }
+                }
+            })
+        }
+    }
+
+    private fun applyPieEffect(recyclerView: RecyclerView) {
+        val center = recyclerView.width / 2f
+        if (center <= 0) return
+
+        // Radius of the circle pie curve. Tune this multiplier for more/less curve.
+        val radius = recyclerView.width.toFloat() * 0.8f
+        
+        for (i in 0 until recyclerView.childCount) {
+            val child = recyclerView.getChildAt(i)
+            val childCenter = (child.left + child.right) / 2f
+            val dist = childCenter - center
+            
+            // Map distance to an angle along the arc
+            val angleRad = dist / radius
+            val angleDeg = Math.toDegrees(angleRad.toDouble()).toFloat()
+            
+            // Set rotation
+            child.rotation = angleDeg
+            
+            // Set vertical translation to place view on the circle arc
+            val yOffset = (radius * (1 - Math.cos(angleRad.toDouble()))).toFloat()
+            child.translationY = yOffset
         }
     }
 
