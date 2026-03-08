@@ -12,11 +12,11 @@ on:
         default: '1.0.0'
 
 jobs:
-  permissions:
-    contents: write
   build:
     name: Build & Release APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       # ── Checkout ──────────────────────────────────────────────────────────
