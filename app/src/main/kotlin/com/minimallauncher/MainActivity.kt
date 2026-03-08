@@ -1,5 +1,6 @@
 package com.minimallauncher
 
+import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -16,12 +17,11 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.minimallauncher.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : Activity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var appAdapter: AppAdapter
@@ -108,7 +108,11 @@ class MainActivity : AppCompatActivity() {
             addAction(Intent.ACTION_PACKAGE_REPLACED)
             addDataScheme("package")
         }
-        registerReceiver(packageReceiver, filter)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(packageReceiver, filter, Context.RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(packageReceiver, filter)
+        }
     }
 
     override fun onDestroy() {
