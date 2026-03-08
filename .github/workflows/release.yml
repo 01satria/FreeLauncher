@@ -72,7 +72,16 @@ jobs:
           
           for apk in app/build/outputs/apk/release/*.apk; do
             filename=$(basename "$apk" .apk)
-            cp "$apk" "release_apks/MinimalLauncher-${VERSION}-${filename##*-}.apk"
+            
+            # Extract ABI part using sed (e.g., app-arm64-v8a-release -> arm64-v8a)
+            abi_part=$(echo "$filename" | sed -e 's/^app-//' -e 's/-release$//')
+            
+            # Fallback if empty (shouldn't happen with valid splits)
+            if [ -z "$abi_part" ]; then
+              abi_part="universal"
+            fi
+            
+            cp "$apk" "release_apks/MinimalLauncher-${VERSION}-${abi_part}.apk"
           done
           
           echo "APK files:"
