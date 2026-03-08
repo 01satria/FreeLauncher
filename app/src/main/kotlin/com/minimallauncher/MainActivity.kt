@@ -56,6 +56,11 @@ class MainActivity : Activity() {
                 false
             )
             adapter = appAdapter
+
+            // Extreme RAM Optimization: No view caching to prevent background Bitmap retention
+            setItemViewCacheSize(0)
+            recycledViewPool.setMaxRecycledViews(0, 0)
+            
             setHasFixedSize(true)
             itemAnimator = null
             addOnScrollListener(SnapScrollListener())
@@ -123,8 +128,7 @@ class MainActivity : Activity() {
                 AppInfo(
                     label = info.loadLabel(pm).toString(),
                     packageName = info.activityInfo.packageName,
-                    activityName = info.activityInfo.name,
-                    icon = info.loadIcon(pm)
+                    activityName = info.activityInfo.name
                 )
             }
             .sortedBy { it.label.lowercase() }
@@ -174,8 +178,7 @@ class MainActivity : Activity() {
 data class AppInfo(
     val label: String,
     val packageName: String,
-    val activityName: String,
-    val icon: Drawable
+    val activityName: String
 )
 
 // ── RecyclerView Adapter ──────────────────────────────────────────────────────
@@ -202,6 +205,11 @@ class AppAdapter(
         holder.bind(apps[position])
     }
 
+    override fun onViewRecycled(holder: AppViewHolder) {
+        holder.recycle()
+        super.onViewRecycled(holder)
+    }
+
     override fun getItemCount() = apps.size
 
     class AppViewHolder(
@@ -213,9 +221,18 @@ class AppAdapter(
         private val tvLabel: TextView = itemView.findViewById(R.id.tv_label)
 
         fun bind(appInfo: AppInfo) {
-            ivIcon.setImageDrawable(appInfo.icon)
+            try {
+                val icon = itemView.context.packageManager.getApplicationIcon(appInfo.packageName)
+                ivIcon.setImageDrawable(icon)
+            } catch (e: Exception) {
+                ivIcon.setImageDrawable(null)
+            }
             tvLabel.text = appInfo.label
             itemView.setOnClickListener { onAppClick(appInfo) }
+        }
+
+        fun recycle() {
+            ivIcon.setImageDrawable(null)
         }
     }
 }
