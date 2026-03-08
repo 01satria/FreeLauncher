@@ -44,10 +44,8 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          echo "$KEYSTORE_BASE64" | tr -d ' \n\r' | base64 --decode > keystore.jks
+          echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
           echo "KEYSTORE_PATH=${{ github.workspace }}/keystore.jks" >> $GITHUB_ENV
-
-
 
       # ── Build Release APK (split ABI) ─────────────────────────────────────
       - name: Build Release APKs
