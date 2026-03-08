@@ -15,7 +15,6 @@ android {
         versionName = "1.0.0"
     }
 
-    // Split APK per ABI untuk ukuran minimal
     splits {
         abi {
             isEnable = true
@@ -27,7 +26,6 @@ android {
 
     signingConfigs {
         create("release") {
-            // Diisi dari environment variable di GitHub Actions
             storeFile = System.getenv("KEYSTORE_PATH")?.let { file(it) }
             storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
             keyAlias = System.getenv("KEY_ALIAS") ?: ""
@@ -58,12 +56,10 @@ android {
 
     kotlinOptions {
         jvmTarget = "1.8"
-        freeCompilerArgs += listOf("-opt-in=kotlin.RequiresOptIn")
     }
 
     buildFeatures {
         viewBinding = true
-        // Matikan fitur yang tidak dipakai
         buildConfig = false
         aidl = false
         renderScript = false
@@ -71,7 +67,6 @@ android {
         shaders = false
     }
 
-    // Packaging minimal
     packaging {
         resources {
             excludes += setOf(
@@ -86,7 +81,7 @@ android {
 }
 
 dependencies {
-    // Hanya RecyclerView, tidak ada Compose, tidak ada lifecycle overhead
+    implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.core:core-ktx:1.12.0")
 }

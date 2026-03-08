@@ -6,11 +6,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -26,7 +26,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var appAdapter: AppAdapter
 
-    // BroadcastReceiver untuk update daftar app jika ada install/uninstall
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             loadApps()
@@ -36,10 +35,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Tampilkan wallpaper di balik launcher
         window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
-
-        // Pastikan tidak ada background yang menghalangi wallpaper
         window.setBackgroundDrawableResource(android.R.color.transparent)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -51,9 +47,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        appAdapter = AppAdapter { appInfo ->
-            launchApp(appInfo)
-        }
+        appAdapter = AppAdapter { appInfo -> launchApp(appInfo) }
 
         binding.rvApps.apply {
             layoutManager = LinearLayoutManager(
@@ -63,9 +57,7 @@ class MainActivity : AppCompatActivity() {
             )
             adapter = appAdapter
             setHasFixedSize(true)
-            // Tidak ada animasi untuk lebih ringan
             itemAnimator = null
-            // Snap ke item saat scroll selesai
             addOnScrollListener(SnapScrollListener())
         }
     }
@@ -82,16 +74,14 @@ class MainActivity : AppCompatActivity() {
             0
         }
 
-        val resolveInfoList: List<ResolveInfo> = pm.queryIntentActivities(intent, flags)
-
-        val apps = resolveInfoList
-            .filter { it.activityInfo.packageName != packageName } // Exclude launcher sendiri
-            .map { resolveInfo ->
+        val apps = pm.queryIntentActivities(intent, flags)
+            .filter { it.activityInfo.packageName != packageName }
+            .map { info ->
                 AppInfo(
-                    label = resolveInfo.loadLabel(pm).toString(),
-                    packageName = resolveInfo.activityInfo.packageName,
-                    activityName = resolveInfo.activityInfo.name,
-                    icon = resolveInfo.loadIcon(pm)
+                    label = info.loadLabel(pm).toString(),
+                    packageName = info.activityInfo.packageName,
+                    activityName = info.activityInfo.name,
+                    icon = info.loadIcon(pm)
                 )
             }
             .sortedBy { it.label.lowercase() }
@@ -102,12 +92,11 @@ class MainActivity : AppCompatActivity() {
     private fun launchApp(appInfo: AppInfo) {
         try {
             val intent = packageManager.getLaunchIntentForPackage(appInfo.packageName)
-            intent?.let {
-                it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-                startActivity(it)
+            intent?.apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+                startActivity(this)
             }
         } catch (e: Exception) {
-            // App mungkin sudah di-uninstall, reload
             loadApps()
         }
     }
@@ -127,15 +116,13 @@ class MainActivity : AppCompatActivity() {
         try { unregisterReceiver(packageReceiver) } catch (_: Exception) {}
     }
 
-    // Tidak ada service, tidak ada background task
-    // Launcher tetap ada di foreground atau tidak aktif sama sekali
-
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         // Tidak lakukan apa-apa di home screen
     }
 }
 
-// ─── Data Model ──────────────────────────────────────────────────────────────
+// ── Data Model ────────────────────────────────────────────────────────────────
 
 data class AppInfo(
     val label: String,
@@ -144,7 +131,7 @@ data class AppInfo(
     val icon: Drawable
 )
 
-// ─── RecyclerView Adapter ─────────────────────────────────────────────────────
+// ── RecyclerView Adapter ──────────────────────────────────────────────────────
 
 class AppAdapter(
     private val onAppClick: (AppInfo) -> Unit
@@ -181,16 +168,12 @@ class AppAdapter(
         fun bind(appInfo: AppInfo) {
             ivIcon.setImageDrawable(appInfo.icon)
             tvLabel.text = appInfo.label
-
-            itemView.setOnClickListener {
-                onAppClick(appInfo)
-            }
+            itemView.setOnClickListener { onAppClick(appInfo) }
         }
     }
 }
 
-// ─── Snap Scroll Listener ─────────────────────────────────────────────────────
-// Snap sederhana tanpa dependency PagerSnapHelper agar lebih ringan
+// ── Snap Scroll Listener ──────────────────────────────────────────────────────
 
 class SnapScrollListener : RecyclerView.OnScrollListener() {
 
@@ -210,27 +193,24 @@ class SnapScrollListener : RecyclerView.OnScrollListener() {
     }
 
     private fun snapToNearest(recyclerView: RecyclerView) {
-        val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
-        val firstVisible = layoutManager.findFirstVisibleItemPosition()
-        val lastVisible = layoutManager.findLastVisibleItemPosition()
+        val lm = recyclerView.layoutManager as? LinearLayoutManager ?: return
+        val first = lm.findFirstVisibleItemPosition()
+        val last = lm.findLastVisibleItemPosition()
+        if (first == RecyclerView.NO_POSITION) return
 
-        if (firstVisible == RecyclerView.NO_ID) return
+        var bestPos = first
+        var bestVis = 0
 
-        // Cari item yang paling banyak terlihat
-        var bestPosition = firstVisible
-        var bestVisibility = 0
-
-        for (i in firstVisible..lastVisible) {
-            val child = layoutManager.findViewByPosition(i) ?: continue
-            val childRect = android.graphics.Rect()
-            child.getGlobalVisibleRect(childRect)
-            val visible = childRect.width()
-            if (visible > bestVisibility) {
-                bestVisibility = visible
-                bestPosition = i
+        for (i in first..last) {
+            val child = lm.findViewByPosition(i) ?: continue
+            val rect = Rect()
+            child.getGlobalVisibleRect(rect)
+            val vis = rect.width()
+            if (vis > bestVis) {
+                bestVis = vis
+                bestPos = i
             }
         }
-
-        recyclerView.smoothScrollToPosition(bestPosition)
+        recyclerView.smoothScrollToPosition(bestPos)
     }
 }
