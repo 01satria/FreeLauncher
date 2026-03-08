@@ -1,4 +1,4 @@
-zz# Launcher tidak punya library eksternal yang rumit
+# Launcher tidak punya library eksternal yang rumit
 # RecyclerView
 -keep class androidx.recyclerview.widget.** { *; }
 
