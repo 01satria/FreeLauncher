@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:layout_marginBottom="60dp"
+        android:layout_marginBottom="80dp"
         android:clipToPadding="false"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
@@ -23,7 +23,7 @@
     <com.minimallauncher.AlphabetStripView
         android:id="@+id/alphabet_strip"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="56dp"
         android:layout_gravity="bottom"
         android:layout_marginBottom="16dp"
         android:paddingStart="16dp"
