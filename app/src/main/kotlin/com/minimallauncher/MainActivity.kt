@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.minimallauncher.databinding.ActivityMainBinding
@@ -51,10 +52,15 @@ class MainActivity : Activity() {
     private fun setupRecyclerView() {
         appAdapter = AppAdapter { appInfo -> launchApp(appInfo) }
 
+        val displayMetrics = resources.displayMetrics
+        val itemWidthPx = 80 * displayMetrics.density
+        val spanCount = (displayMetrics.widthPixels / itemWidthPx).toInt().coerceAtLeast(1)
+
         binding.rvApps.apply {
-            layoutManager = LinearLayoutManager(
+            layoutManager = GridLayoutManager(
                 this@MainActivity,
-                LinearLayoutManager.HORIZONTAL,
+                spanCount,
+                GridLayoutManager.VERTICAL,
                 false
             )
             adapter = appAdapter
@@ -65,7 +71,8 @@ class MainActivity : Activity() {
             
             setHasFixedSize(true)
             itemAnimator = null
-            addOnScrollListener(SnapScrollListener())
+            // No touch scrolling
+            setOnTouchListener { _, _ -> true }
         }
     }
 
@@ -112,6 +119,13 @@ class MainActivity : Activity() {
             }
             .sortedBy { it.label.lowercase() }
             
+        val distinctLetters = allApps.mapNotNull { it.label.firstOrNull()?.uppercaseChar() }
+            .map { if (it.isLetter()) it else '#' }
+            .distinct()
+            .sorted()
+
+        binding.alphabetStrip.setLetters(distinctLetters)
+
         // Default: Show 'A' or the closest first letter items or clear if none
         val firstLetter = allApps.firstOrNull()?.label?.firstOrNull()?.uppercaseChar() ?: 'A'
         filterAppsByLetter(firstLetter)

@@ -14,7 +14,7 @@ class AlphabetStripView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    private val letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".toCharArray()
+    private var letters = charArrayOf()
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
         textAlign = Paint.Align.CENTER
@@ -28,8 +28,15 @@ class AlphabetStripView @JvmOverloads constructor(
 
     var onLetterSelected: ((Char) -> Unit)? = null
 
+    fun setLetters(validLetters: List<Char>) {
+        this.letters = validLetters.toCharArray()
+        requestLayout()
+        invalidate()
+    }
+
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
+        if (letters.isEmpty()) return
         letterWidth = w.toFloat() / letters.size
         paint.textSize = (letterWidth * 0.8f).coerceAtMost(h * 0.6f) // Auto-scale text
     }
@@ -57,6 +64,7 @@ class AlphabetStripView @JvmOverloads constructor(
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                if (letters.isEmpty()) return false
                 val index = (event.x / letterWidth).toInt().coerceIn(0, letters.size - 1)
                 if (index != selectedIndex) {
                     selectedIndex = index
