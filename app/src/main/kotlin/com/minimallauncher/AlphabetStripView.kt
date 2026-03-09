@@ -30,13 +30,18 @@ class AlphabetStripView @JvmOverloads constructor(
 
     fun setLetters(validLetters: List<Char>) {
         this.letters = validLetters.toCharArray()
+        calculateDimensions(width, height)
         requestLayout()
         invalidate()
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        if (letters.isEmpty()) return
+        calculateDimensions(w, h)
+    }
+
+    private fun calculateDimensions(w: Int, h: Int) {
+        if (letters.isEmpty() || w == 0 || h == 0) return
         letterWidth = w.toFloat() / letters.size
         paint.textSize = (letterWidth * 0.8f).coerceAtMost(h * 0.6f) // Auto-scale text
     }
