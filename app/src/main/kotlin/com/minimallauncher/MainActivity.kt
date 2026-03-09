@@ -6,9 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.content.pm.ResolveInfo
 import android.graphics.Rect
-import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -25,6 +23,9 @@ class MainActivity : Activity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var appAdapter: AppAdapter
+    
+    // Memory efficient cache of loaded apps (just strings)
+    private var allApps = listOf<AppInfo>()
 
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -42,6 +43,7 @@ class MainActivity : Activity() {
         setContentView(binding.root)
 
         setupRecyclerView()
+        setupAlphabetStrip()
         loadApps()
         registerPackageReceiver()
     }
@@ -64,49 +66,26 @@ class MainActivity : Activity() {
             setHasFixedSize(true)
             itemAnimator = null
             addOnScrollListener(SnapScrollListener())
-
-            // Add pie effect scroll listener
-            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    applyPieEffect(recyclerView)
-                }
-            })
-
-            // Apply pie effect on initial render
-            viewTreeObserver.addOnGlobalLayoutListener(object : android.view.ViewTreeObserver.OnGlobalLayoutListener {
-                override fun onGlobalLayout() {
-                    applyPieEffect(this@apply)
-                    if (childCount > 0) {
-                        viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    }
-                }
-            })
         }
     }
 
-    private fun applyPieEffect(recyclerView: RecyclerView) {
-        val center = recyclerView.width / 2f
-        if (center <= 0) return
+    private fun setupAlphabetStrip() {
+        binding.alphabetStrip.onLetterSelected = { letter ->
+            filterAppsByLetter(letter)
+        }
+    }
 
-        // Radius of the circle pie curve. Tune this multiplier for more/less curve.
-        val radius = recyclerView.width.toFloat() * 0.8f
-        
-        for (i in 0 until recyclerView.childCount) {
-            val child = recyclerView.getChildAt(i)
-            val childCenter = (child.left + child.right) / 2f
-            val dist = childCenter - center
-            
-            // Map distance to an angle along the arc
-            val angleRad = dist / radius
-            val angleDeg = Math.toDegrees(angleRad.toDouble()).toFloat()
-            
-            // Set rotation
-            child.rotation = angleDeg
-            
-            // Set vertical translation to place view on the circle arc
-            val yOffset = (radius * (1 - Math.cos(angleRad.toDouble()))).toFloat()
-            child.translationY = yOffset
+    private fun filterAppsByLetter(letter: Char) {
+        val filtered = if (letter == '#') {
+            // Numbers or symbols
+            allApps.filter { it.label.firstOrNull()?.isLetter() == false }
+        } else {
+            // Matching letters (ignore case)
+            allApps.filter { it.label.firstOrNull()?.equals(letter, ignoreCase = true) == true }
+        }
+        appAdapter.setApps(filtered)
+        if (filtered.isNotEmpty()) {
+            binding.rvApps.scrollToPosition(0)
         }
     }
 
@@ -122,7 +101,7 @@ class MainActivity : Activity() {
             0
         }
 
-        val apps = pm.queryIntentActivities(intent, flags)
+        allApps = pm.queryIntentActivities(intent, flags)
             .filter { it.activityInfo.packageName != packageName }
             .map { info ->
                 AppInfo(
@@ -132,8 +111,10 @@ class MainActivity : Activity() {
                 )
             }
             .sortedBy { it.label.lowercase() }
-
-        appAdapter.setApps(apps)
+            
+        // Default: Show 'A' or the closest first letter items or clear if none
+        val firstLetter = allApps.firstOrNull()?.label?.firstOrNull()?.uppercaseChar() ?: 'A'
+        filterAppsByLetter(firstLetter)
     }
 
     private fun launchApp(appInfo: AppInfo) {

@@ -5,20 +5,28 @@
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
-    <!-- App icons horizontal scroll di bagian bawah, diatur dengan pie curve -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_apps"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:layout_gravity="bottom"
+        android:layout_marginBottom="46dp"
         android:clipToPadding="false"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:paddingTop="16dp"
-        android:paddingBottom="42dp"
+        android:paddingBottom="16dp"
         android:scrollbars="none"
         android:overScrollMode="never"
-        android:focusable="true"
-        android:contentDescription="Application list" />
+        android:focusable="true"/>
+
+    <com.minimallauncher.AlphabetStripView
+        android:id="@+id/alphabet_strip"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp" />
 
 </FrameLayout>
