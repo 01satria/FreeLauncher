@@ -54,8 +54,10 @@ class MainActivity : Activity() {
         appAdapter = AppAdapter { appInfo -> launchApp(appInfo) }
 
         val displayMetrics = resources.displayMetrics
+        val paddingPx = 32 * displayMetrics.density
+        val availableWidthPx = displayMetrics.widthPixels - paddingPx
         val itemWidthPx = 80 * displayMetrics.density
-        val spanCount = (displayMetrics.widthPixels / itemWidthPx).toInt().coerceAtLeast(1)
+        val spanCount = (availableWidthPx / itemWidthPx).toInt().coerceAtLeast(1)
 
         binding.rvApps.apply {
             layoutManager = GridLayoutManager(
