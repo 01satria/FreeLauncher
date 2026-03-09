@@ -27,6 +27,7 @@ class MainActivity : Activity() {
     
     // Memory efficient cache of loaded apps (just strings)
     private var allApps = listOf<AppInfo>()
+    private var currentSelectedLetter: Char = 'A'
 
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -78,6 +79,7 @@ class MainActivity : Activity() {
 
     private fun setupAlphabetStrip() {
         binding.alphabetStrip.onLetterSelected = { letter ->
+            currentSelectedLetter = letter
             filterAppsByLetter(letter)
         }
     }
@@ -91,7 +93,7 @@ class MainActivity : Activity() {
             allApps.filter { it.label.firstOrNull()?.equals(letter, ignoreCase = true) == true }
         }
         appAdapter.setApps(filtered)
-        if (filtered.isNotEmpty()) {
+        if (filtered.isNotEmpty() && binding.rvApps.adapter != null) {
             binding.rvApps.scrollToPosition(0)
         }
     }
@@ -128,6 +130,7 @@ class MainActivity : Activity() {
 
         // Default: Show 'A' or the closest first letter items or clear if none
         val firstLetter = allApps.firstOrNull()?.label?.firstOrNull()?.uppercaseChar() ?: 'A'
+        currentSelectedLetter = firstLetter
         filterAppsByLetter(firstLetter)
     }
 
@@ -154,6 +157,31 @@ class MainActivity : Activity() {
             registerReceiver(packageReceiver, filter, Context.RECEIVER_EXPORTED)
         } else {
             registerReceiver(packageReceiver, filter)
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Restore UI state when coming back to foreground
+        if (binding.rvApps.adapter == null) {
+            binding.rvApps.adapter = appAdapter
+            filterAppsByLetter(currentSelectedLetter)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Extreme RAM Optimization: Detach all views to immediately release large Bitmaps/Drawables
+        binding.rvApps.adapter = null
+        // Call GC explicitly to drop memory immediately when in background
+        System.gc()
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (level >= TRIM_MEMORY_UI_HIDDEN) {
+            binding.rvApps.adapter = null
+            System.gc()
         }
     }
 
