@@ -115,8 +115,7 @@ class MainActivity : Activity() {
             .map { info ->
                 AppInfo(
                     label = info.loadLabel(pm).toString(),
-                    packageName = info.activityInfo.packageName,
-                    activityName = info.activityInfo.name
+                    packageName = info.activityInfo.packageName
                 )
             }
             .sortedBy { it.label.lowercase() }
@@ -162,26 +161,35 @@ class MainActivity : Activity() {
 
     override fun onStart() {
         super.onStart()
-        // Restore UI state when coming back to foreground
+        // Extreme RAM Restoring
+        if (allApps.isEmpty()) {
+            loadApps()
+        }
         if (binding.rvApps.adapter == null) {
-            binding.rvApps.adapter = appAdapter
-            filterAppsByLetter(currentSelectedLetter)
+            setupRecyclerView()
+            setupAlphabetStrip()
         }
     }
 
     override fun onStop() {
         super.onStop()
-        // Extreme RAM Optimization: Detach all views to immediately release large Bitmaps/Drawables
+        // Extreme RAM Optimization: Detach all views, drop references, and purge state
         binding.rvApps.adapter = null
-        // Call GC explicitly to drop memory immediately when in background
-        System.gc()
+        binding.rvApps.removeAllViews()
+        allApps = emptyList() // Brutal data discard
+        appAdapter.setApps(emptyList())
+
+        // Force GC to drop ~30-50MB of application instances/views into oblivion
+        Runtime.getRuntime().gc()
     }
 
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
         if (level >= TRIM_MEMORY_UI_HIDDEN) {
             binding.rvApps.adapter = null
-            System.gc()
+            binding.rvApps.removeAllViews()
+            allApps = emptyList()
+            Runtime.getRuntime().gc()
         }
     }
 
@@ -200,8 +208,7 @@ class MainActivity : Activity() {
 
 data class AppInfo(
     val label: String,
-    val packageName: String,
-    val activityName: String
+    val packageName: String
 )
 
 // ── RecyclerView Adapter ──────────────────────────────────────────────────────
