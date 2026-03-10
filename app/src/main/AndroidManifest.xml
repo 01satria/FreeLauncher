@@ -37,7 +37,7 @@
             android:stateNotNeeded="true"
             android:excludeFromRecents="true"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustPan"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter android:priority="1">
                 <action android:name="android.intent.action.MAIN" />
@@ -52,14 +52,14 @@
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.FlowLauncher.Settings"
-            android:windowSoftInputMode="adjustPan"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustPan"
             android:label="@string/settings" />
 
         <activity
             android:name=".FocusActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustPan"
             android:label="@string/focus_mode" />
 
     </application>

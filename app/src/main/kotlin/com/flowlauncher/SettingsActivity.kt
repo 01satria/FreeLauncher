@@ -26,46 +26,49 @@ class SettingsActivity : Activity() {
         binding.btnBack.setOnClickListener { finish() }
 
         // Theme
-        val themes = arrayOf("Dark", "Light", "OLED Black")
+        val themes    = arrayOf("Dark", "Light", "OLED Black")
         val themeVals = arrayOf(Prefs.THEME_DARK, Prefs.THEME_LIGHT, Prefs.THEME_OLED)
-        binding.spinnerTheme.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, themes)
+        binding.spinnerTheme.adapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, themes)
         binding.spinnerTheme.setSelection(themeVals.indexOf(prefs.theme).coerceAtLeast(0))
-        binding.spinnerTheme.onItemSelectedListener = simpleListener { pos -> prefs.theme = themeVals[pos] }
+        binding.spinnerTheme.onItemSelectedListener = listen { prefs.theme = themeVals[it] }
 
         // Alignment
         val alignments = arrayOf("Left", "Center", "Right")
         val alignVals  = arrayOf(Prefs.ALIGN_LEFT, Prefs.ALIGN_CENTER, Prefs.ALIGN_RIGHT)
-        binding.spinnerAlignment.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, alignments)
+        binding.spinnerAlignment.adapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, alignments)
         binding.spinnerAlignment.setSelection(alignVals.indexOf(prefs.alignment).coerceAtLeast(0))
-        binding.spinnerAlignment.onItemSelectedListener = simpleListener { pos -> prefs.alignment = alignVals[pos] }
+        binding.spinnerAlignment.onItemSelectedListener = listen { prefs.alignment = alignVals[it] }
 
         // Clock
         binding.switch24Hour.isChecked = prefs.use24Hour
-        binding.switch24Hour.setOnCheckedChangeListener { _, checked -> prefs.use24Hour = checked }
+        binding.switch24Hour.setOnCheckedChangeListener { _, c -> prefs.use24Hour = c }
         binding.switchShowDate.isChecked = prefs.showDate
-        binding.switchShowDate.setOnCheckedChangeListener { _, checked -> prefs.showDate = checked }
+        binding.switchShowDate.setOnCheckedChangeListener { _, c -> prefs.showDate = c }
 
         // Screen time
         binding.switchScreenTime.isChecked = prefs.showScreenTime
-        binding.switchScreenTime.setOnCheckedChangeListener { _, checked -> prefs.showScreenTime = checked }
+        binding.switchScreenTime.setOnCheckedChangeListener { _, c -> prefs.showScreenTime = c }
         binding.btnGrantUsage.setOnClickListener {
-            try { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) } catch (_: Exception) { }
+            try { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
+            catch (_: Exception) {}
         }
 
         // Icons
         binding.switchShowIcons.isChecked = prefs.showIcons
-        binding.switchShowIcons.setOnCheckedChangeListener { _, checked -> prefs.showIcons = checked }
+        binding.switchShowIcons.setOnCheckedChangeListener { _, c -> prefs.showIcons = c }
 
         // Home app count
         binding.npHomeApps.minValue = 1
         binding.npHomeApps.maxValue = 10
-        binding.npHomeApps.value = prefs.homeAppCount
+        binding.npHomeApps.value    = prefs.homeAppCount
         binding.npHomeApps.setOnValueChangedListener { _, _, new -> prefs.homeAppCount = new }
 
         // Font size
-        binding.seekFontSize.max = 16
+        binding.seekFontSize.max      = 16
         binding.seekFontSize.progress = (prefs.fontSize - 14).coerceIn(0, 16)
-        binding.tvFontSizeVal.text = "${prefs.fontSize}sp"
+        binding.tvFontSizeVal.text    = "${prefs.fontSize}sp"
         binding.seekFontSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onStartTrackingTouch(s: SeekBar?) {}
             override fun onStopTrackingTouch(s: SeekBar?) {}
@@ -75,39 +78,21 @@ class SettingsActivity : Activity() {
             }
         })
 
-        // Digital Detox
-        binding.switchDetox.isChecked = prefs.detoxEnabled
-        binding.switchDetox.setOnCheckedChangeListener { _, checked ->
-            prefs.detoxEnabled = checked
-            if (checked) {
-                prefs.detoxEndTime = System.currentTimeMillis() + prefs.detoxDurationMinutes * 60_000L
-                Toast.makeText(this, "Detox active for ${prefs.detoxDurationMinutes} min", Toast.LENGTH_SHORT).show()
-            } else {
-                prefs.detoxEndTime = 0L
-            }
-        }
-        val detoxOptions = arrayOf("30 min", "1 hour", "2 hours", "4 hours", "8 hours")
-        val detoxMinutes = intArrayOf(30, 60, 120, 240, 480)
-        binding.spinnerDetoxDuration.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, detoxOptions)
-        val detoxIdx = detoxMinutes.indexOfFirst { it == prefs.detoxDurationMinutes }.coerceAtLeast(0)
-        binding.spinnerDetoxDuration.setSelection(detoxIdx)
-        binding.spinnerDetoxDuration.onItemSelectedListener = simpleListener { pos -> prefs.detoxDurationMinutes = detoxMinutes[pos] }
-
-        // Hidden apps
+        // Manage hidden apps
         binding.btnManageHidden.setOnClickListener {
             val cached = AppRepository.getCached()
             if (cached.isEmpty()) {
-                Toast.makeText(this, "App list not loaded yet. Try again.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "App list not loaded yet", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            val hidden = prefs.hiddenPackages.toMutableSet()
-            val all = cached.map { it.packageName }.toTypedArray()
-            val labels = cached.map { it.label }.toTypedArray()
-            val checked = all.map { it in hidden }.toBooleanArray()
+            val hidden  = prefs.hiddenPackages.toMutableSet()
+            val pkgs    = cached.map { it.packageName }.toTypedArray()
+            val labels  = cached.map { it.label }.toTypedArray()
+            val checked = pkgs.map { it in hidden }.toBooleanArray()
             android.app.AlertDialog.Builder(this)
                 .setTitle("Hidden Apps")
-                .setMultiChoiceItems(labels, checked) { _, which, isChecked ->
-                    if (isChecked) hidden.add(all[which]) else hidden.remove(all[which])
+                .setMultiChoiceItems(labels, checked) { _, i, isChecked ->
+                    if (isChecked) hidden.add(pkgs[i]) else hidden.remove(pkgs[i])
                 }
                 .setPositiveButton("Save") { _, _ ->
                     prefs.hiddenPackages = hidden
@@ -118,8 +103,8 @@ class SettingsActivity : Activity() {
         }
     }
 
-    private fun simpleListener(onSelected: (Int) -> Unit) = object : AdapterView.OnItemSelectedListener {
+    private fun listen(block: (Int) -> Unit) = object : AdapterView.OnItemSelectedListener {
         override fun onNothingSelected(p: AdapterView<*>?) {}
-        override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) { onSelected(pos) }
+        override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) = block(pos)
     }
 }

@@ -34,7 +34,6 @@ class MainActivity : Activity() {
     private var loadJob: Job? = null
     private var searchJob: Job? = null
 
-    // Adapters — created after prefs is initialised
     private lateinit var homeAdapter: HomeAppAdapter
     private val drawerAdapter = DrawerAppAdapter(
         onAppClick = ::launchApp,
@@ -42,13 +41,8 @@ class MainActivity : Activity() {
     )
     private lateinit var todoAdapter: TodoAdapter
 
-    // App drawer bottom sheet
     private lateinit var drawerSheet: BottomSheetBehavior<View>
-
-    // Touch tracking for swipe-up
     private var touchStartY = 0f
-
-    // Category filter
     private var currentCategory = AppCategory.ALL
     private var allDrawerApps: List<AppInfo> = emptyList()
 
@@ -59,23 +53,24 @@ class MainActivity : Activity() {
         }
     }
 
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
 
-        // FIX: remove FLAG_LAYOUT_NO_LIMITS — it clips content under nav bar
         window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
         window.setBackgroundDrawableResource(android.R.color.transparent)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.setDecorFitsSystemWindows(true)
         }
 
-        applyTheme()
-
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Init adapters now that prefs exists
+        // Apply theme AFTER setContentView so views exist
+        applyTheme()
+
         homeAdapter = HomeAppAdapter(
             showIcons = prefs.showIcons,
             showScreenTime = prefs.showScreenTime,
@@ -93,42 +88,54 @@ class MainActivity : Activity() {
         setupClockFormat()
         registerReceivers()
         loadData()
-
         updateScreenTimeHint()
     }
 
     override fun onResume() {
         super.onResume()
+        // Re-apply everything on return from Settings
+        applyTheme()
         applyAlignment()
+        setupClockFormat()
         updateScreenTimeHint()
         scope.launch {
-            delay(300)
+            delay(200)
             loadData()
         }
     }
 
-    private fun updateScreenTimeHint() {
-        if (!ScreenTimeHelper.hasPermission(this)) {
-            binding.tvScreenTimeHint.visibility = View.VISIBLE
-            binding.tvScreenTimeHint.setOnClickListener {
-                try {
-                    startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
-                } catch (_: Exception) { }
-            }
-        } else {
-            binding.tvScreenTimeHint.visibility = View.GONE
-        }
-    }
-
-    // ── Theme ─────────────────────────────────────────────────────────────────
+    // ── Theme ──────────────────────────────────────────────────────────────────
+    // Applied to window background AND all themed views so switching works at runtime.
 
     private fun applyTheme() {
-        val bgColor = when (prefs.theme) {
-            Prefs.THEME_LIGHT -> Color.parseColor("#F5F5F5")
-            Prefs.THEME_OLED  -> Color.BLACK
-            else              -> Color.parseColor("#0D0D0D")
+        val isLight = prefs.theme == Prefs.THEME_LIGHT
+        val isOled  = prefs.theme == Prefs.THEME_OLED
+
+        val bgColor = when {
+            isLight -> Color.parseColor("#F2F2F2")
+            isOled  -> Color.BLACK
+            else    -> Color.parseColor("#0D0D0D")   // dark
         }
         window.decorView.setBackgroundColor(bgColor)
+        binding.homeRoot.setBackgroundColor(bgColor)
+
+        val textPrimary   = if (isLight) Color.parseColor("#111111") else Color.WHITE
+        val textSecondary = if (isLight) Color.parseColor("#66000000") else Color.parseColor("#99FFFFFF")
+        val iconTint      = if (isLight) Color.parseColor("#88000000") else Color.parseColor("#AAFFFFFF")
+        val hintColor     = if (isLight) Color.parseColor("#55000000") else Color.parseColor("#55FFFFFF")
+
+        binding.tvClock.setTextColor(textPrimary)
+        binding.tvDate.setTextColor(textSecondary)
+        binding.tvGreeting.setTextColor(textSecondary)
+        binding.tvUsageToday.setTextColor(textSecondary)
+        binding.tvScreenTimeHint.setTextColor(hintColor)
+        binding.tvTodoHeader.setTextColor(textSecondary)
+        binding.btnSettings.setColorFilter(iconTint)
+        binding.btnFocus.setColorFilter(iconTint)
+        binding.btnAddTodo.setColorFilter(iconTint)
+        binding.ivSwipeHint.setColorFilter(
+            if (isLight) Color.parseColor("#33000000") else Color.parseColor("#44FFFFFF")
+        )
     }
 
     // ── Home Screen ───────────────────────────────────────────────────────────
@@ -151,11 +158,11 @@ class MainActivity : Activity() {
     }
 
     private fun applyAlignment() {
-        val gravity = gravityFromPref()
-        binding.tvClock.gravity = gravity
-        binding.tvDate.gravity = gravity
-        binding.tvGreeting.gravity = gravity
-        binding.tvUsageToday.gravity = gravity
+        val g = gravityFromPref()
+        binding.tvClock.gravity = g
+        binding.tvDate.gravity  = g
+        binding.tvGreeting.gravity = g
+        binding.tvUsageToday.gravity = g
     }
 
     private fun gravityFromPref(): Int = when (prefs.alignment) {
@@ -175,12 +182,24 @@ class MainActivity : Activity() {
         binding.tvDate.visibility = if (prefs.showDate) View.VISIBLE else View.GONE
     }
 
+    private fun updateScreenTimeHint() {
+        if (!ScreenTimeHelper.hasPermission(this)) {
+            binding.tvScreenTimeHint.visibility = View.VISIBLE
+            binding.tvScreenTimeHint.setOnClickListener {
+                try { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
+                catch (_: Exception) {}
+            }
+        } else {
+            binding.tvScreenTimeHint.visibility = View.GONE
+        }
+    }
+
     // ── App Drawer ────────────────────────────────────────────────────────────
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupDrawer() {
         drawerSheet = BottomSheetBehavior.from(binding.drawerSheet)
-        drawerSheet.state = BottomSheetBehavior.STATE_HIDDEN
+        drawerSheet.state     = BottomSheetBehavior.STATE_HIDDEN
         drawerSheet.peekHeight = 0
         drawerSheet.isHideable = true
         drawerSheet.skipCollapsed = true
@@ -190,6 +209,7 @@ class MainActivity : Activity() {
             override fun onStateChanged(v: View, state: Int) {
                 if (state == BottomSheetBehavior.STATE_HIDDEN) {
                     hideKeyboard()
+                    binding.etSearch.clearFocus()
                     binding.etSearch.setText("")
                     binding.drawerDim.visibility = View.GONE
                 }
@@ -199,13 +219,18 @@ class MainActivity : Activity() {
         binding.rvDrawerApps.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = drawerAdapter
+            // RAM: small cache, no item animator
+            setItemViewCacheSize(3)
             setHasFixedSize(false)
-            setItemViewCacheSize(6)
             overScrollMode = View.OVER_SCROLL_NEVER
             itemAnimator = null
         }
 
         setupCategoryTabs()
+
+        // Keyboard ONLY appears when user explicitly taps the search bar
+        binding.etSearch.showSoftInputOnFocus = false
+        binding.etSearch.setOnClickListener { showKeyboard() }
 
         binding.etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -241,28 +266,29 @@ class MainActivity : Activity() {
     private fun filterApps(query: String) {
         val base = when (currentCategory) {
             AppCategory.ALL       -> allDrawerApps
-            AppCategory.MOST_USED -> allDrawerApps.filter { it.screenTimeMinutes > 0 }
-                                         .sortedByDescending { it.screenTimeMinutes }
+            AppCategory.MOST_USED -> allDrawerApps
+                .filter { it.screenTimeMinutes > 0 }
+                .sortedByDescending { it.screenTimeMinutes }
             else -> allDrawerApps.filter { it.getCategory() == currentCategory }
         }
         val filtered = if (query.isBlank()) base
                        else base.filter { it.label.contains(query, ignoreCase = true) }
         drawerAdapter.setApps(filtered)
-
         if (query.isNotBlank() && filtered.size == 1) launchApp(filtered[0])
     }
 
+    // Drawer opens WITHOUT auto-showing keyboard; user taps search if needed
     private fun openDrawer() {
         binding.drawerDim.alpha = 0f
         binding.drawerDim.visibility = View.VISIBLE
-        binding.drawerDim.animate().alpha(1f).setDuration(200).start()
+        binding.drawerDim.animate().alpha(1f).setDuration(220).start()
         drawerSheet.state = BottomSheetBehavior.STATE_EXPANDED
-        scope.launch { delay(200); binding.etSearch.requestFocus(); showKeyboard() }
     }
 
     private fun closeDrawer() {
         hideKeyboard()
-        binding.drawerDim.animate().alpha(0f).setDuration(150)
+        binding.etSearch.clearFocus()
+        binding.drawerDim.animate().alpha(0f).setDuration(160)
             .withEndAction { binding.drawerDim.visibility = View.GONE }.start()
         drawerSheet.state = BottomSheetBehavior.STATE_HIDDEN
     }
@@ -294,13 +320,13 @@ class MainActivity : Activity() {
             adapter = todoAdapter
             setHasFixedSize(false)
             overScrollMode = View.OVER_SCROLL_NEVER
+            itemAnimator = null
         }
         todoAdapter.setItems(prefs.todos)
-
         binding.btnAddTodo.setOnClickListener { showAddTodoDialog() }
         binding.tvTodoHeader.setOnClickListener {
             val expanded = binding.rvTodos.visibility == View.VISIBLE
-            binding.rvTodos.visibility = if (expanded) View.GONE else View.VISIBLE
+            binding.rvTodos.visibility  = if (expanded) View.GONE else View.VISIBLE
             binding.btnAddTodo.visibility = if (expanded) View.GONE else View.VISIBLE
         }
     }
@@ -313,18 +339,17 @@ class MainActivity : Activity() {
             background = null
             setPadding(32, 16, 32, 16)
         }
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(48, 16, 48, 16)
-            addView(input)
-        }
         android.app.AlertDialog.Builder(this)
             .setTitle("New Task")
-            .setView(container)
+            .setView(LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(48, 16, 48, 16)
+                addView(input)
+            })
             .setPositiveButton("Add") { _, _ ->
                 val text = input.text.toString().trim()
                 if (text.isNotEmpty()) {
-                    val updated = prefs.todos.toMutableList().apply { add(text) }
+                    val updated = prefs.todos.toMutableList().also { it.add(text) }
                     prefs.todos = updated
                     todoAdapter.setItems(updated)
                 }
@@ -342,37 +367,37 @@ class MainActivity : Activity() {
         }
     }
 
-    // ── Data loading ──────────────────────────────────────────────────────────
+    // ── Data loading (RAM-friendly) ───────────────────────────────────────────
+    // Icons are loaded once in AppRepository (IO thread) and reused from cache.
+    // loadData() only does a full PM scan after invalidate(); otherwise uses cache.
 
     private fun loadData() {
         loadJob?.cancel()
         loadJob = scope.launch {
             val apps = try {
                 AppRepository.loadApps(this@MainActivity, prefs)
-            } catch (e: Exception) {
-                emptyList()
-            }
+            } catch (_: Exception) { emptyList() }
+
+            if (isDestroyed) return@launch
+
             allDrawerApps = apps
 
-            val homeApps = if (prefs.favoritePackages.isNotEmpty()) {
+            val homeApps = if (prefs.favoritePackages.isNotEmpty())
                 AppRepository.getFavorites(prefs).take(prefs.homeAppCount)
-            } else {
+            else
                 AppRepository.getMostUsed(prefs.homeAppCount)
+
+            homeAdapter.setApps(homeApps)
+
+            val totalMin = apps.sumOf { it.screenTimeMinutes }
+            if (totalMin > 0 && prefs.showScreenTime) {
+                binding.tvUsageToday.visibility = View.VISIBLE
+                binding.tvUsageToday.text = "Today: ${ScreenTimeHelper.formatMinutes(totalMin)}"
+            } else {
+                binding.tvUsageToday.visibility = View.GONE
             }
 
-            if (!isDestroyed) {
-                homeAdapter.setApps(homeApps)
-
-                val totalMin = apps.sumOf { it.screenTimeMinutes }
-                if (totalMin > 0 && prefs.showScreenTime) {
-                    binding.tvUsageToday.visibility = View.VISIBLE
-                    binding.tvUsageToday.text = "Today: ${ScreenTimeHelper.formatMinutes(totalMin)}"
-                } else {
-                    binding.tvUsageToday.visibility = View.GONE
-                }
-
-                filterApps(binding.etSearch.text.toString())
-            }
+            filterApps(binding.etSearch.text.toString())
         }
     }
 
@@ -381,22 +406,21 @@ class MainActivity : Activity() {
     private fun launchApp(app: AppInfo) {
         closeDrawer()
         scope.launch {
-            delay(150) // let drawer close animation finish
+            delay(120) // let drawer close
             try {
-                val intent = packageManager.getLaunchIntentForPackage(app.packageName)
-                intent?.apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-                    startActivity(this)
-                } ?: Toast.makeText(this@MainActivity, "Cannot open ${app.label}", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                loadData()
-            }
+                packageManager.getLaunchIntentForPackage(app.packageName)
+                    ?.apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED) }
+                    ?.let { startActivity(it) }
+                    ?: Toast.makeText(this@MainActivity, "Cannot open ${app.label}", Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) { loadData() }
         }
     }
 
     private fun showAppOptions(app: AppInfo, @Suppress("UNUSED_PARAMETER") anchor: View) {
-        val favLabel = if (app.isFavorite) "Remove from Home" else "Add to Home"
-        val items = arrayOf(favLabel, "Hide App", "App Info", "Uninstall")
+        val items = arrayOf(
+            if (app.isFavorite) "Remove from Home" else "Add to Home",
+            "Hide App", "App Info", "Uninstall"
+        )
         android.app.AlertDialog.Builder(this)
             .setTitle(app.label)
             .setItems(items) { _, which ->
@@ -411,17 +435,14 @@ class MainActivity : Activity() {
 
     private fun toggleFavorite(app: AppInfo) {
         val current = prefs.favoritePackages.toMutableList()
-        if (app.packageName in current) current.remove(app.packageName)
-        else current.add(app.packageName)
+        if (app.packageName in current) current.remove(app.packageName) else current.add(app.packageName)
         prefs.favoritePackages = current
         AppRepository.invalidate()
         loadData()
     }
 
     private fun hideApp(app: AppInfo) {
-        val hidden = prefs.hiddenPackages.toMutableSet()
-        hidden.add(app.packageName)
-        prefs.hiddenPackages = hidden
+        prefs.hiddenPackages = prefs.hiddenPackages.toMutableSet().also { it.add(app.packageName) }
         AppRepository.invalidate()
         loadData()
     }
@@ -431,20 +452,32 @@ class MainActivity : Activity() {
             startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                 data = Uri.fromParts("package", app.packageName, null)
             })
-        } catch (_: Exception) { }
+        } catch (_: Exception) {}
     }
 
+    // FIX: ACTION_UNINSTALL_PACKAGE is the correct intent for launchers on all API levels.
+    // ACTION_DELETE is deprecated on API 29+ and silently ignored on some ROMs.
     private fun uninstallApp(app: AppInfo) {
         try {
-            startActivity(Intent(Intent.ACTION_DELETE).apply {
-                data = Uri.fromParts("package", app.packageName, null)
-            })
-        } catch (_: Exception) { }
+            startActivity(
+                Intent(Intent.ACTION_UNINSTALL_PACKAGE,
+                    Uri.fromParts("package", app.packageName, null)).apply {
+                    putExtra(Intent.EXTRA_RETURN_RESULT, false)
+                }
+            )
+        } catch (_: Exception) {
+            // Ultimate fallback
+            try {
+                startActivity(Intent(Intent.ACTION_DELETE,
+                    Uri.fromParts("package", app.packageName, null)))
+            } catch (_: Exception) {}
+        }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // ── Keyboard ──────────────────────────────────────────────────────────────
 
     private fun showKeyboard() {
+        binding.etSearch.requestFocus()
         (getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager)
             ?.showSoftInput(binding.etSearch, InputMethodManager.SHOW_IMPLICIT)
     }
@@ -454,6 +487,8 @@ class MainActivity : Activity() {
             ?.hideSoftInputFromWindow(binding.etSearch.windowToken, 0)
     }
 
+    // ── Receivers ─────────────────────────────────────────────────────────────
+
     private fun registerReceivers() {
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_PACKAGE_ADDED)
@@ -462,20 +497,17 @@ class MainActivity : Activity() {
             addDataScheme("package")
         }
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                 registerReceiver(packageReceiver, filter, Context.RECEIVER_EXPORTED)
-            } else {
+            else
                 registerReceiver(packageReceiver, filter)
-            }
-        } catch (_: Exception) { }
+        } catch (_: Exception) {}
     }
 
     @Deprecated("Deprecated")
     override fun onBackPressed() {
-        if (drawerSheet.state != BottomSheetBehavior.STATE_HIDDEN) {
-            closeDrawer()
-        }
-        // Do NOT call super — prevents launcher from being "closed"
+        if (drawerSheet.state != BottomSheetBehavior.STATE_HIDDEN) closeDrawer()
+        // No super — launcher must not exit
     }
 
     override fun onDestroy() {
