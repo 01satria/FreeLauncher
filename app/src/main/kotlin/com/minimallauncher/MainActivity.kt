@@ -192,6 +192,8 @@ class MainActivity : Activity() {
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             if (position == 1) {
+                val rv = holder.itemView.findViewById<RecyclerView>(R.id.rv_apps_vertical)
+                val etSearch = holder.itemView.findViewById<EditText>(R.id.et_search)
                 appsRecyclerView = rv
 
                 if (etSearch.tag == null) {
