@@ -6,10 +6,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.LruCache
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -60,10 +62,6 @@ class MainActivity : Activity() {
                 false
             )
             adapter = appAdapter
-
-            // Extreme RAM Optimization: No view caching to prevent background Bitmap retention
-            setItemViewCacheSize(0)
-            recycledViewPool.setMaxRecycledViews(0, 0)
             
             setHasFixedSize(true)
             itemAnimator = null
@@ -186,6 +184,9 @@ class AppAdapter(
     // Fixed thread pool for smooth asynchronous loading
     private val executor = Executors.newFixedThreadPool(4)
     private val mainHandler = Handler(Looper.getMainLooper())
+    
+    // Cache for smoother scrolling while in foreground
+    private val iconCache = LruCache<String, Drawable>(50)
 
     fun setApps(newApps: List<AppInfo>) {
         apps.clear()
@@ -195,6 +196,7 @@ class AppAdapter(
 
     fun shutdown() {
         executor.shutdownNow()
+        iconCache.evictAll()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
@@ -205,7 +207,7 @@ class AppAdapter(
 
     override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
         val appInfo = apps[position]
-        holder.bind(appInfo, executor, mainHandler)
+        holder.bind(appInfo, executor, mainHandler, iconCache)
     }
 
     override fun onViewRecycled(holder: AppViewHolder) {
@@ -226,10 +228,17 @@ class AppAdapter(
         // Track the current package to ensure async loads match the current view state
         private var currentPackageName: String? = null
 
-        fun bind(appInfo: AppInfo, executor: java.util.concurrent.ExecutorService, mainHandler: Handler) {
+        fun bind(appInfo: AppInfo, executor: java.util.concurrent.ExecutorService, mainHandler: Handler, iconCache: LruCache<String, Drawable>) {
             currentPackageName = appInfo.packageName
             tvLabel.text = appInfo.label
             
+            val cachedIcon = iconCache.get(appInfo.packageName)
+            if (cachedIcon != null) {
+                ivIcon.setImageDrawable(cachedIcon)
+                itemView.setOnClickListener { onAppClick(appInfo) }
+                return
+            }
+
             // Clear previous icon to immediately appear clean while loading asynchronously
             ivIcon.setImageDrawable(null)
 
@@ -241,6 +250,7 @@ class AppAdapter(
                     mainHandler.post {
                         // Only set if this ViewHolder hasn't been recycled for another app
                         if (currentPackageName == appInfo.packageName) {
+                            iconCache.put(appInfo.packageName, icon)
                             ivIcon.setImageDrawable(icon)
                         }
                     }
