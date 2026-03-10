@@ -9,6 +9,20 @@
     android:paddingEnd="24dp"
     android:paddingBottom="24dp">
 
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Categories"
+        android:textColor="#FFFFFF"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="32dp"
+        android:shadowColor="#80000000"
+        android:shadowDx="0"
+        android:shadowDy="2"
+        android:shadowRadius="4" />
+
     <EditText
         android:id="@+id/et_search"
         android:layout_width="match_parent"
