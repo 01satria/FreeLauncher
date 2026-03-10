@@ -18,12 +18,58 @@
         android:background="@drawable/bg_text_icon"
         android:columnCount="2"
         android:rowCount="2"
-        android:padding="12dp"
+        android:padding="8dp"
         android:alignmentMode="alignMargins"
-        android:columnOrderPreserved="false"
         android:useDefaultMargins="true">
 
-        <!-- These will be populated dynamically with 4 tiny text icons -->
+        <TextView
+            android:id="@+id/tv_preview_1"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_text_icon"
+            android:gravity="center"
+            android:textColor="#FFFFFF"
+            android:textSize="8sp"
+            android:textStyle="bold"
+            android:textAllCaps="true"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_preview_2"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_text_icon"
+            android:gravity="center"
+            android:textColor="#FFFFFF"
+            android:textSize="8sp"
+            android:textStyle="bold"
+            android:textAllCaps="true"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_preview_3"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_text_icon"
+            android:gravity="center"
+            android:textColor="#FFFFFF"
+            android:textSize="8sp"
+            android:textStyle="bold"
+            android:textAllCaps="true"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_preview_4"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_text_icon"
+            android:gravity="center"
+            android:textColor="#FFFFFF"
+            android:textSize="8sp"
+            android:textStyle="bold"
+            android:textAllCaps="true"
+            android:visibility="gone" />
+
     </GridLayout>
 
     <TextView

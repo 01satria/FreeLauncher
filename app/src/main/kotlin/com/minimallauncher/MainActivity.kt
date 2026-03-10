@@ -192,36 +192,40 @@ class MainActivity : Activity() {
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             if (position == 1) {
-                val rv = holder.itemView.findViewById<RecyclerView>(R.id.rv_apps_vertical)
-                val etSearch = holder.itemView.findViewById<EditText>(R.id.et_search)
                 appsRecyclerView = rv
+
+                if (etSearch.tag == null) {
+                    etSearch.tag = true
+                    etSearch.addTextChangedListener(object : TextWatcher {
+                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                            val query = s?.toString() ?: ""
+                            if (query.isEmpty()) {
+                                rv.layoutManager = GridLayoutManager(holder.itemView.context, 2)
+                                rv.adapter = categoryAdapter
+                                return
+                            }
+                            
+                            rv.layoutManager = GridLayoutManager(holder.itemView.context, 4)
+                            rv.adapter = appAdapter
+                            val filtered = allApps.filter { it.label.contains(query, ignoreCase = true) }
+                            appAdapter.setApps(filtered)
+                            
+                            if (filtered.size == 1) {
+                                launchApp(filtered[0], rv) 
+                            }
+                        }
+                        override fun afterTextChanged(s: Editable?) {}
+                    })
+                }
 
                 rv.layoutManager = GridLayoutManager(holder.itemView.context, 2)
                 rv.adapter = categoryAdapter
                 rv.setHasFixedSize(true)
-
-                etSearch.addTextChangedListener(object : TextWatcher {
-                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                        val query = s?.toString() ?: ""
-                        if (query.isEmpty()) {
-                            rv.layoutManager = GridLayoutManager(holder.itemView.context, 2)
-                            rv.adapter = categoryAdapter
-                            return
-                        }
-                        
-                        rv.layoutManager = GridLayoutManager(holder.itemView.context, 4)
-                        rv.adapter = appAdapter
-                        val filtered = allApps.filter { it.label.contains(query, ignoreCase = true) }
-                        appAdapter.setApps(filtered)
-                        
-                        if (filtered.size == 1) {
-                            // Non-animated launch for search auto-match to stay snappy
-                            launchApp(filtered[0], rv) 
-                        }
-                    }
-                    override fun afterTextChanged(s: Editable?) {}
-                })
+                rv.setItemViewCacheSize(20)
+                rv.setScrollingTouchSlop(RecyclerView.TOUCH_SLOP_PAGING)
+                rv.isDrawingCacheEnabled = true
+                rv.drawingCacheQuality = View.DRAWING_CACHE_QUALITY_HIGH
             }
         }
 
@@ -271,30 +275,26 @@ class CategoryAdapter(
         itemView: View,
         private val onCategoryClick: (CategoryInfo) -> Unit
     ) : RecyclerView.ViewHolder(itemView) {
-        private val glPreview: android.widget.GridLayout = itemView.findViewById(R.id.gl_preview)
         private val tvName: TextView = itemView.findViewById(R.id.tv_category_name)
+        private val previewSlots = listOf<TextView>(
+            itemView.findViewById(R.id.tv_preview_1),
+            itemView.findViewById(R.id.tv_preview_2),
+            itemView.findViewById(R.id.tv_preview_3),
+            itemView.findViewById(R.id.tv_preview_4)
+        )
 
         fun bind(category: CategoryInfo) {
             tvName.text = category.name
             
-            // Clear and populate preview with first 4 apps
-            glPreview.removeAllViews()
-            category.apps.take(4).forEach { app ->
-                val tinyIcon = LayoutInflater.from(itemView.context).inflate(R.layout.item_app, glPreview, false)
-                // Resize for preview
-                tinyIcon.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
-                tinyIcon.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
-                tinyIcon.setPadding(2, 2, 2, 2)
-                val innerBox = tinyIcon.findViewById<View>(R.id.tv_label).parent as View
-                innerBox.layoutParams.width = (48 * itemView.context.resources.displayMetrics.density).toInt()
-                innerBox.layoutParams.height = (48 * itemView.context.resources.displayMetrics.density).toInt()
-                
-                val tv = tinyIcon.findViewById<TextView>(R.id.tv_label)
-                tv.textSize = 8f
-                val shortName = if (app.label.length > 5) app.label.take(5) else app.label
-                tv.text = shortName
-                
-                glPreview.addView(tinyIcon)
+            // Populate pre-defined slots
+            previewSlots.forEach { it.visibility = View.GONE }
+            category.apps.take(4).forEachIndexed { index, app ->
+                if (index < previewSlots.size) {
+                    previewSlots[index].apply {
+                        visibility = View.VISIBLE
+                        text = if (app.label.length > 5) app.label.take(5) else app.label
+                    }
+                }
             }
             
             itemView.setOnClickListener { onCategoryClick(category) }
