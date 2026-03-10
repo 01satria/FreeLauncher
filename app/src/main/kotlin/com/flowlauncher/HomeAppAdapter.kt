@@ -4,15 +4,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 
 class HomeAppAdapter(
-    private val showIcons: Boolean,
-    private val showScreenTime: Boolean,
-    private val alignment: Int,  // Gravity constant
-    private val fontSize: Float,
+    var showIcons: Boolean,
+    var showScreenTime: Boolean,
+    var alignment: Int,
+    var fontSize: Float,
     private val onAppClick: (AppInfo) -> Unit,
     private val onAppLongClick: (AppInfo, View) -> Unit
 ) : RecyclerView.Adapter<HomeAppAdapter.VH>() {
@@ -37,13 +38,12 @@ class HomeAppAdapter(
         return VH(v)
     }
 
-    override fun onBindViewHolder(holder: VH, position: Int) {
-        holder.bind(apps[position])
-    }
+    override fun onBindViewHolder(holder: VH, pos: Int) = holder.bind(apps[pos])
 
     inner class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val icon: ImageView = itemView.findViewById(R.id.iv_icon)
         private val label: TextView = itemView.findViewById(R.id.tv_label)
+        private val layoutST: LinearLayout = itemView.findViewById(R.id.layoutScreenTime)
         private val screenTime: TextView = itemView.findViewById(R.id.tv_screen_time)
 
         fun bind(app: AppInfo) {
@@ -59,18 +59,14 @@ class HomeAppAdapter(
             }
 
             if (showScreenTime && app.screenTimeMinutes > 0) {
-                screenTime.visibility = View.VISIBLE
+                layoutST.visibility = View.VISIBLE
                 screenTime.text = ScreenTimeHelper.formatMinutes(app.screenTimeMinutes)
-                screenTime.gravity = alignment
             } else {
-                screenTime.visibility = View.GONE
+                layoutST.visibility = View.GONE
             }
 
             itemView.setOnClickListener { onAppClick(app) }
-            itemView.setOnLongClickListener {
-                onAppLongClick(app, it)
-                true
-            }
+            itemView.setOnLongClickListener { onAppLongClick(app, it); true }
         }
     }
 }

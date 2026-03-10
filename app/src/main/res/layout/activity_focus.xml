@@ -1,62 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/focusRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#000000"
-    android:paddingStart="32dp"
-    android:paddingEnd="32dp"
+    android:paddingStart="28dp"
+    android:paddingEnd="28dp"
     android:paddingBottom="40dp">
 
-    <!-- Top bar -->
-    <LinearLayout
+    <!-- Back button top left -->
+    <ImageButton
+        android:id="@+id/btnBack"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginTop="52dp"
+        android:layout_marginBottom="8dp"
+        android:src="@drawable/ic_back"
+        android:tint="#AAFFFFFF"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Back" />
+
+    <!-- Title -->
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="Pomodoro"
+        android:textColor="#FFFFFF"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="6dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Focus on your goal, one session at a time."
+        android:textColor="#66FFFFFF"
+        android:textSize="14sp"
+        android:lineSpacingMultiplier="1.3"
+        android:layout_marginBottom="32dp" />
+
+    <!-- Goal input field -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingTop="52dp"
-        android:paddingBottom="16dp">
+        android:background="@drawable/bg_search"
+        android:paddingHorizontal="16dp"
+        android:layout_marginBottom="16dp">
 
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_back"
-            android:tint="#AAFFFFFF"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Back" />
-
-        <TextView
+        <EditText
+            android:id="@+id/etGoal"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="Focus"
+            android:hint="Enter your goal"
+            android:textColorHint="#55FFFFFF"
             android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginStart="16dp" />
+            android:textSize="15sp"
+            android:background="@null"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:imeOptions="actionDone" />
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_focus"
+            android:tint="#FFCC00"
+            android:contentDescription="Goal" />
     </LinearLayout>
 
-    <!-- Phase -->
+    <!-- Phase label -->
     <TextView
         android:id="@+id/tvPhase"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="FOCUS"
         android:textColor="#FFFFFF"
-        android:textSize="13sp"
-        android:textAllCaps="true"
+        android:textSize="11sp"
         android:letterSpacing="0.2"
         android:gravity="center"
-        android:layout_marginBottom="24dp" />
+        android:layout_marginBottom="16dp" />
 
-    <!-- Timer circle overlay -->
+    <!-- Timer circle -->
     <FrameLayout
         android:layout_width="220dp"
         android:layout_height="220dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="32dp">
+        android:layout_marginBottom="28dp">
 
         <ProgressBar
             android:id="@+id/progressTimer"
@@ -67,91 +101,116 @@
             android:rotation="-90"
             android:progressDrawable="@drawable/progress_circle" />
 
-        <TextView
-            android:id="@+id/tvTimer"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="25:00"
-            android:textColor="#FFFFFF"
-            android:textSize="52sp"
-            android:textStyle="bold" />
-    </FrameLayout>
-
-    <!-- Duration pickers -->
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="32dp">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:layout_marginEnd="40dp">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Focus (min)"
-                android:textColor="#77FFFFFF"
-                android:textSize="12sp"
-                android:layout_marginBottom="4dp" />
-            <NumberPicker
-                android:id="@+id/npWork"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center">
+
+            <!-- Goal label above timer (if set) -->
+            <ImageView
+                android:id="@+id/ivGoalFlag"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_focus"
+                android:tint="#FFCC00"
+                android:layout_marginBottom="4dp"
+                android:visibility="gone"
+                android:contentDescription="Goal flag" />
+
             <TextView
+                android:id="@+id/tvGoalDisplay"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:textColor="#AAFFFFFF"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:layout_marginBottom="6dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvTimer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Break (min)"
-                android:textColor="#77FFFFFF"
-                android:textSize="12sp"
-                android:layout_marginBottom="4dp" />
-            <NumberPicker
-                android:id="@+id/npBreak"
+                android:text="25:00"
+                android:textColor="#FFFFFF"
+                android:textSize="52sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Duration row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Duration :"
+            android:textColor="#77FFFFFF"
+            android:textSize="14sp"
+            android:layout_marginEnd="12dp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <Button
+                android:id="@+id/btnDur25"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="36dp"
+                android:text="25 mins"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:background="@drawable/bg_btn_solid"
+                android:paddingHorizontal="16dp"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/btnDur50"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="50 mins"
+                android:textColor="#AAFFFFFF"
+                android:textSize="13sp"
+                android:background="@drawable/bg_btn_outline"
+                android:paddingHorizontal="16dp"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/btnDurCustom"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Custom"
+                android:textColor="#AAFFFFFF"
+                android:textSize="13sp"
+                android:background="@drawable/bg_btn_outline"
+                android:paddingHorizontal="16dp" />
+
         </LinearLayout>
     </LinearLayout>
 
     <!-- Spacer -->
-    <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
 
-    <!-- Controls -->
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_gravity="center_horizontal">
-
-        <Button
-            android:id="@+id/btnReset"
-            android:layout_width="110dp"
-            android:layout_height="48dp"
-            android:text="Reset"
-            android:textColor="#AAFFFFFF"
-            android:background="@drawable/bg_btn_outline"
-            android:layout_marginEnd="16dp" />
-
-        <Button
-            android:id="@+id/btnStartPause"
-            android:layout_width="120dp"
-            android:layout_height="48dp"
-            android:text="Start"
-            android:textColor="#000000"
-            android:background="@drawable/bg_btn_solid" />
-    </LinearLayout>
+    <!-- STOP button at bottom — single big button like reference -->
+    <Button
+        android:id="@+id/btnStartPause"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="START"
+        android:textColor="#000000"
+        android:textSize="15sp"
+        android:letterSpacing="0.15"
+        android:background="@drawable/bg_btn_solid" />
 
 </LinearLayout>

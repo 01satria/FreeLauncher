@@ -5,42 +5,53 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingVertical="10dp"
+    android:paddingVertical="9dp"
     android:clickable="true"
     android:focusable="true"
     android:background="?android:attr/selectableItemBackground">
 
+    <!-- App icon -->
     <ImageView
         android:id="@+id/iv_icon"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:layout_marginEnd="12dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginEnd="16dp"
         android:visibility="gone"
         android:contentDescription="App icon" />
 
-    <LinearLayout
+    <!-- App name -->
+    <TextView
+        android:id="@+id/tv_label"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:singleLine="true" />
 
-        <TextView
-            android:id="@+id/tv_label"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:singleLine="true" />
+    <!-- Screen time dot + time -->
+    <LinearLayout
+        android:id="@+id/layoutScreenTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <View
+            android:layout_width="4dp"
+            android:layout_height="4dp"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/bg_dot" />
 
         <TextView
             android:id="@+id/tv_screen_time"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#55FFFFFF"
-            android:textSize="12sp"
-            android:visibility="gone" />
+            android:textColor="#66FFFFFF"
+            android:textSize="13sp" />
     </LinearLayout>
 
 </LinearLayout>

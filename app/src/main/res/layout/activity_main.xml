@@ -1,11 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Root: CoordinatorLayout so BottomSheet still works.
-    Inside: ViewPager2 takes full screen.
-      Page 0 = FeedFragment  (swipe left from home)
-      Page 1 = HomeFragment  (default / center)
-    BottomSheet drawer floats above the ViewPager2.
--->
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -14,115 +7,106 @@
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
-    <!-- ── PAGER: Feed (0) + Home (1) ────────────────────────────────── -->
+    <!-- ViewPager: Feed(0) | Home(1) — NO page dots -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- ── PAGE DOTS indicator ───────────────────────────────────────── -->
-    <LinearLayout
-        android:id="@+id/pageDots"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="108dp"
-        android:orientation="horizontal"
-        android:gravity="center">
-
-        <!-- Feed dot -->
-        <View
-            android:id="@+id/dotFeed"
-            android:layout_width="6dp"
-            android:layout_height="6dp"
-            android:layout_marginHorizontal="4dp"
-            android:background="@drawable/bg_dot" />
-
-        <!-- Home dot -->
-        <View
-            android:id="@+id/dotHome"
-            android:layout_width="6dp"
-            android:layout_height="6dp"
-            android:layout_marginHorizontal="4dp"
-            android:background="@drawable/bg_dot" />
-
-    </LinearLayout>
-
-    <!-- ── DIM overlay (shown when drawer opens) ─────────────────────── -->
+    <!-- Dim overlay when drawer opens -->
     <View
         android:id="@+id/drawerDim"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#99000000"
+        android:background="#CC000000"
         android:alpha="0"
         android:visibility="gone"
         android:clickable="true"
         android:focusable="true" />
 
-    <!-- ── APP DRAWER BOTTOM SHEET ───────────────────────────────────── -->
+    <!-- ── APP DRAWER (full-screen bottom sheet) ─────────────────────── -->
     <LinearLayout
         android:id="@+id/drawerSheet"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="60dp"
         android:orientation="vertical"
         android:background="@drawable/bg_drawer"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
         app:behavior_hideable="true"
         app:behavior_skipCollapsed="true">
 
-        <!-- Handle bar -->
-        <View
-            android:layout_width="40dp"
-            android:layout_height="4dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="8dp"
-            android:background="@drawable/bg_handle" />
+        <!-- Drawer header: title + settings icon -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="24dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="52dp"
+            android:paddingBottom="8dp">
 
-        <!-- Search bar -->
-        <EditText
-            android:id="@+id/etSearch"
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Apps"
+                android:textColor="#FFFFFF"
+                android:textSize="32sp"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/btnDrawerSettings"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_settings"
+                android:tint="#88FFFFFF"
+                android:background="@drawable/bg_chip"
+                android:contentDescription="Settings" />
+        </LinearLayout>
+
+        <!-- Search bar with icon -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginBottom="8dp"
-            android:hint="Search apps..."
-            android:textColorHint="#66FFFFFF"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:background="@drawable/bg_search"
-            android:paddingStart="20dp"
-            android:paddingEnd="16dp"
-            android:inputType="text"
-            android:maxLines="1"
-            android:imeOptions="actionDone|flagNoFullscreen"
-            android:singleLine="true"
-            android:focusable="true"
-            android:focusableInTouchMode="true" />
-
-        <!-- Category tabs -->
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/tabCategories"
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginHorizontal="24dp"
             android:layout_marginBottom="4dp"
-            app:tabGravity="fill"
-            app:tabMode="scrollable"
-            app:tabTextColor="#77FFFFFF"
-            app:tabSelectedTextColor="#FFFFFF"
-            app:tabIndicatorColor="#FFFFFF"
-            app:tabIndicatorHeight="2dp"
-            app:tabTextAppearance="@android:style/TextAppearance.Small"
-            android:background="@android:color/transparent" />
+            android:background="@drawable/bg_search"
+            android:paddingStart="16dp"
+            android:paddingEnd="12dp">
 
-        <!-- Apps list -->
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_search"
+                android:layout_marginEnd="10dp"
+                android:contentDescription="Search" />
+
+            <EditText
+                android:id="@+id/etSearch"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:hint="Search apps"
+                android:textColorHint="#55FFFFFF"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:background="@null"
+                android:inputType="text"
+                android:maxLines="1"
+                android:imeOptions="actionDone|flagNoFullscreen"
+                android:singleLine="true"
+                android:focusable="true"
+                android:focusableInTouchMode="true" />
+        </LinearLayout>
+
+        <!-- Apps list (alphabetical with section headers) -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvDrawerApps"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
             android:paddingBottom="32dp"
             android:clipToPadding="false"
             android:overScrollMode="never"

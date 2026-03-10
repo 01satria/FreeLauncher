@@ -21,7 +21,6 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.flowlauncher.databinding.ActivityMainBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.*
 
 class MainActivity : FragmentActivity() {
@@ -32,18 +31,16 @@ class MainActivity : FragmentActivity() {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var searchJob: Job? = null
 
-    // Fragments
     private lateinit var homeFragment: HomeFragment
     private lateinit var feedFragment: FeedFragment
 
-    // App drawer
     private val drawerAdapter = DrawerAppAdapter(
         onAppClick     = ::launchApp,
         onAppLongClick = ::showAppOptions
     )
     private lateinit var drawerSheet: BottomSheetBehavior<View>
-    private var currentCategory = AppCategory.ALL
     private var allDrawerApps: List<AppInfo> = emptyList()
+    private var isSearching = false
 
     companion object {
         const val PAGE_FEED = 0
@@ -56,8 +53,6 @@ class MainActivity : FragmentActivity() {
             if (::homeFragment.isInitialized) homeFragment.loadHomeApps()
         }
     }
-
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,16 +69,14 @@ class MainActivity : FragmentActivity() {
 
         setupViewPager()
         setupDrawer()
-        setupPageDots()
         registerReceivers()
     }
 
     override fun onResume() {
         super.onResume()
-        updateDots(binding.viewPager.currentItem)
     }
 
-    // ── ViewPager2: Feed (0) ← swipe left | Home (1) default ─────────────────
+    // ── ViewPager ─────────────────────────────────────────────────────────────
 
     private fun setupViewPager() {
         homeFragment = HomeFragment().also { it.onOpenDrawer = ::openDrawer }
@@ -96,28 +89,16 @@ class MainActivity : FragmentActivity() {
                 else      -> homeFragment
             }
         }
-        // Default to Home page
         binding.viewPager.setCurrentItem(PAGE_HOME, false)
 
         binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(pos: Int) {
-                updateDots(pos)
-                // Close drawer if open when user swipes pages
                 if (drawerSheet.state != BottomSheetBehavior.STATE_HIDDEN) closeDrawer()
             }
         })
     }
 
-    // ── Page dots indicator ───────────────────────────────────────────────────
-
-    private fun setupPageDots() = updateDots(PAGE_HOME)
-
-    private fun updateDots(page: Int) {
-        binding.dotFeed.alpha = if (page == PAGE_FEED) 1f else 0.3f
-        binding.dotHome.alpha = if (page == PAGE_HOME) 1f else 0.3f
-    }
-
-    // ── App Drawer (BottomSheet) ──────────────────────────────────────────────
+    // ── App Drawer ────────────────────────────────────────────────────────────
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupDrawer() {
@@ -136,6 +117,7 @@ class MainActivity : FragmentActivity() {
                     binding.etSearch.setText("")
                     binding.drawerDim.visibility = View.GONE
                     binding.viewPager.isUserInputEnabled = true
+                    isSearching = false
                 }
             }
         })
@@ -149,18 +131,15 @@ class MainActivity : FragmentActivity() {
             itemAnimator = null
         }
 
-        setupCategoryTabs()
-
-        // Keyboard only on explicit tap
         binding.etSearch.showSoftInputOnFocus = false
         binding.etSearch.setOnClickListener { showKeyboard() }
         binding.etSearch.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) {}
             override fun afterTextChanged(s: Editable?) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) {
                 searchJob?.cancel()
                 searchJob = scope.launch {
-                    delay(100)
+                    delay(80)
                     filterApps(s?.toString().orEmpty())
                 }
             }
@@ -168,56 +147,43 @@ class MainActivity : FragmentActivity() {
 
         binding.drawerDim.setOnClickListener { closeDrawer() }
 
-        // Pre-load app list
+        // Settings button in drawer header
+        binding.btnDrawerSettings.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+
         scope.launch {
             allDrawerApps = try { AppRepository.loadApps(this@MainActivity, prefs) }
                             catch (_: Exception) { emptyList() }
         }
     }
 
-    private fun setupCategoryTabs() {
-        val tabs = binding.tabCategories
-        tabs.removeAllTabs()
-        AppCategory.values().forEach { cat ->
-            tabs.addTab(tabs.newTab().setText(cat.displayName))
-        }
-        tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab) {
-                currentCategory = AppCategory.values()[tab.position]
-                filterApps(binding.etSearch.text.toString())
-            }
-            override fun onTabUnselected(tab: TabLayout.Tab) {}
-            override fun onTabReselected(tab: TabLayout.Tab) {}
-        })
-    }
-
     private fun filterApps(query: String) {
-        val base = when (currentCategory) {
-            AppCategory.ALL       -> allDrawerApps
-            AppCategory.MOST_USED -> allDrawerApps
-                .filter { it.screenTimeMinutes > 0 }
-                .sortedByDescending { it.screenTimeMinutes }
-            else -> allDrawerApps.filter { it.getCategory() == currentCategory }
+        if (query.isBlank()) {
+            isSearching = false
+            drawerAdapter.setApps(allDrawerApps)
+        } else {
+            isSearching = true
+            val filtered = allDrawerApps.filter {
+                it.label.contains(query, ignoreCase = true)
+            }
+            drawerAdapter.setSearchApps(filtered)
+            // Auto-launch if exactly 1 result
+            if (filtered.size == 1) launchApp(filtered[0])
         }
-        val filtered = if (query.isBlank()) base
-                       else base.filter { it.label.contains(query, ignoreCase = true) }
-        drawerAdapter.setApps(filtered)
-        if (query.isNotBlank() && filtered.size == 1) launchApp(filtered[0])
     }
 
     fun openDrawer() {
-        // Disable ViewPager swipe while drawer is open (prevents conflict)
         binding.viewPager.isUserInputEnabled = false
         binding.drawerDim.alpha = 0f
         binding.drawerDim.visibility = View.VISIBLE
         binding.drawerDim.animate().alpha(1f).setDuration(200).start()
         drawerSheet.state = BottomSheetBehavior.STATE_EXPANDED
 
-        // Refresh app list
         scope.launch {
             allDrawerApps = try { AppRepository.loadApps(this@MainActivity, prefs) }
                             catch (_: Exception) { emptyList() }
-            filterApps(binding.etSearch.text.toString())
+            drawerAdapter.setApps(allDrawerApps)
         }
     }
 
@@ -245,7 +211,6 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    // Public so HomeFragment can delegate long-press actions to MainActivity
     fun showAppOptionsPublic(app: AppInfo, anchor: View) = showAppOptions(app, anchor)
 
     private fun showAppOptions(app: AppInfo, @Suppress("UNUSED_PARAMETER") anchor: View) {
@@ -332,11 +297,9 @@ class MainActivity : FragmentActivity() {
     @Deprecated("Deprecated")
     override fun onBackPressed() {
         when {
-            drawerSheet.state != BottomSheetBehavior.STATE_HIDDEN ->
-                closeDrawer()
+            drawerSheet.state != BottomSheetBehavior.STATE_HIDDEN -> closeDrawer()
             binding.viewPager.currentItem != PAGE_HOME ->
                 binding.viewPager.setCurrentItem(PAGE_HOME, true)
-            // On home page: do nothing — launcher must not exit
         }
     }
 
