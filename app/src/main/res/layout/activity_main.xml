@@ -178,7 +178,8 @@
     <LinearLayout
         android:id="@+id/drawerSheet"
         android:layout_width="match_parent"
-        android:layout_height="85%"
+        android:layout_height="match_parent"
+        android:layout_marginTop="60dp"
         android:orientation="vertical"
         android:background="@drawable/bg_drawer"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
