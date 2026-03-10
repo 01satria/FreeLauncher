@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/feedRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:overScrollMode="never"
+    android:background="@android:color/transparent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="28dp"
+        android:paddingEnd="28dp"
+        android:paddingTop="68dp"
+        android:paddingBottom="64dp">
+
+        <!-- ── HEADER ──────────────────────────────────────────────────── -->
+        <TextView
+            android:id="@+id/tvFeedTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="My Feed"
+            android:textColor="#FFFFFF"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:letterSpacing="-0.02"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tvFeedDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#77FFFFFF"
+            android:textSize="14sp"
+            android:layout_marginBottom="40dp" />
+
+        <!-- ── TASKS SECTION ───────────────────────────────────────────── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tvSectionTasks"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="TASKS"
+                android:textColor="#66FFFFFF"
+                android:textSize="11sp"
+                android:letterSpacing="0.15" />
+
+            <ImageButton
+                android:id="@+id/btnAddTodo"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_add"
+                android:tint="#AAFFFFFF"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Add task" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvTasksEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No tasks yet. Tap + to add one."
+            android:textColor="#44FFFFFF"
+            android:textSize="13sp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvTodos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:overScrollMode="never"
+            android:nestedScrollingEnabled="false"
+            android:layout_marginBottom="40dp" />
+
+        <!-- ── MY EVENTS SECTION ───────────────────────────────────────── -->
+        <TextView
+            android:id="@+id/tvSectionEvents"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="MY EVENTS"
+            android:textColor="#66FFFFFF"
+            android:textSize="11sp"
+            android:letterSpacing="0.15"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Calendar permission card -->
+        <LinearLayout
+            android:id="@+id/layoutCalendarPermission"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_permission_card"
+            android:padding="20dp"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Calendar Access Needed"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="6dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Allow access to show your upcoming events with countdown timers."
+                android:textColor="#88FFFFFF"
+                android:textSize="13sp"
+                android:lineSpacingMultiplier="1.3"
+                android:layout_marginBottom="16dp" />
+
+            <Button
+                android:id="@+id/btnGrantCalendar"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="Grant Calendar Access"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:background="@drawable/bg_btn_outline" />
+
+        </LinearLayout>
+
+        <!-- No events state -->
+        <TextView
+            android:id="@+id/tvEventsEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No upcoming events in the next 30 days."
+            android:textColor="#44FFFFFF"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
+        <!-- Events list -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvEvents"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:overScrollMode="never"
+            android:nestedScrollingEnabled="false"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

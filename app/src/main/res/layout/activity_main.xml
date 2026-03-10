@@ -1,169 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Root: CoordinatorLayout so BottomSheet still works.
+    Inside: ViewPager2 takes full screen.
+      Page 0 = FeedFragment  (swipe left from home)
+      Page 1 = HomeFragment  (default / center)
+    BottomSheet drawer floats above the ViewPager2.
+-->
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/homeRoot"
+    android:id="@+id/mainRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
-    <!-- ── HOME CONTENT ─────────────────────────────────────────────────── -->
-    <LinearLayout
+    <!-- ── PAGER: Feed (0) + Home (1) ────────────────────────────────── -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:paddingStart="32dp"
-        android:paddingEnd="32dp"
-        android:paddingTop="60dp"
-        android:paddingBottom="32dp">
+        android:layout_height="match_parent" />
 
-        <!-- Top row: Settings + Focus buttons -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="end"
-            android:layout_marginBottom="8dp">
+    <!-- ── PAGE DOTS indicator ───────────────────────────────────────── -->
+    <LinearLayout
+        android:id="@+id/pageDots"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="108dp"
+        android:orientation="horizontal"
+        android:gravity="center">
 
-            <ImageButton
-                android:id="@+id/btnFocus"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@drawable/ic_focus"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:tint="#AAFFFFFF"
-                android:contentDescription="Focus Mode"
-                android:layout_marginEnd="8dp" />
+        <!-- Feed dot -->
+        <View
+            android:id="@+id/dotFeed"
+            android:layout_width="6dp"
+            android:layout_height="6dp"
+            android:layout_marginHorizontal="4dp"
+            android:background="@drawable/bg_dot" />
 
-            <ImageButton
-                android:id="@+id/btnSettings"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@drawable/ic_settings"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:tint="#AAFFFFFF"
-                android:contentDescription="Settings" />
-        </LinearLayout>
+        <!-- Home dot -->
+        <View
+            android:id="@+id/dotHome"
+            android:layout_width="6dp"
+            android:layout_height="6dp"
+            android:layout_marginHorizontal="4dp"
+            android:background="@drawable/bg_dot" />
 
-        <!-- Clock -->
-        <TextClock
-            android:id="@+id/tvClock"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:format12Hour="hh:mm"
-            android:format24Hour="HH:mm"
-            android:textColor="#FFFFFF"
-            android:textSize="80sp"
-            android:textStyle="bold"
-            android:letterSpacing="-0.05"
-            android:includeFontPadding="false" />
-
-        <!-- Date -->
-        <TextClock
-            android:id="@+id/tvDate"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:format12Hour="EEEE, MMMM d"
-            android:format24Hour="EEEE, MMMM d"
-            android:textColor="#AAFFFFFF"
-            android:textSize="16sp"
-            android:layout_marginTop="2dp"
-            android:layout_marginBottom="4dp" />
-
-        <!-- Greeting + total usage -->
-        <TextView
-            android:id="@+id/tvGreeting"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textColor="#77FFFFFF"
-            android:textSize="13sp"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/tvUsageToday"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#77FFFFFF"
-            android:textSize="13sp"
-            android:layout_marginBottom="32dp"
-            android:visibility="gone" />
-
-        <!-- Screen-time permission hint -->
-        <TextView
-            android:id="@+id/tvScreenTimeHint"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Tap to enable screen time →"
-            android:textColor="#55FFFFFF"
-            android:textSize="12sp"
-            android:layout_marginBottom="16dp"
-            android:visibility="gone" />
-
-        <!-- Home favourite apps -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvHomeApps"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:overScrollMode="never"
-            android:clipToPadding="false" />
-
-        <!-- To-do widget -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:id="@+id/tvTodoHeader"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Tasks"
-                    android:textColor="#AAFFFFFF"
-                    android:textSize="13sp"
-                    android:textAllCaps="true"
-                    android:letterSpacing="0.15" />
-
-                <ImageButton
-                    android:id="@+id/btnAddTodo"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:src="@drawable/ic_add"
-                    android:tint="#AAFFFFFF"
-                    android:background="?android:attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Add task" />
-            </LinearLayout>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvTodos"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:overScrollMode="never"
-                android:nestedScrollingEnabled="false" />
-        </LinearLayout>
-
-        <!-- Swipe-up hint -->
-        <ImageView
-            android:id="@+id/ivSwipeHint"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
-            android:src="@drawable/ic_swipe_up"
-            android:tint="#44FFFFFF"
-            android:contentDescription="Swipe up for apps" />
     </LinearLayout>
 
-    <!-- ── DIM overlay ───────────────────────────────────────────────────── -->
+    <!-- ── DIM overlay (shown when drawer opens) ─────────────────────── -->
     <View
         android:id="@+id/drawerDim"
         android:layout_width="match_parent"
@@ -174,7 +59,7 @@
         android:clickable="true"
         android:focusable="true" />
 
-    <!-- ── APP DRAWER BOTTOM SHEET ──────────────────────────────────────── -->
+    <!-- ── APP DRAWER BOTTOM SHEET ───────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/drawerSheet"
         android:layout_width="match_parent"
