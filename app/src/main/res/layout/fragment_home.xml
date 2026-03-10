@@ -99,45 +99,20 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:gravity="center"
         android:paddingStart="28dp"
         android:paddingEnd="28dp"
         android:paddingBottom="28dp"
         android:paddingTop="12dp">
 
         <ImageButton
-            android:id="@+id/btnSettings"
+            android:id="@+id/btnDrawer"
             android:layout_width="44dp"
             android:layout_height="44dp"
-            android:src="@drawable/ic_settings"
+            android:src="@drawable/ic_swipe_up"
             android:tint="#88FFFFFF"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Settings" />
-
-        <ImageButton
-            android:id="@+id/btnFocus"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:src="@drawable/ic_focus"
-            android:tint="#88FFFFFF"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Focus Mode"
-            android:layout_marginStart="4dp" />
-
-        <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1"/>
-
-        <TextView
-            android:id="@+id/btnFocusPill"
-            android:layout_width="wrap_content"
-            android:layout_height="44dp"
-            android:gravity="center"
-            android:text="Focus Mode"
-            android:textColor="#CCFFFFFF"
-            android:textSize="14sp"
-            android:paddingHorizontal="20dp"
-            android:background="@drawable/bg_focus_pill"
-            android:clickable="true"
-            android:focusable="true" />
+            android:contentDescription="Open App Drawer" />
 
     </LinearLayout>
 

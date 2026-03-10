@@ -56,15 +56,8 @@ class HomeFragment : Fragment() {
             overScrollMode = View.OVER_SCROLL_NEVER
         }
 
-        binding.btnSettings.setOnClickListener {
-            startActivity(Intent(requireContext(), SettingsActivity::class.java))
-        }
-        // Both icon and pill open Focus
-        binding.btnFocus.setOnClickListener {
-            startActivity(Intent(requireContext(), FocusActivity::class.java))
-        }
-        binding.btnFocusPill.setOnClickListener {
-            startActivity(Intent(requireContext(), FocusActivity::class.java))
+        binding.btnDrawer.setOnClickListener {
+            onOpenDrawer?.invoke()
         }
 
         applyTheme()
@@ -100,14 +93,12 @@ class HomeFragment : Fragment() {
 
         val textPrimary   = if (isLight) Color.parseColor("#111111") else Color.WHITE
         val textSecondary = if (isLight) Color.parseColor("#66000000") else Color.parseColor("#88FFFFFF")
-        val iconTint      = if (isLight) Color.parseColor("#88000000") else Color.parseColor("#88FFFFFF")
 
         b.tvClock.setTextColor(textPrimary)
         b.tvDate.setTextColor(textSecondary)
         b.tvUsageToday.setTextColor(textSecondary)
         b.tvScreenTimeHint.setTextColor(if (isLight) Color.parseColor("#44000000") else Color.parseColor("#44FFFFFF"))
-        b.btnSettings.setColorFilter(iconTint)
-        b.btnFocus.setColorFilter(iconTint)
+        b.btnDrawer.setColorFilter(if (isLight) Color.parseColor("#88000000") else Color.parseColor("#88FFFFFF"))
     }
 
     // ── Clock format ─────────────────────────────────────────────────────────
