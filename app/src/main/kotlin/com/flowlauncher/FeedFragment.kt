@@ -176,7 +176,7 @@ class FeedFragment : Fragment() {
             setHasFixedSize(false)
             overScrollMode = View.OVER_SCROLL_NEVER
             itemAnimator = null
-            nestedScrollingEnabled = false
+            isNestedScrollingEnabled = false
         }
         binding.btnGrantCalendar.setOnClickListener {
             calendarPermLauncher.launch(Manifest.permission.READ_CALENDAR)
