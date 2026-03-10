@@ -1,17 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.FlowLauncher" parent="android:Theme.Material.NoActionBar">
+
+    <!--
+        FIX: Use Theme.MaterialComponents (not android:Theme.Material) so that
+        colorPrimary, colorAccent, and Material widget attrs are valid.
+        Also removed tabTextAppearance which caused AttributeNotFoundException.
+    -->
+    <style name="Theme.FlowLauncher" parent="Theme.MaterialComponents.NoActionBar">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:textColor">#FFFFFF</item>
         <item name="colorPrimary">#FFFFFF</item>
+        <item name="colorPrimaryVariant">#CCCCCC</item>
+        <item name="colorOnPrimary">#000000</item>
         <item name="colorAccent">#FFFFFF</item>
-        <item name="tabTextAppearance">@style/TabTextSmall</item>
+        <item name="colorSurface">#121212</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        <!-- Ripple stays visible on dark bg -->
+        <item name="rippleColor">#33FFFFFF</item>
+        <!-- Make AlertDialog dark -->
+        <item name="alertDialogTheme">@style/Theme.FlowLauncher.Dialog</item>
     </style>
 
-    <style name="TabTextSmall">
-        <item name="android:textSize">12sp</item>
+    <!-- Dark AlertDialog so text is readable -->
+    <style name="Theme.FlowLauncher.Dialog" parent="Theme.MaterialComponents.Dialog">
+        <item name="android:background">#1E1E1E</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="colorAccent">#FFFFFF</item>
     </style>
+
+    <!-- Settings activity - slightly lighter surface -->
+    <style name="Theme.FlowLauncher.Settings" parent="Theme.FlowLauncher">
+        <item name="android:windowBackground">#000000</item>
+    </style>
+
 </resources>

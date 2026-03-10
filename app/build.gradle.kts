@@ -20,9 +20,9 @@ android {
             val path = System.getenv("KEYSTORE_PATH")
             if (path != null) {
                 storeFile = file(path)
-                storePassword = System.getenv("KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("KEY_ALIAS")
-                keyPassword = System.getenv("KEY_PASSWORD")
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+                keyAlias = System.getenv("KEY_ALIAS") ?: ""
+                keyPassword = System.getenv("KEY_PASSWORD") ?: ""
             }
         }
     }
@@ -30,8 +30,8 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -39,6 +39,17 @@ android {
         }
         debug {
             isMinifyEnabled = false
+            applicationIdSuffix = ".debug"
+        }
+    }
+
+    // ── ABI split — menghasilkan APK terpisah per arsitektur ──────────────────
+    splits {
+        abi {
+            isEnable = true          // FIX: was false
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            isUniversalApk = true    // juga hasilkan universal APK
         }
     }
 
@@ -54,28 +65,25 @@ android {
         buildConfig = false
     }
 
-    splits {
-        abi {
-            isEnable = false
-            reset()
-            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-            isUniversalApk = true
+    packaging {
+        resources {
+            excludes += setOf("META-INF/**.kotlin_module", "kotlin/**")
         }
     }
 }
 
+// ── Version code per ABI ───────────────────────────────────────────────────────
 val abiCodes = mapOf("armeabi-v7a" to 1, "arm64-v8a" to 2, "x86" to 3, "x86_64" to 4)
 
 androidComponents {
     onVariants { variant ->
         variant.outputs.forEach { output ->
-            val abi = output.filters.find { 
-                it.filterType == com.android.build.api.variant.FilterConfiguration.FilterType.ABI 
+            val abi = output.filters.find {
+                it.filterType == com.android.build.api.variant.FilterConfiguration.FilterType.ABI
             }?.identifier
-            
             if (abi != null) {
-                val baseVersionCode = android.defaultConfig.versionCode ?: 1
-                output.versionCode.set(baseVersionCode * 1000 + (abiCodes[abi] ?: 0))
+                val base = android.defaultConfig.versionCode ?: 1
+                output.versionCode.set(base * 1000 + (abiCodes[abi] ?: 0))
             }
         }
     }
@@ -87,6 +95,6 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("com.google.android.material:material:1.11.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation("androidx.preference:preference-ktx:1.2.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.core:core-ktx:1.12.0")
 }

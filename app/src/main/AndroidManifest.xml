@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- App usage stats for screen time feature -->
+    <!-- Screen time / usage stats -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
 
@@ -11,6 +11,13 @@
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <!-- For app info + uninstall intents -->
+        <intent>
+            <action android:name="android.settings.APPLICATION_DETAILS_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.DELETE" />
         </intent>
     </queries>
 
@@ -23,7 +30,6 @@
         android:largeHeap="false"
         tools:targetApi="31">
 
-        <!-- Main launcher activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -31,7 +37,7 @@
             android:stateNotNeeded="true"
             android:excludeFromRecents="true"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize"
+            android:windowSoftInputMode="adjustPan"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter android:priority="1">
                 <action android:name="android.intent.action.MAIN" />
@@ -41,18 +47,19 @@
             </intent-filter>
         </activity>
 
-        <!-- Settings activity -->
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:screenOrientation="portrait"
+            android:theme="@style/Theme.FlowLauncher.Settings"
+            android:windowSoftInputMode="adjustPan"
             android:label="@string/settings" />
 
-        <!-- Focus / Pomodoro timer activity -->
         <activity
             android:name=".FocusActivity"
             android:exported="false"
             android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan"
             android:label="@string/focus_mode" />
 
     </application>

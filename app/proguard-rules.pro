@@ -1,3 +1,6 @@
 -keep class com.flowlauncher.** { *; }
+-keep class androidx.viewbinding.** { *; }
 -keepattributes *Annotation*
+-keepattributes SourceFile,LineNumberTable
 -dontwarn kotlin.**
+-dontwarn kotlinx.**
