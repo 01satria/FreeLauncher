@@ -24,22 +24,26 @@ object ScreenTimeHelper {
      * Returns empty map if permission not granted.
      */
     fun getTodayUsage(context: Context): Map<String, Long> {
-        if (!hasPermission(context)) return emptyMap()
+        return try {
+            if (!hasPermission(context)) return emptyMap()
 
-        val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+            val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
 
-        val cal = Calendar.getInstance()
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
+            val cal = Calendar.getInstance()
+            cal.set(Calendar.HOUR_OF_DAY, 0)
+            cal.set(Calendar.MINUTE, 0)
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
 
-        val stats: Map<String, UsageStats> = usm.queryAndAggregateUsageStats(
-            cal.timeInMillis,
-            System.currentTimeMillis()
-        )
+            val stats: Map<String, UsageStats> = usm.queryAndAggregateUsageStats(
+                cal.timeInMillis,
+                System.currentTimeMillis()
+            )
 
-        return stats.mapValues { it.value.totalTimeInForeground / 60_000L }
+            stats.mapValues { it.value.totalTimeInForeground / 60_000L }
+        } catch (e: Exception) {
+            emptyMap()
+        }
     }
 
     fun formatMinutes(minutes: Long): String {
