@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#000000"
+    android:paddingStart="32dp"
+    android:paddingEnd="32dp"
+    android:paddingBottom="40dp">
+
+    <!-- Top bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="52dp"
+        android:paddingBottom="16dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_back"
+            android:tint="#AAFFFFFF"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Focus"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginStart="16dp" />
+    </LinearLayout>
+
+    <!-- Phase -->
+    <TextView
+        android:id="@+id/tvPhase"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="FOCUS"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textAllCaps="true"
+        android:letterSpacing="0.2"
+        android:gravity="center"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Timer circle overlay -->
+    <FrameLayout
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="32dp">
+
+        <ProgressBar
+            android:id="@+id/progressTimer"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:progress="0"
+            android:rotation="-90"
+            android:progressDrawable="@drawable/progress_circle" />
+
+        <TextView
+            android:id="@+id/tvTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="25:00"
+            android:textColor="#FFFFFF"
+            android:textSize="52sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <!-- Duration pickers -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="32dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginEnd="40dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Focus (min)"
+                android:textColor="#77FFFFFF"
+                android:textSize="12sp"
+                android:layout_marginBottom="4dp" />
+            <NumberPicker
+                android:id="@+id/npWork"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Break (min)"
+                android:textColor="#77FFFFFF"
+                android:textSize="12sp"
+                android:layout_marginBottom="4dp" />
+            <NumberPicker
+                android:id="@+id/npBreak"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Spacer -->
+    <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+
+    <!-- Controls -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_gravity="center_horizontal">
+
+        <Button
+            android:id="@+id/btnReset"
+            android:layout_width="110dp"
+            android:layout_height="48dp"
+            android:text="Reset"
+            android:textColor="#AAFFFFFF"
+            android:background="@drawable/bg_btn_outline"
+            android:layout_marginEnd="16dp" />
+
+        <Button
+            android:id="@+id/btnStartPause"
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:text="Start"
+            android:textColor="#000000"
+            android:background="@drawable/bg_btn_solid" />
+    </LinearLayout>
+
+</LinearLayout>

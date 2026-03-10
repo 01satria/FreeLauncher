@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Top bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="32dp"
+            android:paddingTop="24dp">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_back"
+                android:tint="#FFFFFF"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Back" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Settings"
+                android:textColor="#FFFFFF"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_marginStart="16dp" />
+        </LinearLayout>
+
+        <!-- Section: Appearance -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="APPEARANCE"
+            android:textColor="#55FFFFFF"
+            android:textSize="11sp"
+            android:letterSpacing="0.15"
+            android:layout_marginBottom="12dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Theme"
+                android:textColor="#FFFFFF" android:textSize="16sp" />
+            <Spinner
+                android:id="@+id/spinnerTheme"
+                android:layout_width="140dp"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#FFFFFF" />
+        </LinearLayout>
+
+        <View android:layout_width="match_parent" android:layout_height="1dp"
+            android:background="#22FFFFFF" android:layout_marginVertical="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Text Alignment"
+                android:textColor="#FFFFFF" android:textSize="16sp" />
+            <Spinner
+                android:id="@+id/spinnerAlignment"
+                android:layout_width="140dp"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#FFFFFF" />
+        </LinearLayout>
+
+        <View android:layout_width="match_parent" android:layout_height="1dp"
+            android:background="#22FFFFFF" android:layout_marginVertical="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="12dp">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Font Size" android:textColor="#FFFFFF" android:textSize="16sp" />
+                <TextView android:id="@+id/tvFontSizeVal" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:textColor="#77FFFFFF" android:textSize="13sp" />
+            </LinearLayout>
+            <SeekBar
+                android:id="@+id/seekFontSize"
+                android:layout_width="140dp"
+                android:layout_height="wrap_content"
+                android:progressTint="#FFFFFF"
+                android:thumbTint="#FFFFFF" />
+        </LinearLayout>
+
+        <View android:layout_width="match_parent" android:layout_height="1dp"
+            android:background="#22FFFFFF" android:layout_marginVertical="4dp" />
+
+        <!-- Show icons toggle -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Show App Icons"
+                android:textColor="#FFFFFF" android:textSize="16sp" />
+            <Switch android:id="@+id/switchShowIcons" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:thumbTint="#FFFFFF"
+                android:trackTint="#55FFFFFF" />
+        </LinearLayout>
+
+        <!-- Section: Clock -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="CLOCK"
+            android:textColor="#55FFFFFF"
+            android:textSize="11sp"
+            android:letterSpacing="0.15"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="24-Hour Format"
+                android:textColor="#FFFFFF" android:textSize="16sp" />
+            <Switch android:id="@+id/switch24Hour" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:thumbTint="#FFFFFF"
+                android:trackTint="#55FFFFFF" />
+        </LinearLayout>
+
+        <View android:layout_width="match_parent" android:layout_height="1dp"
+            android:background="#22FFFFFF" android:layout_marginVertical="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Show Date"
+                android:textColor="#FFFFFF" android:textSize="16sp" />
+            <Switch android:id="@+id/switchShowDate" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:thumbTint="#FFFFFF"
+                android:trackTint="#55FFFFFF" />
+        </LinearLayout>
+
+        <!-- Section: Home Screen -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="HOME SCREEN"
+            android:textColor="#55FFFFFF"
+            android:textSize="11sp"
+            android:letterSpacing="0.15"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Max Apps on Home"
+                android:textColor="#FFFFFF" android:textSize="16sp" />
+            <NumberPicker
+                android:id="@+id/npHomeApps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Section: Screen Time -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="SCREEN TIME"
+            android:textColor="#55FFFFFF"
+            android:textSize="11sp"
+            android:letterSpacing="0.15"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Show Screen Time"
+                android:textColor="#FFFFFF" android:textSize="16sp" />
+            <Switch android:id="@+id/switchScreenTime" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:thumbTint="#FFFFFF"
+                android:trackTint="#55FFFFFF" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnGrantUsage"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Grant Usage Access"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/bg_btn_outline"
+            android:layout_marginTop="8dp" />
+
+        <!-- Section: Digital Detox -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="DIGITAL DETOX"
+            android:textColor="#55FFFFFF"
+            android:textSize="11sp"
+            android:letterSpacing="0.15"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Enable Detox Mode"
+                android:textColor="#FFFFFF" android:textSize="16sp" />
+            <Switch android:id="@+id/switchDetox" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:thumbTint="#FFFFFF"
+                android:trackTint="#55FFFFFF" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Duration"
+                android:textColor="#FFFFFF" android:textSize="16sp" />
+            <Spinner
+                android:id="@+id/spinnerDetoxDuration"
+                android:layout_width="140dp"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#FFFFFF" />
+        </LinearLayout>
+
+        <!-- Section: Apps -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="APPS"
+            android:textColor="#55FFFFFF"
+            android:textSize="11sp"
+            android:letterSpacing="0.15"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/btnManageHidden"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Manage Hidden Apps"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/bg_btn_outline"
+            android:layout_marginBottom="40dp" />
+
+    </LinearLayout>
+</ScrollView>

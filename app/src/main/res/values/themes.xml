@@ -1,23 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Launcher" parent="android:Theme">
-        <!-- Latar belakang transparan total -->
+    <style name="Theme.FlowLauncher" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:colorBackgroundCacheHint">@null</item>
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowShowWallpaper">true</item>
-
-        <!-- Hilangkan title bar dan action bar -->
-        <item name="android:windowNoTitle">true</item>
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:windowContentOverlay">@null</item>
-
-        <!-- Tidak ada animasi transisi -->
-        <item name="android:windowAnimationStyle">@null</item>
-
-        <!-- Status bar transparan -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="colorPrimary">#FFFFFF</item>
+        <item name="colorAccent">#FFFFFF</item>
+        <item name="tabTextAppearance">@style/TabTextSmall</item>
+    </style>
+
+    <style name="TabTextSmall">
+        <item name="android:textSize">12sp</item>
     </style>
 </resources>
