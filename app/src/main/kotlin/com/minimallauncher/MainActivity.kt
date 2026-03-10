@@ -6,19 +6,21 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.minimallauncher.databinding.ActivityMainBinding
+import java.util.concurrent.Executors
 
 class MainActivity : Activity() {
 
@@ -27,7 +29,6 @@ class MainActivity : Activity() {
     
     // Memory efficient cache of loaded apps (just strings)
     private var allApps = listOf<AppInfo>()
-    private var currentSelectedLetter: Char = 'A'
 
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -45,7 +46,6 @@ class MainActivity : Activity() {
         setContentView(binding.root)
 
         setupRecyclerView()
-        setupAlphabetStrip()
         loadApps()
         registerPackageReceiver()
     }
@@ -53,17 +53,10 @@ class MainActivity : Activity() {
     private fun setupRecyclerView() {
         appAdapter = AppAdapter { appInfo -> launchApp(appInfo) }
 
-        val displayMetrics = resources.displayMetrics
-        val paddingPx = 32 * displayMetrics.density
-        val availableWidthPx = displayMetrics.widthPixels - paddingPx
-        val itemWidthPx = 80 * displayMetrics.density
-        val spanCount = (availableWidthPx / itemWidthPx).toInt().coerceAtLeast(1)
-
         binding.rvApps.apply {
-            layoutManager = GridLayoutManager(
+            layoutManager = LinearLayoutManager(
                 this@MainActivity,
-                spanCount,
-                GridLayoutManager.VERTICAL,
+                LinearLayoutManager.HORIZONTAL,
                 false
             )
             adapter = appAdapter
@@ -74,29 +67,9 @@ class MainActivity : Activity() {
             
             setHasFixedSize(true)
             itemAnimator = null
-            // No touch scrolling
-            setOnTouchListener { _, _ -> true }
-        }
-    }
-
-    private fun setupAlphabetStrip() {
-        binding.alphabetStrip.onLetterSelected = { letter ->
-            currentSelectedLetter = letter
-            filterAppsByLetter(letter)
-        }
-    }
-
-    private fun filterAppsByLetter(letter: Char) {
-        val filtered = if (letter == '#') {
-            // Numbers or symbols
-            allApps.filter { it.label.firstOrNull()?.isLetter() == false }
-        } else {
-            // Matching letters (ignore case)
-            allApps.filter { it.label.firstOrNull()?.equals(letter, ignoreCase = true) == true }
-        }
-        appAdapter.setApps(filtered)
-        if (filtered.isNotEmpty() && binding.rvApps.adapter != null) {
-            binding.rvApps.scrollToPosition(0)
+            
+            // Apply snap helper for smooth snapping
+            LinearSnapHelper().attachToRecyclerView(this)
         }
     }
 
@@ -121,18 +94,8 @@ class MainActivity : Activity() {
                 )
             }
             .sortedBy { it.label.lowercase() }
-            
-        val distinctLetters = allApps.mapNotNull { it.label.firstOrNull()?.uppercaseChar() }
-            .map { if (it.isLetter()) it else '#' }
-            .distinct()
-            .sorted()
 
-        binding.alphabetStrip.setLetters(distinctLetters)
-
-        // Default: Show 'A' or the closest first letter items or clear if none
-        val firstLetter = allApps.firstOrNull()?.label?.firstOrNull()?.uppercaseChar() ?: 'A'
-        currentSelectedLetter = firstLetter
-        filterAppsByLetter(firstLetter)
+        appAdapter.setApps(allApps)
     }
 
     private fun launchApp(appInfo: AppInfo) {
@@ -169,7 +132,6 @@ class MainActivity : Activity() {
         }
         if (binding.rvApps.adapter == null) {
             setupRecyclerView()
-            setupAlphabetStrip()
         }
     }
 
@@ -197,6 +159,7 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        appAdapter.shutdown() // Shutdown executors
         try { unregisterReceiver(packageReceiver) } catch (_: Exception) {}
     }
 
@@ -220,11 +183,18 @@ class AppAdapter(
 ) : RecyclerView.Adapter<AppAdapter.AppViewHolder>() {
 
     private val apps = mutableListOf<AppInfo>()
+    // Fixed thread pool for smooth asynchronous loading
+    private val executor = Executors.newFixedThreadPool(4)
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     fun setApps(newApps: List<AppInfo>) {
         apps.clear()
         apps.addAll(newApps)
         notifyDataSetChanged()
+    }
+
+    fun shutdown() {
+        executor.shutdownNow()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
@@ -234,7 +204,8 @@ class AppAdapter(
     }
 
     override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
-        holder.bind(apps[position])
+        val appInfo = apps[position]
+        holder.bind(appInfo, executor, mainHandler)
     }
 
     override fun onViewRecycled(holder: AppViewHolder) {
@@ -251,62 +222,43 @@ class AppAdapter(
 
         private val ivIcon: ImageView = itemView.findViewById(R.id.iv_icon)
         private val tvLabel: TextView = itemView.findViewById(R.id.tv_label)
+        
+        // Track the current package to ensure async loads match the current view state
+        private var currentPackageName: String? = null
 
-        fun bind(appInfo: AppInfo) {
-            try {
-                val icon = itemView.context.packageManager.getApplicationIcon(appInfo.packageName)
-                ivIcon.setImageDrawable(icon)
-            } catch (e: Exception) {
-                ivIcon.setImageDrawable(null)
-            }
+        fun bind(appInfo: AppInfo, executor: java.util.concurrent.ExecutorService, mainHandler: Handler) {
+            currentPackageName = appInfo.packageName
             tvLabel.text = appInfo.label
+            
+            // Clear previous icon to immediately appear clean while loading asynchronously
+            ivIcon.setImageDrawable(null)
+
+            executor.execute {
+                try {
+                    val pm = itemView.context.packageManager
+                    val icon = pm.getApplicationIcon(appInfo.packageName)
+                    
+                    mainHandler.post {
+                        // Only set if this ViewHolder hasn't been recycled for another app
+                        if (currentPackageName == appInfo.packageName) {
+                            ivIcon.setImageDrawable(icon)
+                        }
+                    }
+                } catch (e: Exception) {
+                    mainHandler.post {
+                        if (currentPackageName == appInfo.packageName) {
+                            ivIcon.setImageDrawable(null)
+                        }
+                    }
+                }
+            }
+
             itemView.setOnClickListener { onAppClick(appInfo) }
         }
 
         fun recycle() {
+            currentPackageName = null
             ivIcon.setImageDrawable(null)
         }
-    }
-}
-
-// ── Snap Scroll Listener ──────────────────────────────────────────────────────
-
-class SnapScrollListener : RecyclerView.OnScrollListener() {
-
-    private var isScrolling = false
-
-    override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-        super.onScrollStateChanged(recyclerView, newState)
-        when (newState) {
-            RecyclerView.SCROLL_STATE_DRAGGING -> isScrolling = true
-            RecyclerView.SCROLL_STATE_IDLE -> {
-                if (isScrolling) {
-                    isScrolling = false
-                    snapToNearest(recyclerView)
-                }
-            }
-        }
-    }
-
-    private fun snapToNearest(recyclerView: RecyclerView) {
-        val lm = recyclerView.layoutManager as? LinearLayoutManager ?: return
-        val first = lm.findFirstVisibleItemPosition()
-        val last = lm.findLastVisibleItemPosition()
-        if (first == RecyclerView.NO_POSITION) return
-
-        var bestPos = first
-        var bestVis = 0
-
-        for (i in first..last) {
-            val child = lm.findViewByPosition(i) ?: continue
-            val rect = Rect()
-            child.getGlobalVisibleRect(rect)
-            val vis = rect.width()
-            if (vis > bestVis) {
-                bestVis = vis
-                bestPos = i
-            }
-        }
-        recyclerView.smoothScrollToPosition(bestPos)
     }
 }
