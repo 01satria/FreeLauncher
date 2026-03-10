@@ -283,7 +283,7 @@ class CategoryAdapter(
                 innerBox.layoutParams.height = (48 * itemView.context.resources.displayMetrics.density).toInt()
                 
                 val tv = tinyIcon.findViewById<TextView>(R.id.tv_label)
-                tv.textSize = 8sp
+                tv.textSize = 8f
                 val shortName = if (app.label.length > 5) app.label.take(5) else app.label
                 tv.text = shortName
                 
