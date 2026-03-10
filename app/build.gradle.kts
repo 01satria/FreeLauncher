@@ -41,9 +41,35 @@ android {
         buildConfig = false
     }
 
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            isUniversalApk = true
+        }
+    }
+
     packaging {
         resources {
             excludes += setOf("META-INF/**.kotlin_module", "kotlin/**")
+        }
+    }
+}
+
+val abiCodes = mapOf("armeabi-v7a" to 1, "arm64-v8a" to 2, "x86" to 3, "x86_64" to 4)
+
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            val abi = output.filters.find { 
+                it.filterType == com.android.build.api.variant.FilterConfiguration.FilterType.ABI 
+            }?.identifier
+            
+            if (abi != null) {
+                val baseVersionCode = android.defaultConfig.versionCode ?: 1
+                output.versionCode.set(baseVersionCode * 1000 + (abiCodes[abi] ?: 0))
+            }
         }
     }
 }
