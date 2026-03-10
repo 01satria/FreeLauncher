@@ -1,17 +1,21 @@
-<FrameLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="8dp">
+    android:padding="10dp"
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
     <LinearLayout
-        android:layout_width="64dp"
-        android:layout_height="64dp"
+        android:id="@+id/ll_icon_container"
+        android:layout_width="68dp"
+        android:layout_height="68dp"
         android:background="@drawable/bg_text_icon"
         android:gravity="center"
         android:orientation="vertical"
         android:clickable="true"
-        android:focusable="true">
+        android:focusable="true"
+        android:stateListAnimator="@android:animator/fade_in">
 
         <TextView
             android:id="@+id/tv_label"
@@ -19,15 +23,12 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="#FFFFFFFF"
+            android:textColor="#E6FFFFFF"
             android:textSize="12sp"
             android:textStyle="bold"
             android:textAllCaps="true"
-            android:shadowColor="#80000000"
-            android:shadowDx="0"
-            android:shadowDy="1"
-            android:shadowRadius="2" />
+            android:letterSpacing="0.05" />
 
     </LinearLayout>
 
-</FrameLayout>
+</LinearLayout>

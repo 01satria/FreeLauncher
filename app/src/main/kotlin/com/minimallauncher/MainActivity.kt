@@ -25,11 +25,14 @@ import com.minimallauncher.databinding.ActivityMainBinding
 class MainActivity : Activity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var appAdapter: AppAdapter
-    private lateinit var categoryAdapter: CategoryAdapter
+    private val appAdapter = AppAdapter { appInfo, view -> launchApp(appInfo, view) }
+    private val categoryAdapter = CategoryAdapter { category -> showCategory(category) }
     private var allApps = listOf<AppInfo>()
     private var categorizedApps = listOf<CategoryInfo>()
     
+    // Store reference to the apps RecyclerView for state management
+    private var appsRecyclerView: RecyclerView? = null
+
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             loadApps()
@@ -92,13 +95,8 @@ class MainActivity : Activity() {
         categorizedApps = groups.map { (name, apps) -> CategoryInfo(name, apps) }
             .sortedBy { it.name }
 
-        findViewById<RecyclerView>(R.id.rv_apps_vertical)?.let {
-            if (it.adapter is CategoryAdapter) {
-                (it.adapter as CategoryAdapter).setCategories(categorizedApps)
-            } else if (it.adapter is AppAdapter) {
-                (it.adapter as AppAdapter).setApps(allApps)
-            }
-        }
+        categoryAdapter.setCategories(categorizedApps)
+        appAdapter.setApps(allApps)
     }
 
     private fun getCategoryName(category: Int): String {
@@ -119,16 +117,35 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun launchApp(appInfo: AppInfo) {
-        try {
-            val intent = packageManager.getLaunchIntentForPackage(appInfo.packageName)
-            intent?.apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-                startActivity(this)
-            }
-        } catch (e: Exception) {
-            loadApps()
+    private fun showCategory(category: CategoryInfo) {
+        appsRecyclerView?.apply {
+            layoutManager = GridLayoutManager(context, 4)
+            adapter = appAdapter
+            appAdapter.setApps(category.apps)
         }
+    }
+
+    private fun launchApp(appInfo: AppInfo, view: View) {
+        // Visual feedback: simple scale up animation
+        view.animate()
+            .scaleX(1.1f)
+            .scaleY(1.1f)
+            .setDuration(100)
+            .withEndAction {
+                view.animate().scaleX(1f).scaleY(1f).setDuration(100).start()
+                try {
+                    val intent = packageManager.getLaunchIntentForPackage(appInfo.packageName)
+                    intent?.apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+                        startActivity(this)
+                        // Smooth transition
+                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                    }
+                } catch (e: Exception) {
+                    loadApps()
+                }
+            }
+            .start()
     }
 
     private fun registerReceivers() {
@@ -152,12 +169,11 @@ class MainActivity : Activity() {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        val rv = findViewById<RecyclerView>(R.id.rv_apps_vertical)
         if (binding.viewPager.currentItem != 0) {
-            if (rv != null && rv.adapter is AppAdapter) {
-                // Return to categories from folder or search
-                rv.layoutManager = GridLayoutManager(this, 2)
-                rv.adapter = categoryAdapter
+            if (appsRecyclerView?.adapter is AppAdapter) {
+                // Return to categories
+                appsRecyclerView?.layoutManager = GridLayoutManager(this, 2)
+                appsRecyclerView?.adapter = categoryAdapter
             } else {
                 binding.viewPager.currentItem = 0
             }
@@ -178,39 +194,30 @@ class MainActivity : Activity() {
             if (position == 1) {
                 val rv = holder.itemView.findViewById<RecyclerView>(R.id.rv_apps_vertical)
                 val etSearch = holder.itemView.findViewById<EditText>(R.id.et_search)
-                
-                appAdapter = AppAdapter { appInfo -> launchApp(appInfo) }
-                categoryAdapter = CategoryAdapter { category ->
-                    // Show apps in this category
-                    rv.layoutManager = GridLayoutManager(holder.itemView.context, 4)
-                    rv.adapter = appAdapter
-                    appAdapter.setApps(category.apps)
-                }
+                appsRecyclerView = rv
 
                 rv.layoutManager = GridLayoutManager(holder.itemView.context, 2)
                 rv.adapter = categoryAdapter
-                categoryAdapter.setCategories(categorizedApps)
+                rv.setHasFixedSize(true)
 
                 etSearch.addTextChangedListener(object : TextWatcher {
                     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                         val query = s?.toString() ?: ""
                         if (query.isEmpty()) {
-                            // Back to categories if search is cleared
                             rv.layoutManager = GridLayoutManager(holder.itemView.context, 2)
                             rv.adapter = categoryAdapter
-                            categoryAdapter.setCategories(categorizedApps)
                             return
                         }
                         
-                        // Flat search mode
                         rv.layoutManager = GridLayoutManager(holder.itemView.context, 4)
                         rv.adapter = appAdapter
                         val filtered = allApps.filter { it.label.contains(query, ignoreCase = true) }
                         appAdapter.setApps(filtered)
                         
                         if (filtered.size == 1) {
-                            launchApp(filtered[0])
+                            // Non-animated launch for search auto-match to stay snappy
+                            launchApp(filtered[0], rv) 
                         }
                     }
                     override fun afterTextChanged(s: Editable?) {}
@@ -298,7 +305,7 @@ class CategoryAdapter(
 // ── RecyclerView Adapter for Apps ─────────────────────────────────────────────
 
 class AppAdapter(
-    private val onAppClick: (AppInfo) -> Unit
+    private val onAppClick: (AppInfo, View) -> Unit
 ) : RecyclerView.Adapter<AppAdapter.AppViewHolder>() {
 
     private val apps = mutableListOf<AppInfo>()
@@ -322,9 +329,10 @@ class AppAdapter(
 
     class AppViewHolder(
         itemView: View,
-        private val onAppClick: (AppInfo) -> Unit
+        private val onAppClick: (AppInfo, View) -> Unit
     ) : RecyclerView.ViewHolder(itemView) {
         private val tvLabel: TextView = itemView.findViewById(R.id.tv_label)
+        private val container: View = itemView.findViewById(R.id.ll_icon_container)
 
         fun bind(appInfo: AppInfo) {
             val shortName = if (appInfo.label.length > 5) {
@@ -333,7 +341,7 @@ class AppAdapter(
                 appInfo.label
             }
             tvLabel.text = shortName
-            itemView.setOnClickListener { onAppClick(appInfo) }
+            container.setOnClickListener { onAppClick(appInfo, container) }
         }
     }
 }
