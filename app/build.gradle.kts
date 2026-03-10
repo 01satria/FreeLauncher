@@ -11,8 +11,8 @@ android {
         applicationId = "com.flowlauncher"
         minSdk = 23
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.1.1"
     }
 
     signingConfigs {
@@ -30,8 +30,8 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -60,12 +60,6 @@ android {
             reset()
             include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
             isUniversalApk = true
-        }
-    }
-
-    packaging {
-        resources {
-            excludes += setOf("META-INF/**.kotlin_module", "kotlin/**")
         }
     }
 }
