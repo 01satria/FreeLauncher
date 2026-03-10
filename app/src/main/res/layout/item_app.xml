@@ -1,34 +1,22 @@
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="10dp"
-    android:clipChildren="false"
-    android:clipToPadding="false">
+    android:paddingHorizontal="24dp"
+    android:paddingVertical="12dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?android:attr/selectableItemBackground">
 
-    <LinearLayout
-        android:id="@+id/ll_icon_container"
-        android:layout_width="68dp"
-        android:layout_height="68dp"
-        android:background="@drawable/bg_text_icon"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:clickable="true"
-        android:focusable="true"
-        android:stateListAnimator="@android:animator/fade_in">
+    <TextView
+        android:id="@+id/tv_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#E6FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        android:textAllCaps="false"
+        android:ellipsize="end"
+        android:maxLines="1" />
 
-        <TextView
-            android:id="@+id/tv_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="#E6FFFFFF"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:textAllCaps="true"
-            android:letterSpacing="0.05" />
-
-    </LinearLayout>
-
-</LinearLayout>
+</FrameLayout>
