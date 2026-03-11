@@ -82,6 +82,21 @@ class Prefs(context: Context) {
             prefs.edit().putString("todos_v2", arr.toString()).apply()
         }
 
+    // ── Pinned calendar events ────────────────────────────────────────────────
+    var pinnedEventIds: Set<Long>
+        get() {
+            val json = prefs.getString("pinned_events", null) ?: return emptySet()
+            return try {
+                val arr = org.json.JSONArray(json)
+                (0 until arr.length()).map { arr.getLong(it) }.toSet()
+            } catch (_: Exception) { emptySet() }
+        }
+        set(ids) {
+            val arr = org.json.JSONArray()
+            ids.forEach { arr.put(it) }
+            prefs.edit().putString("pinned_events", arr.toString()).apply()
+        }
+
     // ── Transparent background ────────────────────────────────────────────────
     var transparentBg: Boolean
         get() = prefs.getBoolean("transparent_bg", false)

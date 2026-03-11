@@ -56,9 +56,10 @@ object CalendarHelper {
 
     /**
      * Fetch upcoming events within the next 30 days, sorted by start time.
+     * If [query] is non-blank, filters by title (case-insensitive LIKE).
      * Returns empty list if permission not granted.
      */
-    suspend fun getUpcomingEvents(context: Context, limit: Int = 20): List<EventItem> =
+    suspend fun getUpcomingEvents(context: Context, limit: Int = 20, query: String = ""): List<EventItem> =
         withContext(Dispatchers.IO) {
             if (!hasPermission(context)) return@withContext emptyList()
             val events = mutableListOf<EventItem>()
@@ -74,32 +75,42 @@ object CalendarHelper {
                 CalendarContract.Events.CALENDAR_COLOR
             )
 
+            val selection = buildString {
+                append("${CalendarContract.Events.DTSTART} >= ? AND ")
+                append("${CalendarContract.Events.DTSTART} <= ? AND ")
+                append("${CalendarContract.Events.DELETED} = 0")
+                if (query.isNotBlank()) {
+                    append(" AND ${CalendarContract.Events.TITLE} LIKE ?")
+                }
+            }
+            val selectionArgs = if (query.isNotBlank())
+                arrayOf(now.toString(), rangeEnd.toString(), "%$query%")
+            else
+                arrayOf(now.toString(), rangeEnd.toString())
+
             try {
                 context.contentResolver.query(
                     CalendarContract.Events.CONTENT_URI,
                     projection,
-                    // upcoming & not deleted
-                    "${CalendarContract.Events.DTSTART} >= ? AND " +
-                    "${CalendarContract.Events.DTSTART} <= ? AND " +
-                    "${CalendarContract.Events.DELETED} = 0",
-                    arrayOf(now.toString(), rangeEnd.toString()),
+                    selection,
+                    selectionArgs,
                     "${CalendarContract.Events.DTSTART} ASC"
                 )?.use { cursor ->
-                    val iId    = cursor.getColumnIndex(CalendarContract.Events._ID)
-                    val iTitle = cursor.getColumnIndex(CalendarContract.Events.TITLE)
-                    val iStart = cursor.getColumnIndex(CalendarContract.Events.DTSTART)
-                    val iEnd   = cursor.getColumnIndex(CalendarContract.Events.DTEND)
+                    val iId     = cursor.getColumnIndex(CalendarContract.Events._ID)
+                    val iTitle  = cursor.getColumnIndex(CalendarContract.Events.TITLE)
+                    val iStart  = cursor.getColumnIndex(CalendarContract.Events.DTSTART)
+                    val iEnd    = cursor.getColumnIndex(CalendarContract.Events.DTEND)
                     val iAllDay = cursor.getColumnIndex(CalendarContract.Events.ALL_DAY)
-                    val iColor = cursor.getColumnIndex(CalendarContract.Events.CALENDAR_COLOR)
+                    val iColor  = cursor.getColumnIndex(CalendarContract.Events.CALENDAR_COLOR)
                     while (cursor.moveToNext() && events.size < limit) {
                         val title = cursor.getString(iTitle)?.takeIf { it.isNotBlank() }
                             ?: continue
                         events += EventItem(
-                            id           = cursor.getLong(iId),
-                            title        = title,
-                            startMs      = cursor.getLong(iStart),
-                            endMs        = cursor.getLong(iEnd).let { if (it == 0L) cursor.getLong(iStart) + 3_600_000L else it },
-                            allDay       = cursor.getInt(iAllDay) == 1,
+                            id            = cursor.getLong(iId),
+                            title         = title,
+                            startMs       = cursor.getLong(iStart),
+                            endMs         = cursor.getLong(iEnd).let { if (it == 0L) cursor.getLong(iStart) + 3_600_000L else it },
+                            allDay        = cursor.getInt(iAllDay) == 1,
                             calendarColor = cursor.getInt(iColor).let { if (it == 0) 0xFF4285F4.toInt() else it }
                         )
                     }

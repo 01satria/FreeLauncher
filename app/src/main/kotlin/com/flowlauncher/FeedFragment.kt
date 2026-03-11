@@ -4,6 +4,8 @@ import android.Manifest
 import android.app.AlertDialog
 import android.graphics.Color
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,10 +26,23 @@ class FeedFragment : Fragment() {
 
     private lateinit var prefs: Prefs
     private lateinit var todoAdapter: TodoAdapter
-    private val eventAdapter = FeedEventAdapter()
+
+    // Main events list (search results when query active, full list otherwise)
+    private val eventAdapter = FeedEventAdapter(
+        showPinButton = false,
+        onPin = { event -> togglePin(event) }
+    )
+
+    // Pinned events list — shown only when events card is COLLAPSED
+    private val pinnedAdapter = FeedEventAdapter(
+        showPinButton = false,
+        onPin = null
+    )
 
     private var tickJob: Job? = null
+    private var searchJob: Job? = null
     private var eventsExpanded = true
+    private var currentQuery = ""
 
     private val calendarPermLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -66,10 +81,12 @@ class FeedFragment : Fragment() {
     override fun onPause() {
         super.onPause()
         tickJob?.cancel()
+        searchJob?.cancel()
     }
 
     override fun onDestroyView() {
         tickJob?.cancel()
+        searchJob?.cancel()
         _binding = null
         super.onDestroyView()
     }
@@ -98,6 +115,7 @@ class FeedFragment : Fragment() {
     // ── Events ────────────────────────────────────────────────────────────────
 
     private fun setupEvents() {
+        // Main events RecyclerView
         binding.rvEvents.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = eventAdapter
@@ -106,14 +124,47 @@ class FeedFragment : Fragment() {
             itemAnimator = null
             isNestedScrollingEnabled = false
         }
+
+        // Pinned events RecyclerView (shown only when collapsed)
+        binding.rvPinnedEvents.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = pinnedAdapter
+            setHasFixedSize(false)
+            overScrollMode = View.OVER_SCROLL_NEVER
+            itemAnimator = null
+            isNestedScrollingEnabled = false
+        }
+
         binding.btnGrantCalendar.setOnClickListener {
             calendarPermLauncher.launch(Manifest.permission.READ_CALENDAR)
         }
 
-        // Collapse/expand toggle
+        // Collapse / expand toggle
         binding.layoutEventsHeader.setOnClickListener {
             eventsExpanded = !eventsExpanded
             updateEventsCollapse()
+        }
+
+        // Search bar
+        binding.etEventSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
+            override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) {
+                val query = s?.toString().orEmpty()
+                binding.btnClearEventSearch.visibility =
+                    if (query.isNotBlank()) View.VISIBLE else View.GONE
+                searchJob?.cancel()
+                searchJob = viewLifecycleOwner.lifecycleScope.launch {
+                    delay(300)
+                    currentQuery = query
+                    refreshEvents(query = query)
+                }
+            }
+        })
+
+        binding.btnClearEventSearch.setOnClickListener {
+            binding.etEventSearch.setText("")
+            currentQuery = ""
         }
 
         refreshEvents()
@@ -124,36 +175,85 @@ class FeedFragment : Fragment() {
         if (eventsExpanded) {
             b.layoutEventsContent.visibility = View.VISIBLE
             b.tvEventsChevron.text = "▲"
+            b.rvPinnedEvents.visibility = View.GONE
         } else {
             b.layoutEventsContent.visibility = View.GONE
             b.tvEventsChevron.text = "▼"
+            // Show pinned events only when collapsed
+            refreshPinnedEvents()
         }
     }
 
-    fun refreshEvents() {
+    fun refreshEvents(query: String = currentQuery) {
         val b = _binding ?: return
         if (!CalendarHelper.hasPermission(requireContext())) {
             b.layoutCalendarPermission.visibility = View.VISIBLE
             b.rvEvents.visibility = View.GONE
             b.tvEventsEmpty.visibility = View.GONE
+            eventAdapter.setShowPinButton(false)
             return
         }
         b.layoutCalendarPermission.visibility = View.GONE
 
+        // Show pin button only when there's an active search query
+        eventAdapter.setShowPinButton(query.isNotBlank())
+
         viewLifecycleOwner.lifecycleScope.launch {
-            val events = CalendarHelper.getUpcomingEvents(requireContext())
+            val events = CalendarHelper.getUpcomingEvents(requireContext(), query = query)
             val bv = _binding ?: return@launch
             when {
                 events.isEmpty() -> {
                     bv.rvEvents.visibility = View.GONE
                     bv.tvEventsEmpty.visibility = View.VISIBLE
+                    bv.tvEventsEmpty.text = if (query.isNotBlank())
+                        "No events matching \"$query\"."
+                    else
+                        "No upcoming events in next 30 days."
                 }
                 else -> {
                     bv.tvEventsEmpty.visibility = View.GONE
                     bv.rvEvents.visibility = View.VISIBLE
+                    eventAdapter.updatePinnedIds(prefs.pinnedEventIds)
                     eventAdapter.setEvents(events)
                 }
             }
+        }
+    }
+
+    // ── Pin logic ─────────────────────────────────────────────────────────────
+
+    private fun togglePin(event: EventItem) {
+        val pinned = prefs.pinnedEventIds.toMutableSet()
+        if (event.id in pinned) pinned.remove(event.id) else pinned.add(event.id)
+        prefs.pinnedEventIds = pinned
+        // Update pin button state in main list
+        eventAdapter.updatePinnedIds(pinned)
+        // Refresh pinned strip if currently collapsed
+        if (!eventsExpanded) refreshPinnedEvents()
+    }
+
+    private fun refreshPinnedEvents() {
+        val b = _binding ?: return
+        if (!eventsExpanded && CalendarHelper.hasPermission(requireContext())) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                val pinnedIds = prefs.pinnedEventIds
+                if (pinnedIds.isEmpty()) {
+                    b.rvPinnedEvents.visibility = View.GONE
+                    return@launch
+                }
+                // Fetch all events then filter by pinned IDs
+                val all = CalendarHelper.getUpcomingEvents(requireContext(), limit = 100)
+                val pinned = all.filter { it.id in pinnedIds }
+                val bv = _binding ?: return@launch
+                if (pinned.isEmpty()) {
+                    bv.rvPinnedEvents.visibility = View.GONE
+                } else {
+                    bv.rvPinnedEvents.visibility = View.VISIBLE
+                    pinnedAdapter.setEvents(pinned)
+                }
+            }
+        } else {
+            b.rvPinnedEvents.visibility = View.GONE
         }
     }
 
@@ -273,6 +373,7 @@ class FeedFragment : Fragment() {
                 delay(30_000L)
                 if (_binding != null && CalendarHelper.hasPermission(requireContext())) {
                     eventAdapter.notifyDataSetChanged()
+                    if (!eventsExpanded) pinnedAdapter.notifyDataSetChanged()
                 }
             }
         }

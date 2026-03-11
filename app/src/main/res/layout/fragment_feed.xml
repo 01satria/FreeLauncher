@@ -85,6 +85,15 @@
                     android:textSize="12sp" />
             </LinearLayout>
 
+            <!-- Pinned events — shown ONLY when card is collapsed -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvPinnedEvents"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:overScrollMode="never"
+                android:visibility="gone" />
+
             <!-- Collapsible content -->
             <LinearLayout
                 android:id="@+id/layoutEventsContent"
@@ -127,6 +136,49 @@
                         android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:background="@drawable/bg_btn_outline" />
+                </LinearLayout>
+
+                <!-- Search bar -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_search"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="8dp"
+                    android:layout_marginBottom="10dp">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_search"
+                        android:layout_marginEnd="8dp"
+                        android:contentDescription="Search" />
+
+                    <EditText
+                        android:id="@+id/etEventSearch"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:hint="Search events..."
+                        android:textColorHint="#55FFFFFF"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:background="@null"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:imeOptions="actionSearch|flagNoFullscreen"
+                        android:singleLine="true" />
+
+                    <ImageButton
+                        android:id="@+id/btnClearEventSearch"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@drawable/ic_close_small"
+                        android:background="?android:attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Clear search"
+                        android:visibility="gone" />
                 </LinearLayout>
 
                 <!-- No events message -->
