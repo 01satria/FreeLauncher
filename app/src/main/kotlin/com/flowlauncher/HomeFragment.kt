@@ -9,6 +9,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -60,6 +62,29 @@ class HomeFragment : Fragment() {
         applyTheme()
         setupClockFormat()
         showCachedWeather()
+        applyWindowInsets()
+    }
+
+    private fun applyWindowInsets() {
+        val density = resources.displayMetrics.density
+        fun Int.dp() = (this * density).toInt()
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            val navBar    = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+
+            // Content area: top = statusBar + 16dp, bottom = navBar + BottomBar height + 16dp
+            binding.homeContentLayout.setPadding(
+                28.dp(), statusBar + 16.dp(), 28.dp(), navBar + 72.dp()
+            )
+
+            // Bottom action bar: float di atas navigation bar
+            binding.bottomBar.setPadding(
+                28.dp(), 12.dp(), 28.dp(), navBar + 8.dp()
+            )
+            insets
+        }
+        ViewCompat.requestApplyInsets(binding.root)
     }
 
     override fun onResume() {

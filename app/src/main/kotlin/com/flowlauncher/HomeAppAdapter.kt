@@ -21,13 +21,20 @@ class HomeAppAdapter(
     private val apps = mutableListOf<AppInfo>()
 
     fun setApps(newApps: List<AppInfo>) {
-        val diff = DiffUtil.calculateDiff(AppDiffCallback(apps, newApps))
+        val oldSnapshot = apps.toList()          // snapshot sebelum mutasi
+        val diff = DiffUtil.calculateDiff(AppDiffCallback(oldSnapshot, newApps))
         apps.clear()
         apps.addAll(newApps)
         diff.dispatchUpdatesTo(this)
     }
 
-    override fun getItemId(pos: Int) = apps[pos].packageName.hashCode().toLong()
+    override fun getItemId(pos: Int): Long {
+        // Gunakan kombinasi hash yang lebih robust untuk menghindari collision
+        val pkg = apps[pos].packageName
+        var h = 0L
+        for (ch in pkg) h = h * 31 + ch.code.toLong()
+        return h
+    }
     override fun getItemCount() = apps.size
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
@@ -49,9 +56,10 @@ class HomeAppAdapter(
             label.gravity = Gravity.START
 
             // Fetch from LruCache — O(1), no I/O, no Drawable allocation.
+            // Reset dulu sebelum set — cegah icon lama flash saat view di-recycle
+            icon.setImageBitmap(null)
             val bmp = AppRepository.getIcon(app.packageName)
             if (bmp != null) icon.setImageBitmap(bmp)
-            else             icon.setImageDrawable(null)
 
             if (showScreenTime && app.screenTimeMinutes > 0) {
                 layoutST.visibility = View.VISIBLE

@@ -17,6 +17,8 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
@@ -72,6 +74,7 @@ class MainActivity : AppCompatActivity() {
 
         setupViewPager()
         setupDrawer()
+        applyWindowInsets()
         registerReceivers()
 
         // Pre-load app list so drawer is instant on first open
@@ -302,6 +305,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ── Receivers ─────────────────────────────────────────────────────────────
+
+    private fun applyWindowInsets() {
+        val density = resources.displayMetrics.density
+        fun Int.dp() = (this * density).toInt()
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.mainRoot) { _, insets ->
+            val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            val navBar    = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+
+            // Drawer header: top padding = status bar + 16dp
+            binding.drawerHeader.setPadding(
+                24.dp(), statusBar + 16.dp(), 20.dp(), 8.dp()
+            )
+            // Drawer list: bottom padding = nav bar
+            binding.rvDrawerApps.setPadding(0, 0, 0, navBar + 16.dp())
+
+            insets
+        }
+        ViewCompat.requestApplyInsets(binding.mainRoot)
+    }
 
     private fun registerReceivers() {
         val filter = IntentFilter().apply {

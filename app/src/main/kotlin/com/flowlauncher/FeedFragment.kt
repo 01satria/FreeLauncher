@@ -9,6 +9,8 @@ import android.text.TextWatcher
 import android.view.*
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -72,6 +74,23 @@ class FeedFragment : Fragment() {
         b.btnFeedSettings.setOnClickListener {
             startActivity(android.content.Intent(requireContext(), SettingsActivity::class.java))
         }
+        applyFeedWindowInsets()
+    }
+
+    private fun applyFeedWindowInsets() {
+        val density = resources.displayMetrics.density
+        fun Int.dp() = (this * density).toInt()
+
+        ViewCompat.setOnApplyWindowInsetsListener(b.root) { _, insets ->
+            val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            val navBar    = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+
+            b.feedContentLayout.setPadding(
+                20.dp(), statusBar + 16.dp(), 20.dp(), navBar + 32.dp()
+            )
+            insets
+        }
+        ViewCompat.requestApplyInsets(b.root)
     }
 
     override fun onResume() {
