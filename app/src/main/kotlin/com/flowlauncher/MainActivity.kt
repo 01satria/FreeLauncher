@@ -59,10 +59,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
 
+        // Window flags HARUS diset sebelum setContentView
         window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
         window.setBackgroundDrawableResource(android.R.color.transparent)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.setDecorFitsSystemWindows(true)
+            window.setDecorFitsSystemWindows(false)
         }
         applySystemBarColors()
 
@@ -323,6 +324,7 @@ class MainActivity : AppCompatActivity() {
             drawerSheet.state != BottomSheetBehavior.STATE_HIDDEN -> closeDrawer()
             binding.viewPager.currentItem != PAGE_HOME ->
                 binding.viewPager.setCurrentItem(PAGE_HOME, true)
+            else -> super.onBackPressed()
         }
     }
 

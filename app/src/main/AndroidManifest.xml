@@ -69,6 +69,7 @@
             android:name=".FocusActivity"
             android:exported="false"
             android:screenOrientation="portrait"
+            android:theme="@style/Theme.FlowLauncher.Settings"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan"
             android:label="@string/focus_mode" />
 

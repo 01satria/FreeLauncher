@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!--
-        Uses Theme.MaterialComponents (AppCompat-based) because
-        FragmentActivity + Material components both require AppCompat heritage.
-    -->
     <style name="Theme.FlowLauncher" parent="Theme.MaterialComponents.NoActionBar">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowShowWallpaper">true</item>
@@ -22,14 +18,17 @@
         <item name="alertDialogTheme">@style/Theme.FlowLauncher.Dialog</item>
     </style>
 
-    <style name="Theme.FlowLauncher.Dialog" parent="Theme.MaterialComponents.Dialog">
+    <style name="Theme.FlowLauncher.Dialog" parent="Theme.MaterialComponents.Dialog.Alert">
         <item name="android:background">#1E1E1E</item>
         <item name="android:textColor">#FFFFFF</item>
         <item name="colorAccent">#FFFFFF</item>
+        <item name="colorPrimary">#FFFFFF</item>
     </style>
 
+    <!-- Settings dan Focus: solid background, tidak ada wallpaper -->
     <style name="Theme.FlowLauncher.Settings" parent="Theme.FlowLauncher">
         <item name="android:windowBackground">#000000</item>
+        <item name="android:windowShowWallpaper">false</item>
     </style>
 
 </resources>

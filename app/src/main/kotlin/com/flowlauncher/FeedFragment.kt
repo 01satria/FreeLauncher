@@ -34,9 +34,10 @@ class FeedFragment : Fragment() {
     private var currentQuery   = ""
 
     // Pre-allocated GradientDrawable for section cards (set once, color updated per theme)
-    private val sectionBg     = GradientDrawable().apply { cornerRadius = dpToPx(20f) }
-    private val sectionBg2    = GradientDrawable().apply { cornerRadius = dpToPx(20f) }
-    private val sectionBg3    = GradientDrawable().apply { cornerRadius = dpToPx(20f) }
+    // cornerRadius diset di onViewCreated setelah context tersedia — BUKAN di property init
+    private val sectionBg     = GradientDrawable()
+    private val sectionBg2    = GradientDrawable()
+    private val sectionBg3    = GradientDrawable()
 
     private val calendarPermLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -50,6 +51,12 @@ class FeedFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         prefs = Prefs(requireContext())
+
+        // Set cornerRadius setelah context tersedia (resources.displayMetrics sudah siap)
+        val r = dpToPx(20f)
+        sectionBg.cornerRadius  = r
+        sectionBg2.cornerRadius = r
+        sectionBg3.cornerRadius = r
 
         // Assign pre-allocated backgrounds so we only update color, never allocate
         b.sectionEvents.background    = sectionBg
@@ -70,7 +77,7 @@ class FeedFragment : Fragment() {
         super.onResume()
         prefs = Prefs(requireContext())
         applyTheme()
-        refreshTasks()
+        if (::todoAdapter.isInitialized) refreshTasks()
         refreshEvents()
         refreshScreenTime()
         startCountdownTicker()

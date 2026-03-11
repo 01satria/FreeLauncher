@@ -106,8 +106,8 @@ object AppRepository {
             val intent  = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) }
 
             @Suppress("DEPRECATION")
-            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                PackageManager.MATCH_DEFAULT_ONLY else 0
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                PackageManager.GET_META_DATA else 0
 
             val hidden     = prefs.hiddenPackages
             val favorites  = prefs.favoritePackages.toSet()

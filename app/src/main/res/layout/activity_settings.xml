@@ -61,9 +61,8 @@
             <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                 android:layout_weight="1" android:text="Theme"
                 android:textColor="#FFFFFF" android:textSize="16sp" />
-            <Spinner android:id="@+id/spinnerTheme"
-                android:layout_width="140dp" android:layout_height="wrap_content"
-                android:backgroundTint="#FFFFFF" />
+            <androidx.appcompat.widget.AppCompatSpinner android:id="@+id/spinnerTheme"
+                android:layout_width="140dp" android:layout_height="wrap_content" />
         </LinearLayout>
 
         <View android:layout_width="match_parent" android:layout_height="1dp"
@@ -78,9 +77,8 @@
             <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                 android:layout_weight="1" android:text="Text Alignment"
                 android:textColor="#FFFFFF" android:textSize="16sp" />
-            <Spinner android:id="@+id/spinnerAlignment"
-                android:layout_width="140dp" android:layout_height="wrap_content"
-                android:backgroundTint="#FFFFFF" />
+            <androidx.appcompat.widget.AppCompatSpinner android:id="@+id/spinnerAlignment"
+                android:layout_width="140dp" android:layout_height="wrap_content" />
         </LinearLayout>
 
 
