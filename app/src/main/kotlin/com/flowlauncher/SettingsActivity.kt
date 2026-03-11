@@ -183,60 +183,57 @@ class SettingsActivity : Activity() {
         }
     }
 
-    /**
-     * Gets current location using active request (not just cached).
-     * Tries GPS first, falls back to NETWORK. Times out after 15s.
-     * Uses suspendCancellableCoroutine so it works cleanly in coroutines.
-     */
     @Suppress("MissingPermission")
     private suspend fun getCurrentLocationSuspend(): Pair<Double, Double>? {
         val lm = getSystemService(LOCATION_SERVICE) as LocationManager
 
-        // Try cached first as instant fallback
-        val cached = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER)
-            .mapNotNull { p ->
-                try { if (lm.isProviderEnabled(p)) lm.getLastKnownLocation(p) else null }
-                catch (_: Exception) { null }
-            }
-            .maxByOrNull { it.time }
-        
-        // If cached is recent enough (< 10 min), use it
+        // Use cached if recent (< 10 min)
+        val cached = listOf(
+            LocationManager.GPS_PROVIDER,
+            LocationManager.NETWORK_PROVIDER,
+            LocationManager.PASSIVE_PROVIDER
+        ).mapNotNull { p ->
+            try { if (lm.isProviderEnabled(p)) lm.getLastKnownLocation(p) else null }
+            catch (_: Exception) { null }
+        }.maxByOrNull { it.time }
+
         if (cached != null && System.currentTimeMillis() - cached.time < 10 * 60 * 1000L) {
             return Pair(cached.latitude, cached.longitude)
         }
 
-        // Request a fresh location
         val providers = listOf(LocationManager.NETWORK_PROVIDER, LocationManager.GPS_PROVIDER)
             .filter { try { lm.isProviderEnabled(it) } catch (_: Exception) { false } }
 
         if (providers.isEmpty()) {
-            // Last resort: use stale cache
             return cached?.let { Pair(it.latitude, it.longitude) }
         }
 
-        return withTimeoutOrNull(15_000L) {
-            kotlinx.coroutines.suspendCancellableCoroutine { cont ->
-                val listener = object : android.location.LocationListener {
-                    override fun onLocationChanged(loc: android.location.Location) {
-                        lm.removeUpdates(this)
-                        if (cont.isActive) cont.resume(Pair(loc.latitude, loc.longitude))
-                    }
-                    @Deprecated("Deprecated")
-                    override fun onStatusChanged(p: String?, s: Int, e: android.os.Bundle?) {}
-                    override fun onProviderEnabled(p: String) {}
-                    override fun onProviderDisabled(p: String) {}
-                }
-                cont.invokeOnCancellation { lm.removeUpdates(listener) }
-                try {
-                    // Request from all available providers simultaneously
-                    providers.forEach { p ->
-                        lm.requestLocationUpdates(p, 0L, 0f, listener, android.os.Looper.getMainLooper())
-                    }
-                } catch (e: Exception) {
-                    if (cont.isActive) cont.resume(null)
-                }
+        // Channel-based — avoids suspendCancellableCoroutine resume signature issues
+        val channel = kotlinx.coroutines.channels.Channel<Pair<Double, Double>?>(1)
+
+        val listener = object : android.location.LocationListener {
+            override fun onLocationChanged(loc: android.location.Location) {
+                lm.removeUpdates(this)
+                channel.trySend(Pair(loc.latitude, loc.longitude))
             }
-        } ?: cached?.let { Pair(it.latitude, it.longitude) }  // timeout fallback
+            @Deprecated("Deprecated")
+            override fun onStatusChanged(p: String?, s: Int, e: android.os.Bundle?) {}
+            override fun onProviderEnabled(p: String) {}
+            override fun onProviderDisabled(p: String) {}
+        }
+
+        return try {
+            providers.forEach { p ->
+                lm.requestLocationUpdates(p, 0L, 0f, listener, android.os.Looper.getMainLooper())
+            }
+            withTimeoutOrNull(15_000L) { channel.receive() }
+                ?: cached?.let { Pair(it.latitude, it.longitude) }
+        } catch (_: Exception) {
+            cached?.let { Pair(it.latitude, it.longitude) }
+        } finally {
+            lm.removeUpdates(listener)
+            channel.close()
+        }
     }
 
     override fun onDestroy() {
