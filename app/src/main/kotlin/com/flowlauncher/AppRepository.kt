@@ -8,6 +8,7 @@ import android.os.Build
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Calendar
+import java.util.Collections
 
 /**
  * Singleton app cache — optimised for low RAM.
@@ -26,8 +27,10 @@ object AppRepository {
     @Volatile private var cacheValid = false
     @Volatile private var lastKnownDayOfYear: Int = -1
 
-    // Icons kept separately so they can be dropped without clearing the whole cache
-    private val iconMap = HashMap<String, Drawable?>()
+    // Icons kept separately so they can be dropped without clearing the whole cache.
+    // Using synchronizedMap to prevent concurrent read/write between the cheap-refresh
+    // and a full scan that might run concurrently on first launch.
+    private val iconMap = Collections.synchronizedMap(HashMap<String, Drawable?>())
 
     private fun currentDayOfYear(): Int = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
 
@@ -44,12 +47,19 @@ object AppRepository {
             forceResetIfNewDay()
 
             if (cacheValid && cachedApps.isNotEmpty()) {
-                // Cheap refresh: screen time + favorites only, reuse icons from map
+                // Cheap refresh: screen time + favorites only.
+                // BUG FIX: always reload icons that are missing from iconMap (e.g. after
+                // clearIcons() was called). Without this, every app.icon becomes null
+                // which causes the "icons disappear" glitch on homescreen and drawer.
                 val screenTime = ScreenTimeHelper.getTodayUsage(context)
                 val favorites  = prefs.favoritePackages.toSet()
+                val pm         = context.packageManager
                 cachedApps = cachedApps.map { app ->
+                    val icon = iconMap.getOrPut(app.packageName) {
+                        try { pm.getApplicationIcon(app.packageName) } catch (_: Exception) { null }
+                    }
                     app.copy(
-                        icon              = iconMap[app.packageName],
+                        icon              = icon,
                         screenTimeMinutes = screenTime[app.packageName] ?: 0L,
                         isFavorite        = app.packageName in favorites
                     )
@@ -112,10 +122,12 @@ object AppRepository {
         return order.mapNotNull { map[it] }
     }
 
-    /** Release icon bitmaps from memory — called when drawer closes. */
+    /** Release icon bitmaps from memory — called when drawer closes.
+     *  Also resets cacheValid so the next loadApps() call reloads icons
+     *  instead of silently returning null icons from the stale map. */
     fun clearIcons() {
         iconMap.clear()
-        // Keep metadata cache valid; icons reload on next loadApps call
+        cacheValid = false
     }
 
     fun invalidate() {

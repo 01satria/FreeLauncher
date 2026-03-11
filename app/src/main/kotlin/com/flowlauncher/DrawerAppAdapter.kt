@@ -92,11 +92,14 @@ class DrawerAppAdapter(
         fun bind(app: AppInfo) {
             label.text = app.label
 
+            // BUG FIX: always reset to VISIBLE before setting drawable so that a recycled
+            // ViewHolder that was previously INVISIBLE does not stay invisible when it
+            // gets reused for an app that does have an icon.
+            icon.visibility = View.VISIBLE
             if (app.icon != null) {
-                icon.visibility = View.VISIBLE
                 icon.setImageDrawable(app.icon)
             } else {
-                icon.visibility = View.INVISIBLE
+                icon.setImageDrawable(null)
             }
 
             if (app.screenTimeMinutes > 0) {

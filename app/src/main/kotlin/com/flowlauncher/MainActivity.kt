@@ -202,7 +202,12 @@ class MainActivity : FragmentActivity() {
         scope.launch {
             val fresh = try { AppRepository.loadApps(this@MainActivity, prefs) }
                         catch (_: Exception) { allDrawerApps }
-            if (fresh != allDrawerApps) {
+            // BUG FIX: only update adapter when fresh list has icons, or when the
+            // current list also has no icons — prevents a null-icon background refresh
+            // from wiping out icons that are already displayed.
+            val freshHasIcons = fresh.any { it.icon != null }
+            val currentHasIcons = allDrawerApps.any { it.icon != null }
+            if (fresh != allDrawerApps && (freshHasIcons || !currentHasIcons)) {
                 allDrawerApps = fresh
                 drawerAdapter.setApps(allDrawerApps)
             }

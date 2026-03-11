@@ -12,5 +12,8 @@ class AppDiffCallback(
     override fun areContentsTheSame(o: Int, n: Int) =
         old[o].label == new[n].label &&
         old[o].screenTimeMinutes == new[n].screenTimeMinutes &&
-        old[o].isFavorite == new[n].isFavorite
+        old[o].isFavorite == new[n].isFavorite &&
+        // BUG FIX: treat a null→non-null (or non-null→null) icon transition as a
+        // content change so the adapter rebinds the view and the icon reappears.
+        (old[o].icon != null) == (new[n].icon != null)
 }

@@ -8,6 +8,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -54,7 +55,7 @@ class HomeFragment : Fragment() {
         binding.btnDrawer.setOnClickListener { onOpenDrawer?.invoke() }
 
         // Weather: click to refresh
-        binding.tvWeather.setOnClickListener { fetchWeather() }
+        binding.tvWeather.setOnClickListener { fetchWeather(showToast = true) }
 
         applyTheme()
         setupClockFormat()
@@ -139,7 +140,7 @@ class HomeFragment : Fragment() {
         b.tvWeather.visibility = View.VISIBLE
     }
 
-    private fun fetchWeather() {
+    private fun fetchWeather(showToast: Boolean = false) {
         if (!prefs.hasWeatherLocation()) return
         viewLifecycleOwner.lifecycleScope.launch {
             val result = WeatherHelper.fetch(prefs.weatherLat, prefs.weatherLon)
@@ -152,6 +153,11 @@ class HomeFragment : Fragment() {
                 val temp = WeatherHelper.formatTemp(result.tempC)
                 b.tvWeather.text = "$icon $temp"
                 b.tvWeather.visibility = View.VISIBLE
+                if (showToast) {
+                    Toast.makeText(requireContext(), "Weather updated: $icon $temp", Toast.LENGTH_SHORT).show()
+                }
+            } else if (showToast) {
+                Toast.makeText(requireContext(), "Failed to update weather", Toast.LENGTH_SHORT).show()
             }
         }
     }
