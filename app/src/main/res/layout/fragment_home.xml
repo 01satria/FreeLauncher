@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
-    <!-- Main content fills screen, bottom padding for action bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -29,16 +28,38 @@
             android:letterSpacing="-0.04"
             android:includeFontPadding="false" />
 
-        <!-- Date -->
-        <TextClock
-            android:id="@+id/tvDate"
+        <!-- Date + Weather row -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:format12Hour="EEEE, d MMM"
-            android:format24Hour="EEEE, d MMM"
-            android:textColor="#77FFFFFF"
-            android:textSize="15sp"
-            android:layout_marginTop="2dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="2dp">
+
+            <TextClock
+                android:id="@+id/tvDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:format12Hour="EEEE, d MMM"
+                android:format24Hour="EEEE, d MMM"
+                android:textColor="#77FFFFFF"
+                android:textSize="15sp" />
+
+            <!-- Weather icon + temp (click to refresh) -->
+            <TextView
+                android:id="@+id/tvWeather"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:textColor="#AAFFFFFF"
+                android:textSize="14sp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:paddingHorizontal="4dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
 
         <!-- Next event chip -->
         <TextView
@@ -76,13 +97,11 @@
             android:layout_marginTop="6dp"
             android:visibility="gone" />
 
-        <!-- Push apps to bottom -->
         <View
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <!-- Favourite apps list -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvHomeApps"
             android:layout_width="match_parent"
@@ -92,7 +111,7 @@
 
     </LinearLayout>
 
-    <!-- ── Bottom action bar ──────────────────────────────────────────── -->
+    <!-- Bottom action bar -->
     <LinearLayout
         android:id="@+id/bottomBar"
         android:layout_width="match_parent"

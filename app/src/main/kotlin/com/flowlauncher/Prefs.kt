@@ -53,7 +53,6 @@ class Prefs(context: Context) {
         get() = prefs.getStringSet("hidden_apps", emptySet())!!
         set(v) = prefs.edit().putStringSet("hidden_apps", v).apply()
 
-    /** Todos stored as JSON array of {text, done} objects. Migrates legacy plain-string format. */
     var todoItems: List<TodoItem>
         get() {
             val json = prefs.getString("todos_v2", null)
@@ -66,7 +65,6 @@ class Prefs(context: Context) {
                     }
                 } catch (_: Exception) { emptyList() }
             }
-            // Migrate legacy plain-string todos
             val legacy = prefs.getString("todos", null)
             if (legacy != null) {
                 return try {
@@ -79,18 +77,48 @@ class Prefs(context: Context) {
         set(list) {
             val arr = JSONArray()
             list.forEach { item ->
-                arr.put(JSONObject().apply {
-                    put("t", item.text)
-                    put("d", item.done)
-                })
+                arr.put(JSONObject().apply { put("t", item.text); put("d", item.done) })
             }
             prefs.edit().putString("todos_v2", arr.toString()).apply()
         }
 
+    // ── Transparent background ────────────────────────────────────────────────
+    var transparentBg: Boolean
+        get() = prefs.getBoolean("transparent_bg", false)
+        set(v) = prefs.edit().putBoolean("transparent_bg", v).apply()
+
+    // ── Weather ───────────────────────────────────────────────────────────────
+    var weatherLat: Double
+        get() = java.lang.Double.longBitsToDouble(prefs.getLong("w_lat", java.lang.Double.doubleToLongBits(Double.NaN)))
+        set(v) = prefs.edit().putLong("w_lat", java.lang.Double.doubleToLongBits(v)).apply()
+
+    var weatherLon: Double
+        get() = java.lang.Double.longBitsToDouble(prefs.getLong("w_lon", java.lang.Double.doubleToLongBits(Double.NaN)))
+        set(v) = prefs.edit().putLong("w_lon", java.lang.Double.doubleToLongBits(v)).apply()
+
+    var weatherCity: String
+        get() = prefs.getString("w_city", "") ?: ""
+        set(v) = prefs.edit().putString("w_city", v).apply()
+
+    var weatherTempC: Double
+        get() = java.lang.Double.longBitsToDouble(prefs.getLong("w_temp", java.lang.Double.doubleToLongBits(Double.NaN)))
+        set(v) = prefs.edit().putLong("w_temp", java.lang.Double.doubleToLongBits(v)).apply()
+
+    var weatherCode: Int
+        get() = prefs.getInt("w_code", -1)
+        set(v) = prefs.edit().putInt("w_code", v).apply()
+
+    var weatherLastMs: Long
+        get() = prefs.getLong("w_last_ms", 0L)
+        set(v) = prefs.edit().putLong("w_last_ms", v).apply()
+
+    fun hasWeatherLocation() = !weatherLat.isNaN() && !weatherLon.isNaN()
+    fun hasWeatherCache()    = weatherCode >= 0 && !weatherTempC.isNaN()
+
     companion object {
-        const val THEME_DARK  = "dark"
-        const val THEME_LIGHT = "light"
-        const val THEME_OLED  = "oled"
+        const val THEME_DARK   = "dark"
+        const val THEME_LIGHT  = "light"
+        const val THEME_OLED   = "oled"
         const val ALIGN_LEFT   = "left"
         const val ALIGN_CENTER = "center"
         const val ALIGN_RIGHT  = "right"

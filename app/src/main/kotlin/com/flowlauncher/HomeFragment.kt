@@ -51,12 +51,14 @@ class HomeFragment : Fragment() {
             overScrollMode = View.OVER_SCROLL_NEVER
         }
 
-        binding.btnDrawer.setOnClickListener {
-            onOpenDrawer?.invoke()
-        }
+        binding.btnDrawer.setOnClickListener { onOpenDrawer?.invoke() }
+
+        // Weather: click to refresh
+        binding.tvWeather.setOnClickListener { fetchWeather() }
 
         applyTheme()
         setupClockFormat()
+        showCachedWeather()
     }
 
     override fun onResume() {
@@ -67,6 +69,10 @@ class HomeFragment : Fragment() {
         loadHomeApps()
         updateScreenTimeHint()
         loadNextEvent()
+        showCachedWeather()
+        // Auto-refresh weather if cache is older than 30 min
+        val age = System.currentTimeMillis() - prefs.weatherLastMs
+        if (prefs.hasWeatherLocation() && age > 30 * 60 * 1000L) fetchWeather()
     }
 
     override fun onDestroyView() {
@@ -79,12 +85,17 @@ class HomeFragment : Fragment() {
     fun applyTheme() {
         val b = _binding ?: return
         val isLight = prefs.theme == Prefs.THEME_LIGHT
-        val bgColor = when (prefs.theme) {
-            Prefs.THEME_LIGHT -> Color.parseColor("#F0F0F0")
-            Prefs.THEME_OLED  -> Color.BLACK
-            else              -> Color.parseColor("#090909")
+
+        if (prefs.transparentBg) {
+            b.homePageRoot.setBackgroundColor(Color.TRANSPARENT)
+        } else {
+            val bgColor = when (prefs.theme) {
+                Prefs.THEME_LIGHT -> Color.parseColor("#F0F0F0")
+                Prefs.THEME_OLED  -> Color.BLACK
+                else              -> Color.parseColor("#090909")
+            }
+            b.homePageRoot.setBackgroundColor(bgColor)
         }
-        b.homePageRoot.setBackgroundColor(bgColor)
 
         val textPrimary   = if (isLight) Color.parseColor("#111111") else Color.WHITE
         val textSecondary = if (isLight) Color.parseColor("#66000000") else Color.parseColor("#88FFFFFF")
@@ -92,6 +103,7 @@ class HomeFragment : Fragment() {
         b.tvClock.setTextColor(textPrimary)
         b.tvDate.setTextColor(textSecondary)
         b.tvUsageToday.setTextColor(textSecondary)
+        b.tvWeather.setTextColor(if (isLight) Color.parseColor("#88000000") else Color.parseColor("#AAFFFFFF"))
         b.tvScreenTimeHint.setTextColor(if (isLight) Color.parseColor("#44000000") else Color.parseColor("#44FFFFFF"))
         b.btnDrawer.setColorFilter(if (isLight) Color.parseColor("#88000000") else Color.parseColor("#88FFFFFF"))
     }
@@ -108,10 +120,40 @@ class HomeFragment : Fragment() {
             b.tvClock.format24Hour = null
         }
         b.tvDate.visibility = if (prefs.showDate) View.VISIBLE else View.GONE
-
         b.tvClock.gravity = Gravity.START
         b.tvDate.gravity  = Gravity.START
         b.tvUsageToday.gravity = Gravity.START
+    }
+
+    // ── Weather ───────────────────────────────────────────────────────────────
+
+    private fun showCachedWeather() {
+        val b = _binding ?: return
+        if (!prefs.hasWeatherLocation() || !prefs.hasWeatherCache()) {
+            b.tvWeather.visibility = View.GONE
+            return
+        }
+        val icon = WeatherHelper.codeToIcon(prefs.weatherCode)
+        val temp = WeatherHelper.formatTemp(prefs.weatherTempC)
+        b.tvWeather.text = "$icon $temp"
+        b.tvWeather.visibility = View.VISIBLE
+    }
+
+    private fun fetchWeather() {
+        if (!prefs.hasWeatherLocation()) return
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = WeatherHelper.fetch(prefs.weatherLat, prefs.weatherLon)
+            val b = _binding ?: return@launch
+            if (result != null) {
+                prefs.weatherTempC  = result.tempC
+                prefs.weatherCode   = result.code
+                prefs.weatherLastMs = System.currentTimeMillis()
+                val icon = WeatherHelper.codeToIcon(result.code)
+                val temp = WeatherHelper.formatTemp(result.tempC)
+                b.tvWeather.text = "$icon $temp"
+                b.tvWeather.visibility = View.VISIBLE
+            }
+        }
     }
 
     // ── Home apps ─────────────────────────────────────────────────────────────
@@ -140,7 +182,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // ── Next event chip on home ───────────────────────────────────────────────
+    // ── Next event chip ───────────────────────────────────────────────────────
 
     private fun loadNextEvent() {
         val b = _binding ?: return

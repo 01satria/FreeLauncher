@@ -5,6 +5,13 @@
     <!-- Calendar access for My Feed events -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
 
+    <!-- Internet for weather -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Location for weather -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <!-- Screen time / usage stats -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />

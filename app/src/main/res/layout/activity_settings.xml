@@ -183,6 +183,34 @@
             android:background="@drawable/bg_btn_outline"
             android:layout_marginTop="8dp" />
 
+        <!-- ── WEATHER ───────────────────────────────────────────────────── -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="WEATHER"
+            android:textColor="#55FFFFFF"
+            android:textSize="11sp"
+            android:letterSpacing="0.15"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:id="@+id/tvWeatherLocationStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#77FFFFFF"
+            android:textSize="13sp"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnSetWeatherLocation"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Set Weather Location"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/bg_btn_outline"
+            android:layout_marginBottom="16dp" />
+
         <!-- ── APPS ───────────────────────────────────────────────────────── -->
         <TextView
             android:layout_width="match_parent"
