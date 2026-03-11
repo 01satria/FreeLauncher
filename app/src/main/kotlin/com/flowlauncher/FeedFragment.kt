@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowlauncher.databinding.FragmentFeedBinding
 import kotlinx.coroutines.*
 import android.Manifest
+import android.provider.Settings
 
 class FeedFragment : Fragment() {
 
@@ -131,6 +132,12 @@ class FeedFragment : Fragment() {
         // Screen time
         bv.tvScreenTimeLabel.setTextColor(t.subtle)
         bv.tvScreenTimeTotal.setTextColor(t.onSurface)
+        // Re-check permission state on theme change (onResume path)
+        if (prefs.showScreenTime && !ScreenTimeHelper.hasPermission(requireContext())) {
+            bv.cardScreenTime.visibility = View.VISIBLE
+            bv.layoutScreenTimePermission.visibility = View.VISIBLE
+            bv.layoutTopApps.visibility = View.GONE
+        }
 
         // Push theme into adapters (partial rebind — no full layout pass)
         eventAdapter.applyTheme(t)
@@ -355,28 +362,53 @@ class FeedFragment : Fragment() {
 
     // ── Screen Time ───────────────────────────────────────────────────────────
 
-    private fun setupScreenTime() { refreshScreenTime() }
+    private fun setupScreenTime() {
+        _b?.btnGrantUsageAccess?.setOnClickListener {
+            try {
+                startActivity(android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS))
+            } catch (_: Exception) {}
+        }
+        refreshScreenTime()
+    }
 
     private fun refreshScreenTime() {
         val bv = _b ?: return
-        if (!ScreenTimeHelper.hasPermission(requireContext())) {
-            bv.cardScreenTime.visibility = View.GONE; return
+
+        // Fitur dimatikan dari Settings
+        if (!prefs.showScreenTime) {
+            bv.cardScreenTime.visibility = View.GONE
+            return
         }
+
+        // Kartu selalu tampil jika fitur aktif
+        bv.cardScreenTime.visibility = View.VISIBLE
+
+        if (!ScreenTimeHelper.hasPermission(requireContext())) {
+            // Tampilkan prompt minta izin
+            bv.layoutScreenTimePermission.visibility = View.VISIBLE
+            bv.layoutTopApps.visibility = View.GONE
+            bv.tvScreenTimeTotal.text = ""
+            return
+        }
+
+        // Izin sudah ada
+        bv.layoutScreenTimePermission.visibility = View.GONE
+        bv.layoutTopApps.visibility = View.VISIBLE
+
         viewLifecycleOwner.lifecycleScope.launch {
             val apps = try { AppRepository.loadApps(requireContext(), prefs) }
                        catch (_: Exception) { emptyList() }
             val bv2 = _b ?: return@launch
-            val total = apps.sumOf { it.screenTimeMinutes }
-            if (total <= 0) { bv2.cardScreenTime.visibility = View.GONE; return@launch }
 
-            bv2.cardScreenTime.visibility = View.VISIBLE
-            bv2.tvScreenTimeTotal.text = ScreenTimeHelper.formatMinutes(total)
+            val total = apps.sumOf { it.screenTimeMinutes }
+            bv2.tvScreenTimeTotal.text = if (total > 0)
+                ScreenTimeHelper.formatMinutes(total) else "No data yet"
 
             val top = apps.filter { it.screenTimeMinutes > 0 }
                 .sortedByDescending { it.screenTimeMinutes }.take(5)
 
             val maxMin = top.firstOrNull()?.screenTimeMinutes?.toFloat() ?: 1f
-            val t      = currentTheme
+            val t = currentTheme
             bv2.layoutTopApps.removeAllViews()
 
             top.forEach { app ->
@@ -392,29 +424,24 @@ class FeedFragment : Fragment() {
                     setTextColor(t?.subtle ?: 0x88FFFFFF.toInt())
                 }
 
-                // Animate bar width proportional to max
                 val barView = row.findViewById<View>(R.id.viewStBar)
-                val frac    = app.screenTimeMinutes / maxMin
-
-                // Set bar background color = theme onSurface at reduced alpha
+                val frac = app.screenTimeMinutes / maxMin
                 val barBg = GradientDrawable().apply {
                     cornerRadius = 100f
-                    setColor(if (t?.isLight == true)
-                        Color.parseColor("#CCCCCC")
-                    else
-                        0x55FFFFFF.toInt())
+                    setColor(if (t?.isLight == true) Color.parseColor("#CCCCCC") else 0x55FFFFFF.toInt())
                 }
                 barView.background = barBg
-
-                // Width set post-layout via post{}
                 barView.post {
                     val parent = barView.parent as? View ?: return@post
                     val targetW = (parent.width * frac).toInt().coerceAtLeast(4)
                     barView.layoutParams = barView.layoutParams.also { it.width = targetW }
                     barView.requestLayout()
                 }
-
                 bv2.layoutTopApps.addView(row)
+            }
+
+            if (top.isEmpty()) {
+                bv2.tvScreenTimeTotal.text = "No data yet today"
             }
         }
     }

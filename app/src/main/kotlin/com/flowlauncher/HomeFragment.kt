@@ -217,8 +217,10 @@ class HomeFragment : Fragment() {
 
     private fun updateScreenTimeHint() {
         val b = _binding ?: return
-        if (!ScreenTimeHelper.hasPermission(requireContext())) {
+        // Tampilkan hint hanya jika fitur aktif tapi izin belum diberikan
+        if (prefs.showScreenTime && !ScreenTimeHelper.hasPermission(requireContext())) {
             b.tvScreenTimeHint.visibility = View.VISIBLE
+            b.tvScreenTimeHint.text = "Tap to enable Screen Time"
             b.tvScreenTimeHint.setOnClickListener {
                 try { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
                 catch (_: Exception) {}
