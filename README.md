@@ -15,6 +15,8 @@ Your apps, your clock, your wallpaper.
 **Layar utama Android yang minimalis.**
 Aplikasi kamu, jam, wallpaper.
 
+![preview](public/image/image.jpg)
+
 </div>
 
 
