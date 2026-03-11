@@ -25,12 +25,10 @@ object AppRepository {
     @Volatile private var cacheValid = false
     @Volatile private var cacheDateMs: Long = 0L   // midnight timestamp when cache was built
 
-    /** Returns the 01:00 AM reset boundary in local time (matching ScreenTimeHelper). */
+    /** Returns midnight (00:00) of today in local time — matches INTERVAL_DAILY boundary. */
     private fun todayMidnightMs(): Long {
         val cal = Calendar.getInstance()
-        val hour = cal.get(Calendar.HOUR_OF_DAY)
-        if (hour < 1) cal.add(java.util.Calendar.DATE, -1)
-        cal.set(Calendar.HOUR_OF_DAY, 1)
+        cal.set(Calendar.HOUR_OF_DAY, 0)
         cal.set(Calendar.MINUTE, 0)
         cal.set(Calendar.SECOND, 0)
         cal.set(Calendar.MILLISECOND, 0)
