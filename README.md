@@ -43,13 +43,16 @@ Aplikasi kamu, jam, wallpaper.
 MIT
 
 
-
+## Author
 
 <div align="center">
 
+<img src="https://github.com/01satria.png" width="72" style="border-radius:50%" alt="Satria Bagus" />
 
-<img src="https://github.com/01satria.png" width="64" style="border-radius:50%" alt="01satria" />
-Made by [@01satria](https://github.com/01satria)
+**Satria Bagus**
+
+[![GitHub](https://img.shields.io/badge/GitHub-01satria-181717?style=flat-square&logo=github)](https://github.com/01satria)
+
+*Built with ❤️ in Indonesia*
 
 </div>
-
