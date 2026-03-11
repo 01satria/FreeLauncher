@@ -2,20 +2,18 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="48dp"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingVertical="7dp"
     android:clickable="true"
     android:focusable="true"
     android:background="?android:attr/selectableItemBackground">
 
-    <!-- Circle checkbox -->
     <ImageView
         android:id="@+id/ivCheck"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginEnd="10dp"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_marginEnd="12dp"
         android:src="@drawable/ic_circle"
         android:contentDescription="Checkbox" />
 
@@ -24,18 +22,18 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textColor="#CCFFFFFF"
-        android:textSize="13sp"
+        android:textSize="14sp"
         android:maxLines="1"
-        android:ellipsize="end" />
+        android:ellipsize="end"
+        android:textColor="#DDFFFFFF" />
 
     <ImageButton
         android:id="@+id/btn_delete_todo"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
         android:src="@drawable/ic_close_small"
         android:tint="#33FFFFFF"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Delete task" />
+        android:contentDescription="Delete" />
 
 </LinearLayout>

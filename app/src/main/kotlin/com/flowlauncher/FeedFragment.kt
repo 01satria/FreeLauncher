@@ -1,69 +1,67 @@
 package com.flowlauncher
 
-import android.Manifest
 import android.app.AlertDialog
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.view.*
+import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowlauncher.databinding.FragmentFeedBinding
 import kotlinx.coroutines.*
+import android.Manifest
 
 class FeedFragment : Fragment() {
 
-    private var _binding: FragmentFeedBinding? = null
-    private val binding get() = _binding!!
+    private var _b: FragmentFeedBinding? = null
+    private val b get() = _b!!
 
     private lateinit var prefs: Prefs
     private lateinit var todoAdapter: TodoAdapter
+    private var currentTheme: FeedTheme? = null
 
-    // Main events list (search results when query active, full list otherwise)
-    private val eventAdapter = FeedEventAdapter(
-        showPinButton = false,
-        onPin = { event -> togglePin(event) }
-    )
+    private val eventAdapter = FeedEventAdapter(onPin = { togglePin(it) })
+    private val pinnedAdapter = FeedEventAdapter()
 
-    // Pinned events list — shown only when events card is COLLAPSED
-    private val pinnedAdapter = FeedEventAdapter(
-        showPinButton = false,
-        onPin = null
-    )
-
-    private var tickJob: Job? = null
-    private var searchJob: Job? = null
+    private var tickJob   : Job? = null
+    private var searchJob : Job? = null
     private var eventsExpanded = true
-    private var currentQuery = ""
+    private var currentQuery   = ""
+
+    // Pre-allocated GradientDrawable for section cards (set once, color updated per theme)
+    private val sectionBg     = GradientDrawable().apply { cornerRadius = dpToPx(20f) }
+    private val sectionBg2    = GradientDrawable().apply { cornerRadius = dpToPx(20f) }
+    private val sectionBg3    = GradientDrawable().apply { cornerRadius = dpToPx(20f) }
 
     private val calendarPermLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> if (granted) refreshEvents() }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentFeedBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun onCreateView(i: LayoutInflater, c: ViewGroup?, s: Bundle?): View {
+        _b = FragmentFeedBinding.inflate(i, c, false)
+        return b.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         prefs = Prefs(requireContext())
+
+        // Assign pre-allocated backgrounds so we only update color, never allocate
+        b.sectionEvents.background    = sectionBg
+        b.sectionTasks.background     = sectionBg2
+        b.cardScreenTime.background   = sectionBg3
+
         setupTasks()
         setupEvents()
         setupScreenTime()
         applyTheme()
 
-        binding.btnFeedSettings.setOnClickListener {
+        b.btnFeedSettings.setOnClickListener {
             startActivity(android.content.Intent(requireContext(), SettingsActivity::class.java))
         }
     }
@@ -76,7 +74,6 @@ class FeedFragment : Fragment() {
         refreshEvents()
         refreshScreenTime()
         startCountdownTicker()
-        // Sync pinned strip in case it was collapsed before navigating away
         if (!eventsExpanded) refreshPinnedEvents()
     }
 
@@ -89,36 +86,55 @@ class FeedFragment : Fragment() {
     override fun onDestroyView() {
         tickJob?.cancel()
         searchJob?.cancel()
-        _binding = null
+        _b = null
         super.onDestroyView()
     }
 
     // ── Theme ─────────────────────────────────────────────────────────────────
 
     fun applyTheme() {
-        val b = _binding ?: return
-        val isLight = prefs.theme == Prefs.THEME_LIGHT
+        val bv = _b ?: return
+        val t  = FeedTheme.from(prefs).also { currentTheme = it }
 
-        if (prefs.transparentBg) {
-            b.feedRoot.setBackgroundColor(Color.TRANSPARENT)
-        } else {
-            val bgColor = when (prefs.theme) {
-                Prefs.THEME_LIGHT -> Color.parseColor("#F0F0F0")
-                Prefs.THEME_OLED  -> Color.BLACK
-                else              -> Color.parseColor("#090909")
-            }
-            b.feedRoot.setBackgroundColor(bgColor)
-        }
+        // Page background
+        bv.feedRoot.setBackgroundColor(FeedTheme.pageBg(prefs))
 
-        val textColor = if (isLight) Color.parseColor("#111111") else Color.WHITE
-        b.tvFeedTitle.setTextColor(textColor)
+        // Section card backgrounds (single GradientDrawable, just setColor)
+        sectionBg.setColor(t.surface)
+        sectionBg2.setColor(t.surface)
+        sectionBg3.setColor(t.surface)
+
+        // Header
+        bv.tvFeedTitle.setTextColor(t.onSurface)
+        bv.btnFeedSettings.setColorFilter(t.subtle)
+
+        // Events section labels
+        bv.tvEventsLabel.setTextColor(t.subtle)
+        bv.tvEventsChevron.setTextColor(t.faint)
+        bv.tvEventsEmpty.setTextColor(t.faint)
+        bv.etEventSearch.setTextColor(t.onSurface)
+        bv.etEventSearch.setHintTextColor(t.faint)
+        bv.dividerEventSearch.setBackgroundColor(t.divider)
+
+        // Tasks section
+        bv.tvTasksLabel.setTextColor(t.subtle)
+        bv.btnAddTodo.setColorFilter(t.subtle)
+        bv.tvTasksEmpty.setTextColor(t.faint)
+
+        // Screen time
+        bv.tvScreenTimeLabel.setTextColor(t.subtle)
+        bv.tvScreenTimeTotal.setTextColor(t.onSurface)
+
+        // Push theme into adapters (partial rebind — no full layout pass)
+        eventAdapter.applyTheme(t)
+        pinnedAdapter.applyTheme(t)
+        todoAdapter.applyTheme(t)
     }
 
     // ── Events ────────────────────────────────────────────────────────────────
 
     private fun setupEvents() {
-        // Main events RecyclerView
-        binding.rvEvents.apply {
+        b.rvEvents.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = eventAdapter
             setHasFixedSize(false)
@@ -126,9 +142,7 @@ class FeedFragment : Fragment() {
             itemAnimator = null
             isNestedScrollingEnabled = false
         }
-
-        // Pinned events RecyclerView (shown only when collapsed)
-        binding.rvPinnedEvents.apply {
+        b.rvPinnedEvents.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = pinnedAdapter
             setHasFixedSize(false)
@@ -137,135 +151,131 @@ class FeedFragment : Fragment() {
             isNestedScrollingEnabled = false
         }
 
-        binding.btnGrantCalendar.setOnClickListener {
+        b.btnGrantCalendar.setOnClickListener {
             calendarPermLauncher.launch(Manifest.permission.READ_CALENDAR)
         }
 
-        // Apply initial collapse/expand state
-        updateEventsCollapse()
+        // Apply initial state (expanded by default)
+        updateEventsCollapse(animate = false)
 
-        // Collapse / expand toggle
-        binding.layoutEventsHeader.setOnClickListener {
+        b.layoutEventsHeader.setOnClickListener {
             eventsExpanded = !eventsExpanded
-            updateEventsCollapse()
+            updateEventsCollapse(animate = true)
         }
 
-        // Search bar
-        binding.etEventSearch.addTextChangedListener(object : TextWatcher {
+        // Search
+        b.etEventSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) {}
             override fun afterTextChanged(s: Editable?) {}
-            override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) {
-                val query = s?.toString().orEmpty()
-                binding.btnClearEventSearch.visibility =
-                    if (query.isNotBlank()) View.VISIBLE else View.GONE
+            override fun onTextChanged(s: CharSequence?, st: Int, bc: Int, c: Int) {
+                val q = s?.toString().orEmpty()
+                b.btnClearEventSearch.visibility = if (q.isNotBlank()) View.VISIBLE else View.GONE
                 searchJob?.cancel()
                 searchJob = viewLifecycleOwner.lifecycleScope.launch {
-                    delay(300)
-                    currentQuery = query
-                    refreshEvents(query = query)
+                    delay(280)
+                    currentQuery = q
+                    refreshEvents(query = q)
                 }
             }
         })
-
-        binding.btnClearEventSearch.setOnClickListener {
-            binding.etEventSearch.setText("")
+        b.btnClearEventSearch.setOnClickListener {
+            b.etEventSearch.setText("")
             currentQuery = ""
         }
 
         refreshEvents()
     }
 
-    private fun updateEventsCollapse() {
-        val b = _binding ?: return
+    private fun updateEventsCollapse(animate: Boolean) {
+        val bv = _b ?: return
         if (eventsExpanded) {
-            b.layoutEventsContent.visibility = View.VISIBLE
-            b.tvEventsChevron.text = "▲"
-            b.rvPinnedEvents.visibility = View.GONE
+            bv.tvEventsChevron.text = "▾"
+            bv.rvPinnedEvents.visibility = View.GONE
+            if (animate) {
+                bv.layoutEventsContent.animate().alpha(1f).setDuration(180).withStartAction {
+                    bv.layoutEventsContent.alpha = 0f
+                    bv.layoutEventsContent.visibility = View.VISIBLE
+                }.start()
+            } else {
+                bv.layoutEventsContent.visibility = View.VISIBLE
+                bv.layoutEventsContent.alpha = 1f
+            }
         } else {
-            b.layoutEventsContent.visibility = View.GONE
-            b.tvEventsChevron.text = "▼"
-            // Show pinned events only when collapsed
-            refreshPinnedEvents()
-        }
-    }
-
-    fun refreshEvents(query: String = currentQuery) {
-        val b = _binding ?: return
-        if (!CalendarHelper.hasPermission(requireContext())) {
-            b.layoutCalendarPermission.visibility = View.VISIBLE
-            b.rvEvents.visibility = View.GONE
-            b.tvEventsEmpty.visibility = View.GONE
-            eventAdapter.setShowPinButton(false)
-            return
-        }
-        b.layoutCalendarPermission.visibility = View.GONE
-
-        // Show pin button only when there's an active search query
-        eventAdapter.setShowPinButton(query.isNotBlank())
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            val events = CalendarHelper.getUpcomingEvents(requireContext(), query = query)
-            val bv = _binding ?: return@launch
-            when {
-                events.isEmpty() -> {
-                    bv.rvEvents.visibility = View.GONE
-                    bv.tvEventsEmpty.visibility = View.VISIBLE
-                    bv.tvEventsEmpty.text = if (query.isNotBlank())
-                        "No events matching \"$query\"."
-                    else
-                        "No upcoming events in next 30 days."
-                }
-                else -> {
-                    bv.tvEventsEmpty.visibility = View.GONE
-                    bv.rvEvents.visibility = View.VISIBLE
-                    eventAdapter.updatePinnedIds(prefs.pinnedEventIds)
-                    eventAdapter.setEvents(events)
-                }
+            bv.tvEventsChevron.text = "▸"
+            if (animate) {
+                bv.layoutEventsContent.animate().alpha(0f).setDuration(150).withEndAction {
+                    bv.layoutEventsContent.visibility = View.GONE
+                    refreshPinnedEvents()
+                }.start()
+            } else {
+                bv.layoutEventsContent.visibility = View.GONE
+                refreshPinnedEvents()
             }
         }
     }
 
-    // ── Pin logic ─────────────────────────────────────────────────────────────
+    fun refreshEvents(query: String = currentQuery) {
+        val bv = _b ?: return
+        if (!CalendarHelper.hasPermission(requireContext())) {
+            bv.layoutCalendarPermission.visibility = View.VISIBLE
+            bv.rvEvents.visibility = View.GONE
+            bv.tvEventsEmpty.visibility = View.GONE
+            eventAdapter.setShowPinButton(false)
+            return
+        }
+        bv.layoutCalendarPermission.visibility = View.GONE
+        eventAdapter.setShowPinButton(query.isNotBlank())
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val events = CalendarHelper.getUpcomingEvents(requireContext(), query = query)
+            val bv2 = _b ?: return@launch
+            if (events.isEmpty()) {
+                bv2.rvEvents.visibility = View.GONE
+                bv2.tvEventsEmpty.visibility = View.VISIBLE
+                bv2.tvEventsEmpty.text = if (query.isNotBlank())
+                    "No events matching \"$query\"."
+                else
+                    "No upcoming events."
+            } else {
+                bv2.tvEventsEmpty.visibility = View.GONE
+                bv2.rvEvents.visibility = View.VISIBLE
+                eventAdapter.updatePinnedIds(prefs.pinnedEventIds)
+                currentTheme?.let { eventAdapter.applyTheme(it) }
+                eventAdapter.setEvents(events)
+            }
+        }
+    }
+
+    // ── Pin ───────────────────────────────────────────────────────────────────
 
     private fun togglePin(event: EventItem) {
-        val pinned = prefs.pinnedEventIds.toMutableSet()
-        if (event.id in pinned) pinned.remove(event.id) else pinned.add(event.id)
-        prefs.pinnedEventIds = pinned
-        // Update pin button state in main list
-        eventAdapter.updatePinnedIds(pinned)
-        // Refresh pinned strip if currently collapsed
+        val ids = prefs.pinnedEventIds.toMutableSet()
+        if (event.id in ids) ids.remove(event.id) else ids.add(event.id)
+        prefs.pinnedEventIds = ids
+        eventAdapter.updatePinnedIds(ids)
         if (!eventsExpanded) refreshPinnedEvents()
     }
 
     private fun refreshPinnedEvents() {
-        val b = _binding ?: return
-
+        val bv = _b ?: return
         if (eventsExpanded || !CalendarHelper.hasPermission(requireContext())) {
-            b.rvPinnedEvents.visibility = View.GONE
+            bv.rvPinnedEvents.visibility = View.GONE
             return
         }
-
-        val pinnedIds = prefs.pinnedEventIds
-        if (pinnedIds.isEmpty()) {
-            b.rvPinnedEvents.visibility = View.GONE
-            return
-        }
+        val ids = prefs.pinnedEventIds
+        if (ids.isEmpty()) { bv.rvPinnedEvents.visibility = View.GONE; return }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            // Use 365-day range so pinned events far in the future are found
-            val all    = CalendarHelper.getUpcomingEvents(
-                context    = requireContext(),
-                limit      = Int.MAX_VALUE,
-                rangeDays  = 365
-            )
-            val pinned = all.filter { it.id in pinnedIds }
-            val bv = _binding ?: return@launch
-
+            val pinned = CalendarHelper
+                .getUpcomingEvents(requireContext(), limit = Int.MAX_VALUE, rangeDays = 365)
+                .filter { it.id in ids }
+            val bv2 = _b ?: return@launch
             if (pinned.isEmpty()) {
-                bv.rvPinnedEvents.visibility = View.GONE
+                bv2.rvPinnedEvents.visibility = View.GONE
             } else {
+                currentTheme?.let { pinnedAdapter.applyTheme(it) }
                 pinnedAdapter.setEvents(pinned)
-                bv.rvPinnedEvents.visibility = View.VISIBLE
+                bv2.rvPinnedEvents.visibility = View.VISIBLE
             }
         }
     }
@@ -274,7 +284,7 @@ class FeedFragment : Fragment() {
 
     private fun setupTasks() {
         todoAdapter = TodoAdapter({ pos -> toggleTask(pos) }, { pos -> deleteTask(pos) })
-        binding.rvTodos.apply {
+        b.rvTodos.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = todoAdapter
             setHasFixedSize(false)
@@ -282,36 +292,38 @@ class FeedFragment : Fragment() {
             itemAnimator = null
             isNestedScrollingEnabled = false
         }
-        binding.btnAddTodo.setOnClickListener { showAddTaskDialog() }
+        b.btnAddTodo.setOnClickListener { showAddTaskDialog() }
         refreshTasks()
     }
 
     private fun refreshTasks() {
         val todos = prefs.todoItems
         todoAdapter.setItems(todos)
-        _binding?.tvTasksEmpty?.visibility = if (todos.isEmpty()) View.VISIBLE else View.GONE
+        _b?.tvTasksEmpty?.visibility = if (todos.isEmpty()) View.VISIBLE else View.GONE
     }
 
     private fun showAddTaskDialog() {
         val ctx = requireContext()
+        val t   = currentTheme
         val input = EditText(ctx).apply {
-            hint = "Add a task..."
-            setHintTextColor(Color.parseColor("#80FFFFFF"))
-            setTextColor(Color.WHITE)
+            hint = "New task…"
+            setHintTextColor(t?.faint ?: 0x55FFFFFF.toInt())
+            setTextColor(t?.onSurface ?: Color.WHITE)
             background = null
-            setPadding(32, 16, 32, 16)
+            setPadding(dpToPx(4f).toInt(), dpToPx(8f).toInt(), dpToPx(4f).toInt(), dpToPx(8f).toInt())
+        }
+        val wrap = LinearLayout(ctx).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dpToPx(24f).toInt(), dpToPx(8f).toInt(), dpToPx(24f).toInt(), 0)
+            addView(input)
         }
         AlertDialog.Builder(ctx)
-            .setTitle("New Task")
-            .setView(LinearLayout(ctx).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(48, 16, 48, 16)
-                addView(input)
-            })
+            .setTitle("Add task")
+            .setView(wrap)
             .setPositiveButton("Add") { _, _ ->
                 val text = input.text.toString().trim()
                 if (text.isNotEmpty()) {
-                    prefs.todoItems = prefs.todoItems.toMutableList().also { it.add(TodoItem(text, false)) }
+                    prefs.todoItems = prefs.todoItems + TodoItem(text, false)
                     refreshTasks()
                 }
             }
@@ -320,21 +332,17 @@ class FeedFragment : Fragment() {
     }
 
     private fun toggleTask(pos: Int) {
-        val updated = todoAdapter.getItems().toMutableList()
-        if (pos in updated.indices) {
-            val item = updated[pos]
-            updated[pos] = item.copy(done = !item.done)
-            prefs.todoItems = updated
-            refreshTasks()
+        val list = todoAdapter.getItems().toMutableList()
+        if (pos in list.indices) {
+            list[pos] = list[pos].copy(done = !list[pos].done)
+            prefs.todoItems = list; refreshTasks()
         }
     }
 
     private fun deleteTask(pos: Int) {
-        val updated = todoAdapter.getItems().toMutableList()
-        if (pos in updated.indices) {
-            updated.removeAt(pos)
-            prefs.todoItems = updated
-            refreshTasks()
+        val list = todoAdapter.getItems().toMutableList()
+        if (pos in list.indices) {
+            list.removeAt(pos); prefs.todoItems = list; refreshTasks()
         }
     }
 
@@ -343,36 +351,63 @@ class FeedFragment : Fragment() {
     private fun setupScreenTime() { refreshScreenTime() }
 
     private fun refreshScreenTime() {
-        val b = _binding ?: return
+        val bv = _b ?: return
         if (!ScreenTimeHelper.hasPermission(requireContext())) {
-            b.cardScreenTime.visibility = View.GONE
-            return
+            bv.cardScreenTime.visibility = View.GONE; return
         }
         viewLifecycleOwner.lifecycleScope.launch {
             val apps = try { AppRepository.loadApps(requireContext(), prefs) }
                        catch (_: Exception) { emptyList() }
-            val bv = _binding ?: return@launch
-            val totalMin = apps.sumOf { it.screenTimeMinutes }
-            if (totalMin <= 0) { bv.cardScreenTime.visibility = View.GONE; return@launch }
+            val bv2 = _b ?: return@launch
+            val total = apps.sumOf { it.screenTimeMinutes }
+            if (total <= 0) { bv2.cardScreenTime.visibility = View.GONE; return@launch }
 
-            bv.cardScreenTime.visibility = View.VISIBLE
-            bv.tvScreenTimeTotal.text = ScreenTimeHelper.formatMinutes(totalMin)
+            bv2.cardScreenTime.visibility = View.VISIBLE
+            bv2.tvScreenTimeTotal.text = ScreenTimeHelper.formatMinutes(total)
 
-            val top3 = apps.filter { it.screenTimeMinutes > 0 }
-                .sortedByDescending { it.screenTimeMinutes }.take(3)
+            val top = apps.filter { it.screenTimeMinutes > 0 }
+                .sortedByDescending { it.screenTimeMinutes }.take(5)
 
-            bv.layoutTopApps.removeAllViews()
-            val ctx = requireContext()
-            top3.forEach { app ->
-                val chip = LayoutInflater.from(ctx)
-                    .inflate(R.layout.item_screentime_chip, bv.layoutTopApps, false)
-                chip.findViewById<TextView>(R.id.tvChipName).text = app.label
-                chip.findViewById<TextView>(R.id.tvChipTime).text =
-                    ScreenTimeHelper.formatMinutes(app.screenTimeMinutes)
-                val lp = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                lp.marginEnd = 8
-                chip.layoutParams = lp
-                bv.layoutTopApps.addView(chip)
+            val maxMin = top.firstOrNull()?.screenTimeMinutes?.toFloat() ?: 1f
+            val t      = currentTheme
+            bv2.layoutTopApps.removeAllViews()
+
+            top.forEach { app ->
+                val row = LayoutInflater.from(requireContext())
+                    .inflate(R.layout.item_screentime_row, bv2.layoutTopApps, false)
+
+                row.findViewById<TextView>(R.id.tvStName).apply {
+                    text = app.label
+                    setTextColor(t?.onSurface ?: Color.WHITE)
+                }
+                row.findViewById<TextView>(R.id.tvStTime).apply {
+                    text = ScreenTimeHelper.formatMinutes(app.screenTimeMinutes)
+                    setTextColor(t?.subtle ?: 0x88FFFFFF.toInt())
+                }
+
+                // Animate bar width proportional to max
+                val barView = row.findViewById<View>(R.id.viewStBar)
+                val frac    = app.screenTimeMinutes / maxMin
+
+                // Set bar background color = theme onSurface at reduced alpha
+                val barBg = GradientDrawable().apply {
+                    cornerRadius = 100f
+                    setColor(if (t?.isLight == true)
+                        Color.parseColor("#CCCCCC")
+                    else
+                        0x55FFFFFF.toInt())
+                }
+                barView.background = barBg
+
+                // Width set post-layout via post{}
+                barView.post {
+                    val parent = barView.parent as? View ?: return@post
+                    val targetW = (parent.width * frac).toInt().coerceAtLeast(4)
+                    barView.layoutParams = barView.layoutParams.also { it.width = targetW }
+                    barView.requestLayout()
+                }
+
+                bv2.layoutTopApps.addView(row)
             }
         }
     }
@@ -384,11 +419,18 @@ class FeedFragment : Fragment() {
         tickJob = viewLifecycleOwner.lifecycleScope.launch {
             while (isActive) {
                 delay(30_000L)
-                if (_binding != null && CalendarHelper.hasPermission(requireContext())) {
-                    eventAdapter.notifyDataSetChanged()
-                    if (!eventsExpanded) pinnedAdapter.notifyDataSetChanged()
+                if (_b != null && CalendarHelper.hasPermission(requireContext())) {
+                    if (eventsExpanded) eventAdapter.notifyItemRangeChanged(
+                        0, eventAdapter.itemCount, "tick")
+                    else pinnedAdapter.notifyItemRangeChanged(
+                        0, pinnedAdapter.itemCount, "tick")
                 }
             }
         }
     }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private fun dpToPx(dp: Float): Float =
+        dp * (resources.displayMetrics.density)
 }
