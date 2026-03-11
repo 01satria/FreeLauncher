@@ -2,7 +2,7 @@
 
 <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="96" alt="Flow Launcher icon" />
 
-# Flow Launcher
+# Flow Minimal Launcher
 
 ![Platform](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white&style=flat-square)
 ![Min SDK](https://img.shields.io/badge/min_sdk-23-4A90D9?style=flat-square)
