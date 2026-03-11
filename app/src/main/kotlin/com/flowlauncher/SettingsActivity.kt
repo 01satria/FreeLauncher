@@ -2,7 +2,7 @@ package com.flowlauncher
 
 import android.Manifest
 import kotlinx.coroutines.*
-import android.app.AlertDialog
+import androidx.appcompat.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Geocoder

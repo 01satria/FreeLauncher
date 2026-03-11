@@ -1,13 +1,16 @@
 package com.flowlauncher
 
-import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.View
+import android.widget.EditText
+import android.widget.LinearLayout
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import com.flowlauncher.databinding.ActivityFocusBinding
 
-class FocusActivity : Activity() {
+class FocusActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityFocusBinding
     private var timer: CountDownTimer? = null
@@ -69,7 +72,7 @@ class FocusActivity : Activity() {
 
     private fun showCustomDurationDialog() {
         if (isRunning) return
-        val input = android.widget.EditText(this).apply {
+        val input = EditText(this).apply {
             hint = "Minutes (1–120)"
             inputType = android.text.InputType.TYPE_CLASS_NUMBER
             setTextColor(Color.WHITE)
@@ -77,10 +80,10 @@ class FocusActivity : Activity() {
             background = null
             setPadding(32, 16, 32, 16)
         }
-        android.app.AlertDialog.Builder(this)
+        AlertDialog.Builder(this)
             .setTitle("Custom duration")
-            .setView(android.widget.LinearLayout(this).apply {
-                orientation = android.widget.LinearLayout.VERTICAL
+            .setView(LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
                 setPadding(48, 16, 48, 16)
                 addView(input)
             })
