@@ -96,8 +96,8 @@ object CalendarHelper {
 
             // Title filter applied in-memory after fetch (Instances URI does not
             // support LIKE selection on Android < 26 reliably).
-            val selection = "${CalendarContract.Instances.BEGIN} >= ? AND " +
-                            "${CalendarContract.Instances.DELETED} = 0"
+            // Note: Instances table has no DELETED column — that belongs to Events.
+            val selection     = "${CalendarContract.Instances.BEGIN} >= ?"
             val selectionArgs = arrayOf(now.toString())
 
             val events = mutableListOf<EventItem>()
