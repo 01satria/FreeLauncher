@@ -83,6 +83,23 @@
         </LinearLayout>
 
 
+        <View android:layout_width="match_parent" android:layout_height="1dp"
+            android:background="#22FFFFFF" android:layout_marginVertical="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Transparent Background"
+                android:textColor="#FFFFFF" android:textSize="16sp" />
+            <Switch android:id="@+id/switchTransparentBg"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:thumbTint="#FFFFFF" android:trackTint="#55FFFFFF" />
+        </LinearLayout>
+
         <!-- ── CLOCK ──────────────────────────────────────────────────────── -->
         <TextView
             android:layout_width="match_parent"
