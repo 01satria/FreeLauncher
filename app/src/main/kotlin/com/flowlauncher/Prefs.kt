@@ -3,6 +3,9 @@ package com.flowlauncher
 import android.content.Context
 import android.content.SharedPreferences
 import org.json.JSONArray
+import org.json.JSONObject
+
+data class TodoItem(val text: String, val done: Boolean = false)
 
 class Prefs(context: Context) {
 
@@ -29,17 +32,9 @@ class Prefs(context: Context) {
         get() = prefs.getString("alignment", ALIGN_LEFT)!!
         set(v) = prefs.edit().putString("alignment", v).apply()
 
-    var fontSize: Int
-        get() = prefs.getInt("font_size", 18)
-        set(v) = prefs.edit().putInt("font_size", v).apply()
-
     var homeAppCount: Int
         get() = prefs.getInt("home_app_count", 5)
         set(v) = prefs.edit().putInt("home_app_count", v).apply()
-
-    var showIcons: Boolean
-        get() = prefs.getBoolean("show_icons", false)
-        set(v) = prefs.edit().putBoolean("show_icons", v).apply()
 
     var favoritePackages: List<String>
         get() {
@@ -58,17 +53,38 @@ class Prefs(context: Context) {
         get() = prefs.getStringSet("hidden_apps", emptySet())!!
         set(v) = prefs.edit().putStringSet("hidden_apps", v).apply()
 
-    var todos: List<String>
+    /** Todos stored as JSON array of {text, done} objects. Migrates legacy plain-string format. */
+    var todoItems: List<TodoItem>
         get() {
-            val json = prefs.getString("todos", null) ?: return emptyList()
-            return try {
-                val arr = JSONArray(json)
-                (0 until arr.length()).map { arr.getString(it) }
-            } catch (_: Exception) { emptyList() }
+            val json = prefs.getString("todos_v2", null)
+            if (json != null) {
+                return try {
+                    val arr = JSONArray(json)
+                    (0 until arr.length()).map {
+                        val obj = arr.getJSONObject(it)
+                        TodoItem(obj.getString("t"), obj.optBoolean("d", false))
+                    }
+                } catch (_: Exception) { emptyList() }
+            }
+            // Migrate legacy plain-string todos
+            val legacy = prefs.getString("todos", null)
+            if (legacy != null) {
+                return try {
+                    val arr = JSONArray(legacy)
+                    (0 until arr.length()).map { TodoItem(arr.getString(it), false) }
+                } catch (_: Exception) { emptyList() }
+            }
+            return emptyList()
         }
         set(list) {
-            prefs.edit().putString("todos",
-                JSONArray().also { a -> list.forEach { a.put(it) } }.toString()).apply()
+            val arr = JSONArray()
+            list.forEach { item ->
+                arr.put(JSONObject().apply {
+                    put("t", item.text)
+                    put("d", item.done)
+                })
+            }
+            prefs.edit().putString("todos_v2", arr.toString()).apply()
         }
 
     companion object {

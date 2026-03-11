@@ -112,7 +112,7 @@
 
         </LinearLayout>
 
-        <!-- ── TASKS + CLOCK CARD ──────────────────────────────────────── -->
+        <!-- ── TASKS CARD ──────────────────────────────────────────────── -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -120,53 +120,10 @@
             android:layout_marginHorizontal="16dp"
             android:layout_marginBottom="12dp">
 
-            <!-- Clock widget -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="@drawable/bg_card"
-                android:padding="16dp"
-                android:layout_marginEnd="8dp"
-                android:gravity="center">
-
-                <TextClock
-                    android:id="@+id/tvFeedClock"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:format12Hour="hh:mm"
-                    android:format24Hour="HH:mm"
-                    android:textColor="#FFFFFF"
-                    android:textSize="32sp"
-                    android:textStyle="bold" />
-
-                <TextClock
-                    android:id="@+id/tvFeedDay"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:format12Hour="EEEE"
-                    android:format24Hour="EEEE"
-                    android:textColor="#77FFFFFF"
-                    android:textSize="13sp"
-                    android:layout_marginTop="2dp" />
-
-                <TextClock
-                    android:id="@+id/tvFeedFullDate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:format12Hour="d MMM yyyy"
-                    android:format24Hour="d MMM yyyy"
-                    android:textColor="#55FFFFFF"
-                    android:textSize="12sp"
-                    android:layout_marginTop="1dp" />
-            </LinearLayout>
-
             <!-- Tasks widget -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1.3"
                 android:orientation="vertical"
                 android:background="@drawable/bg_card"
                 android:padding="16dp">

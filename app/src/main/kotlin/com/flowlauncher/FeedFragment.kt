@@ -92,7 +92,7 @@ class FeedFragment : Fragment() {
     // ── Tasks ─────────────────────────────────────────────────────────────────
 
     private fun setupTasks() {
-        todoAdapter = TodoAdapter { pos -> deleteTask(pos) }
+        todoAdapter = TodoAdapter({ pos -> toggleTask(pos) }, { pos -> deleteTask(pos) })
         binding.rvTodos.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = todoAdapter
@@ -106,7 +106,7 @@ class FeedFragment : Fragment() {
     }
 
     private fun refreshTasks() {
-        val todos = prefs.todos
+        val todos = prefs.todoItems
         todoAdapter.setItems(todos)
         _binding?.tvTasksEmpty?.visibility = if (todos.isEmpty()) View.VISIBLE else View.GONE
     }
@@ -130,7 +130,7 @@ class FeedFragment : Fragment() {
             .setPositiveButton("Add") { _, _ ->
                 val text = input.text.toString().trim()
                 if (text.isNotEmpty()) {
-                    prefs.todos = prefs.todos.toMutableList().also { it.add(text) }
+                    prefs.todoItems = prefs.todoItems.toMutableList().also { it.add(TodoItem(text, false)) }
                     refreshTasks()
                 }
             }
@@ -138,11 +138,21 @@ class FeedFragment : Fragment() {
             .show()
     }
 
+    private fun toggleTask(pos: Int) {
+        val updated = todoAdapter.getItems().toMutableList()
+        if (pos in updated.indices) {
+            val item = updated[pos]
+            updated[pos] = item.copy(done = !item.done)
+            prefs.todoItems = updated
+            refreshTasks()
+        }
+    }
+
     private fun deleteTask(pos: Int) {
         val updated = todoAdapter.getItems().toMutableList()
         if (pos in updated.indices) {
             updated.removeAt(pos)
-            prefs.todos = updated
+            prefs.todoItems = updated
             refreshTasks()
         }
     }

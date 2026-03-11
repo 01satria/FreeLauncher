@@ -55,28 +55,11 @@ class SettingsActivity : Activity() {
             catch (_: Exception) {}
         }
 
-        // Icons
-        binding.switchShowIcons.isChecked = prefs.showIcons
-        binding.switchShowIcons.setOnCheckedChangeListener { _, c -> prefs.showIcons = c }
-
         // Home app count
         binding.npHomeApps.minValue = 1
         binding.npHomeApps.maxValue = 10
         binding.npHomeApps.value    = prefs.homeAppCount
         binding.npHomeApps.setOnValueChangedListener { _, _, new -> prefs.homeAppCount = new }
-
-        // Font size
-        binding.seekFontSize.max      = 16
-        binding.seekFontSize.progress = (prefs.fontSize - 14).coerceIn(0, 16)
-        binding.tvFontSizeVal.text    = "${prefs.fontSize}sp"
-        binding.seekFontSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onStartTrackingTouch(s: SeekBar?) {}
-            override fun onStopTrackingTouch(s: SeekBar?) {}
-            override fun onProgressChanged(s: SeekBar?, p: Int, u: Boolean) {
-                prefs.fontSize = 14 + (p ?: 0)
-                binding.tvFontSizeVal.text = "${prefs.fontSize}sp"
-            }
-        })
 
         // Manage hidden apps
         binding.btnManageHidden.setOnClickListener {

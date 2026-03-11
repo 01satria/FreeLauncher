@@ -13,8 +13,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowlauncher.databinding.FragmentHomeBinding
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 
 class HomeFragment : Fragment() {
 
@@ -38,10 +36,7 @@ class HomeFragment : Fragment() {
         prefs = Prefs(requireContext())
 
         homeAdapter = HomeAppAdapter(
-            showIcons      = prefs.showIcons,
             showScreenTime = prefs.showScreenTime,
-            alignment      = gravityFromPref(),
-            fontSize       = prefs.fontSize.toFloat(),
             onAppClick     = { app -> launchApp(app) },
             onAppLongClick = { app, anchor ->
                 (activity as? MainActivity)?.showAppOptionsPublic(app, anchor)
@@ -114,16 +109,9 @@ class HomeFragment : Fragment() {
         }
         b.tvDate.visibility = if (prefs.showDate) View.VISIBLE else View.GONE
 
-        val gravity = gravityFromPref()
-        b.tvClock.gravity = gravity
-        b.tvDate.gravity  = gravity
-        b.tvUsageToday.gravity = gravity
-    }
-
-    private fun gravityFromPref(): Int = when (prefs.alignment) {
-        Prefs.ALIGN_CENTER -> Gravity.CENTER_HORIZONTAL
-        Prefs.ALIGN_RIGHT  -> Gravity.END
-        else               -> Gravity.START
+        b.tvClock.gravity = Gravity.START
+        b.tvDate.gravity  = Gravity.START
+        b.tvUsageToday.gravity = Gravity.START
     }
 
     // ── Home apps ─────────────────────────────────────────────────────────────
@@ -139,11 +127,7 @@ class HomeFragment : Fragment() {
             else
                 AppRepository.getMostUsed(prefs.homeAppCount)
 
-            // Update adapter params in case settings changed
-            homeAdapter.showIcons      = prefs.showIcons
             homeAdapter.showScreenTime = prefs.showScreenTime
-            homeAdapter.alignment      = gravityFromPref()
-            homeAdapter.fontSize       = prefs.fontSize.toFloat()
             homeAdapter.setApps(homeApps)
 
             val totalMin = apps.sumOf { it.screenTimeMinutes }

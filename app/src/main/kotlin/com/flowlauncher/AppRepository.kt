@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.Calendar
 
 /**
  * Singleton app cache.
@@ -13,20 +14,39 @@ import kotlinx.coroutines.withContext
  * RAM strategy:
  * - App list loaded once on IO thread; subsequent calls reuse cache.
  * - Full PM scan only happens after invalidate() (package add/remove).
- * - Icons stored as Drawable references inside AppInfo; not duplicated.
+ * - Icons NOT loaded — saves significant RAM.
  * - Screen-time map is a plain Map<String, Long> — only longs, very cheap.
+ * - Cache auto-invalidates at midnight (local time) so screen time resets correctly.
  */
 object AppRepository {
 
     @Volatile private var cachedApps: List<AppInfo> = emptyList()
     @Volatile private var screenTimeCache: Map<String, Long> = emptyMap()
     @Volatile private var cacheValid = false
+    @Volatile private var cacheDateMs: Long = 0L   // midnight timestamp when cache was built
+
+    /** Returns midnight (00:00) of today in local time as epoch ms. */
+    private fun todayMidnightMs(): Long {
+        val cal = Calendar.getInstance()
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        return cal.timeInMillis
+    }
 
     suspend fun loadApps(context: Context, prefs: Prefs): List<AppInfo> =
         withContext(Dispatchers.IO) {
+            val midnightMs = todayMidnightMs()
+
+            // Invalidate cache if date has crossed midnight
+            if (cacheDateMs != midnightMs) {
+                cacheValid = false
+            }
+
             // Reuse cache on resume — only full-scan if invalidated
             if (cacheValid && cachedApps.isNotEmpty()) {
-                // Still refresh screen time (cheap) without re-loading icons
+                // Refresh screen time (cheap) without re-scanning installed apps
                 screenTimeCache = ScreenTimeHelper.getTodayUsage(context)
                 val favorites = prefs.favoritePackages.toSet()
                 cachedApps = cachedApps.map { app ->
@@ -38,7 +58,7 @@ object AppRepository {
                 return@withContext cachedApps
             }
 
-            // Full scan (first load or after install/uninstall)
+            // Full scan (first load, after install/uninstall, or day change)
             val pm = context.packageManager
             val intent = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) }
 
@@ -73,6 +93,7 @@ object AppRepository {
 
             cachedApps = apps
             cacheValid = true
+            cacheDateMs = midnightMs
             apps
         }
 
