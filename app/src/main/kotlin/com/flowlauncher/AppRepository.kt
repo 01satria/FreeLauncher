@@ -11,56 +11,46 @@ import java.util.Calendar
 /**
  * Singleton app cache.
  *
- * RAM strategy:
- * - App list loaded once on IO thread; subsequent calls reuse cache.
- * - Full PM scan only happens after invalidate() (package add/remove).
- * - Icons NOT loaded — saves significant RAM.
- * - Screen-time map is a plain Map<String, Long> — only longs, very cheap.
- * - Cache auto-invalidates at midnight (local time) so screen time resets correctly.
+ * Day-change detection: tracks DAY_OF_YEAR so cache auto-invalidates at midnight,
+ * ensuring screen time always reflects the current calendar day.
  */
 object AppRepository {
 
     @Volatile private var cachedApps: List<AppInfo> = emptyList()
-    @Volatile private var screenTimeCache: Map<String, Long> = emptyMap()
     @Volatile private var cacheValid = false
-    @Volatile private var cacheDateMs: Long = 0L   // midnight timestamp when cache was built
+    @Volatile private var lastKnownDay: Int = -1
 
-    /** Returns midnight (00:00) of today in local time — matches INTERVAL_DAILY boundary. */
-    private fun todayMidnightMs(): Long {
-        val cal = Calendar.getInstance()
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        return cal.timeInMillis
+    private fun currentDayOfYear(): Int = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
+
+    private fun checkAndResetIfNewDay() {
+        val today = currentDayOfYear()
+        if (today != lastKnownDay) {
+            // New calendar day detected — invalidate so screen time re-fetches from scratch
+            cacheValid = false
+            lastKnownDay = today
+        }
     }
 
     suspend fun loadApps(context: Context, prefs: Prefs): List<AppInfo> =
         withContext(Dispatchers.IO) {
-            val midnightMs = todayMidnightMs()
+            checkAndResetIfNewDay()
 
-            // Invalidate cache if date has crossed midnight
-            if (cacheDateMs != midnightMs) {
-                cacheValid = false
-            }
-
-            // Reuse cache on resume — only full-scan if invalidated
             if (cacheValid && cachedApps.isNotEmpty()) {
-                // Refresh screen time (cheap) without re-scanning installed apps
-                screenTimeCache = ScreenTimeHelper.getTodayUsage(context)
-                val favorites = prefs.favoritePackages.toSet()
+                // Refresh screen time only (cheap) — no re-scan of installed apps
+                val screenTime = ScreenTimeHelper.getTodayUsage(context)
+                val favorites  = prefs.favoritePackages.toSet()
                 cachedApps = cachedApps.map { app ->
                     app.copy(
-                        screenTimeMinutes = screenTimeCache[app.packageName] ?: 0L,
+                        screenTimeMinutes = screenTime[app.packageName] ?: 0L,
                         isFavorite = app.packageName in favorites
                     )
                 }
                 return@withContext cachedApps
             }
 
-            // Full scan (first load, after install/uninstall, or day change)
-            val pm = context.packageManager
-            val intent = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) }
+            // Full scan (first load, after install/uninstall, or new day)
+            val pm      = context.packageManager
+            val intent  = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) }
 
             @Suppress("DEPRECATION")
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
@@ -68,8 +58,7 @@ object AppRepository {
 
             val hidden    = prefs.hiddenPackages
             val favorites = prefs.favoritePackages.toSet()
-
-            screenTimeCache = ScreenTimeHelper.getTodayUsage(context)
+            val screenTime = ScreenTimeHelper.getTodayUsage(context)
 
             val apps = pm.queryIntentActivities(intent, flags)
                 .asSequence()
@@ -83,7 +72,7 @@ object AppRepository {
                                        catch (_: Exception) { info.activityInfo.packageName },
                         packageName  = info.activityInfo.packageName,
                         icon         = try { info.loadIcon(pm) } catch (_: Exception) { null },
-                        screenTimeMinutes = screenTimeCache[info.activityInfo.packageName] ?: 0L,
+                        screenTimeMinutes = screenTime[info.activityInfo.packageName] ?: 0L,
                         isHidden     = false,
                         isFavorite   = info.activityInfo.packageName in favorites
                     )
@@ -91,9 +80,9 @@ object AppRepository {
                 .sortedBy { it.label.lowercase() }
                 .toList()
 
-            cachedApps = apps
-            cacheValid = true
-            cacheDateMs = midnightMs
+            cachedApps  = apps
+            cacheValid  = true
+            lastKnownDay = currentDayOfYear()
             apps
         }
 
@@ -110,9 +99,8 @@ object AppRepository {
         return order.mapNotNull { map[it] }
     }
 
-    /** Called on package install/uninstall — forces full PM scan next load. */
     fun invalidate() {
-        cacheValid = false
-        cachedApps = emptyList()
+        cacheValid  = false
+        cachedApps  = emptyList()
     }
 }

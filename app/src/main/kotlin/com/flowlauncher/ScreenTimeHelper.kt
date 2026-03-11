@@ -18,48 +18,39 @@ object ScreenTimeHelper {
         return mode == AppOpsManager.MODE_ALLOWED
     }
 
-    /**
-     * Returns per-app foreground minutes using INTERVAL_DAILY buckets —
-     * the exact same method Android's Digital Wellbeing / system screen time uses.
-     *
-     * INTERVAL_DAILY buckets are aligned to local midnight by the OS itself,
-     * so totalTimeInForeground in each stat already represents "today only".
-     * No manual event-replay needed; the OS does the windowing correctly for this interval.
-     */
     fun getTodayUsage(context: Context): Map<String, Long> {
         return try {
             if (!hasPermission(context)) return emptyMap()
 
             val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+            val startOfDay = getStartOfToday()
+            val now = System.currentTimeMillis()
 
-            // Start of today in local time (midnight)
-            val cal = Calendar.getInstance()
-            cal.set(Calendar.HOUR_OF_DAY, 0)
-            cal.set(Calendar.MINUTE, 0)
-            cal.set(Calendar.SECOND, 0)
-            cal.set(Calendar.MILLISECOND, 0)
-            val startMs = cal.timeInMillis
-            val nowMs   = System.currentTimeMillis()
+            val usageMap = usm.queryAndAggregateUsageStats(startOfDay, now)
 
-            // INTERVAL_DAILY: OS returns one stat per app per calendar day,
-            // totalTimeInForeground = usage within that calendar day only.
-            val stats = usm.queryUsageStats(
-                UsageStatsManager.INTERVAL_DAILY,
-                startMs,
-                nowMs
-            ) ?: return emptyMap()
-
-            // Accumulate (multiple entries can exist per package)
-            val result = mutableMapOf<String, Long>()
-            for (stat in stats) {
-                val minutes = stat.totalTimeInForeground / 60_000L
-                if (minutes <= 0) continue
-                result[stat.packageName] = (result[stat.packageName] ?: 0L) + minutes
-            }
-            result
+            usageMap.mapValues { it.value.totalTimeInForeground / 60_000L }
+                .filter { it.value > 0 }
         } catch (e: Exception) {
             emptyMap()
         }
+    }
+
+    fun getTodayTotalMinutes(context: Context): Long {
+        return try {
+            if (!hasPermission(context)) return 0L
+            val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+            val usageMap = usm.queryAndAggregateUsageStats(getStartOfToday(), System.currentTimeMillis())
+            usageMap.values.sumOf { it.totalTimeInForeground } / 60_000L
+        } catch (e: Exception) { 0L }
+    }
+
+    private fun getStartOfToday(): Long {
+        return Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
     }
 
     fun formatMinutes(minutes: Long): String {
