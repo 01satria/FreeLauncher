@@ -26,7 +26,7 @@ All reports will be reviewed and investigated. The maintainer reserves the right
 
 ## Scope
 
-This Code of Conduct applies to all project spaces — including issues, pull requests, and any other communication related to this project.
+This Code of Conduct applies to all project spaces including issues, pull requests, and any other communication related to this project.
 
 ---
 
@@ -58,7 +58,7 @@ Semua laporan akan ditinjau dan diselidiki. Maintainer berhak untuk menghapus, m
 
 ## Ruang Lingkup
 
-Kode Etik ini berlaku di semua ruang proyek — termasuk issues, pull request, dan komunikasi lain yang berkaitan dengan proyek ini.
+Kode Etik ini berlaku di semua ruang proyek termasuk issues, pull request, dan komunikasi lain yang berkaitan dengan proyek ini.
 
 ---
 
