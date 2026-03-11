@@ -8,35 +8,27 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Calendar
 
-/**
- * Singleton app cache.
- *
- * Day-change detection: tracks DAY_OF_YEAR so cache auto-invalidates at midnight,
- * ensuring screen time always reflects the current calendar day.
- */
 object AppRepository {
 
     @Volatile private var cachedApps: List<AppInfo> = emptyList()
     @Volatile private var cacheValid = false
-    @Volatile private var lastKnownDay: Int = -1
+    @Volatile private var lastKnownDayOfYear: Int = -1
 
     private fun currentDayOfYear(): Int = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
 
-    private fun checkAndResetIfNewDay() {
+    private fun forceResetIfNewDay() {
         val today = currentDayOfYear()
-        if (today != lastKnownDay) {
-            // New calendar day detected — invalidate so screen time re-fetches from scratch
+        if (today != lastKnownDayOfYear) {
             cacheValid = false
-            lastKnownDay = today
+            lastKnownDayOfYear = today
         }
     }
 
     suspend fun loadApps(context: Context, prefs: Prefs): List<AppInfo> =
         withContext(Dispatchers.IO) {
-            checkAndResetIfNewDay()
+            forceResetIfNewDay()
 
             if (cacheValid && cachedApps.isNotEmpty()) {
-                // Refresh screen time only (cheap) — no re-scan of installed apps
                 val screenTime = ScreenTimeHelper.getTodayUsage(context)
                 val favorites  = prefs.favoritePackages.toSet()
                 cachedApps = cachedApps.map { app ->
@@ -48,16 +40,15 @@ object AppRepository {
                 return@withContext cachedApps
             }
 
-            // Full scan (first load, after install/uninstall, or new day)
-            val pm      = context.packageManager
-            val intent  = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) }
+            val pm     = context.packageManager
+            val intent = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) }
 
             @Suppress("DEPRECATION")
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
                 PackageManager.MATCH_ALL else 0
 
-            val hidden    = prefs.hiddenPackages
-            val favorites = prefs.favoritePackages.toSet()
+            val hidden     = prefs.hiddenPackages
+            val favorites  = prefs.favoritePackages.toSet()
             val screenTime = ScreenTimeHelper.getTodayUsage(context)
 
             val apps = pm.queryIntentActivities(intent, flags)
@@ -68,21 +59,21 @@ object AppRepository {
                 }
                 .map { info ->
                     AppInfo(
-                        label        = try { info.loadLabel(pm).toString() }
-                                       catch (_: Exception) { info.activityInfo.packageName },
-                        packageName  = info.activityInfo.packageName,
-                        icon         = try { info.loadIcon(pm) } catch (_: Exception) { null },
+                        label             = try { info.loadLabel(pm).toString() }
+                                            catch (_: Exception) { info.activityInfo.packageName },
+                        packageName       = info.activityInfo.packageName,
+                        icon              = try { info.loadIcon(pm) } catch (_: Exception) { null },
                         screenTimeMinutes = screenTime[info.activityInfo.packageName] ?: 0L,
-                        isHidden     = false,
-                        isFavorite   = info.activityInfo.packageName in favorites
+                        isHidden          = false,
+                        isFavorite        = info.activityInfo.packageName in favorites
                     )
                 }
                 .sortedBy { it.label.lowercase() }
                 .toList()
 
-            cachedApps  = apps
-            cacheValid  = true
-            lastKnownDay = currentDayOfYear()
+            cachedApps           = apps
+            cacheValid           = true
+            lastKnownDayOfYear   = currentDayOfYear()
             apps
         }
 
@@ -100,7 +91,7 @@ object AppRepository {
     }
 
     fun invalidate() {
-        cacheValid  = false
-        cachedApps  = emptyList()
+        cacheValid = false
+        cachedApps = emptyList()
     }
 }
