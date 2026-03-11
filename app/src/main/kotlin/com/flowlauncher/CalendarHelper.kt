@@ -58,23 +58,24 @@ object CalendarHelper {
     /**
      * Fetch upcoming events sorted by start time using CalendarContract.Instances.
      *
-     * Unlike Events.CONTENT_URI (which only stores the base event record),
-     * Instances.CONTENT_URI expands recurring events into individual instances —
-     * so a weekly meeting will show every occurrence within the queried range,
-     * not just the first one.
-     *
-     * - No query : next 30 days, max [limit] results.
-     * - With query: next 365 days, all matching results (no cap).
+     * - [query] blank  : [rangeDays] window (default 30), max [limit] results.
+     * - [query] present: 365-day window, no result cap — full-year search.
+     * - [rangeDays] can be overridden (e.g. 365) for pinned-event fetches.
      */
-    suspend fun getUpcomingEvents(context: Context, limit: Int = 20, query: String = ""): List<EventItem> =
+    suspend fun getUpcomingEvents(
+        context: Context,
+        limit: Int = 20,
+        query: String = "",
+        rangeDays: Int = 30
+    ): List<EventItem> =
         withContext(Dispatchers.IO) {
             if (!hasPermission(context)) return@withContext emptyList()
 
             val now      = System.currentTimeMillis()
             val rangeEnd = now + if (query.isNotBlank())
-                TimeUnit.DAYS.toMillis(365)   // full-year search
+                TimeUnit.DAYS.toMillis(365)
             else
-                TimeUnit.DAYS.toMillis(30)    // default 30-day view
+                TimeUnit.DAYS.toMillis(rangeDays.toLong())
             val effectiveLimit = if (query.isNotBlank()) Int.MAX_VALUE else limit
 
             // Build the Instances URI with the exact time window baked in.

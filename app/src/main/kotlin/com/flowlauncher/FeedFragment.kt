@@ -76,6 +76,8 @@ class FeedFragment : Fragment() {
         refreshEvents()
         refreshScreenTime()
         startCountdownTicker()
+        // Sync pinned strip in case it was collapsed before navigating away
+        if (!eventsExpanded) refreshPinnedEvents()
     }
 
     override fun onPause() {
@@ -138,6 +140,9 @@ class FeedFragment : Fragment() {
         binding.btnGrantCalendar.setOnClickListener {
             calendarPermLauncher.launch(Manifest.permission.READ_CALENDAR)
         }
+
+        // Apply initial collapse/expand state
+        updateEventsCollapse()
 
         // Collapse / expand toggle
         binding.layoutEventsHeader.setOnClickListener {
@@ -234,26 +239,34 @@ class FeedFragment : Fragment() {
 
     private fun refreshPinnedEvents() {
         val b = _binding ?: return
-        if (!eventsExpanded && CalendarHelper.hasPermission(requireContext())) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                val pinnedIds = prefs.pinnedEventIds
-                if (pinnedIds.isEmpty()) {
-                    b.rvPinnedEvents.visibility = View.GONE
-                    return@launch
-                }
-                // Fetch all events then filter by pinned IDs
-                val all = CalendarHelper.getUpcomingEvents(requireContext(), limit = 100)
-                val pinned = all.filter { it.id in pinnedIds }
-                val bv = _binding ?: return@launch
-                if (pinned.isEmpty()) {
-                    bv.rvPinnedEvents.visibility = View.GONE
-                } else {
-                    bv.rvPinnedEvents.visibility = View.VISIBLE
-                    pinnedAdapter.setEvents(pinned)
-                }
-            }
-        } else {
+
+        if (eventsExpanded || !CalendarHelper.hasPermission(requireContext())) {
             b.rvPinnedEvents.visibility = View.GONE
+            return
+        }
+
+        val pinnedIds = prefs.pinnedEventIds
+        if (pinnedIds.isEmpty()) {
+            b.rvPinnedEvents.visibility = View.GONE
+            return
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Use 365-day range so pinned events far in the future are found
+            val all    = CalendarHelper.getUpcomingEvents(
+                context    = requireContext(),
+                limit      = Int.MAX_VALUE,
+                rangeDays  = 365
+            )
+            val pinned = all.filter { it.id in pinnedIds }
+            val bv = _binding ?: return@launch
+
+            if (pinned.isEmpty()) {
+                bv.rvPinnedEvents.visibility = View.GONE
+            } else {
+                pinnedAdapter.setEvents(pinned)
+                bv.rvPinnedEvents.visibility = View.VISIBLE
+            }
         }
     }
 
