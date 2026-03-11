@@ -1,6 +1,7 @@
 package com.flowlauncher
 
 import android.Manifest
+import android.content.ContentUris
 import android.content.Context
 import android.content.pm.PackageManager
 import android.provider.CalendarContract
@@ -55,63 +56,92 @@ object CalendarHelper {
                 PackageManager.PERMISSION_GRANTED
 
     /**
-     * Fetch upcoming events within the next 30 days, sorted by start time.
-     * If [query] is non-blank, filters by title (case-insensitive LIKE).
-     * Returns empty list if permission not granted.
+     * Fetch upcoming events sorted by start time using CalendarContract.Instances.
+     *
+     * Unlike Events.CONTENT_URI (which only stores the base event record),
+     * Instances.CONTENT_URI expands recurring events into individual instances —
+     * so a weekly meeting will show every occurrence within the queried range,
+     * not just the first one.
+     *
+     * - No query : next 30 days, max [limit] results.
+     * - With query: next 365 days, all matching results (no cap).
      */
     suspend fun getUpcomingEvents(context: Context, limit: Int = 20, query: String = ""): List<EventItem> =
         withContext(Dispatchers.IO) {
             if (!hasPermission(context)) return@withContext emptyList()
-            val events = mutableListOf<EventItem>()
-            val now = System.currentTimeMillis()
-            val rangeEnd = now + TimeUnit.DAYS.toMillis(30)
+
+            val now      = System.currentTimeMillis()
+            val rangeEnd = now + if (query.isNotBlank())
+                TimeUnit.DAYS.toMillis(365)   // full-year search
+            else
+                TimeUnit.DAYS.toMillis(30)    // default 30-day view
+            val effectiveLimit = if (query.isNotBlank()) Int.MAX_VALUE else limit
+
+            // Build the Instances URI with the exact time window baked in.
+            // This is required by the Instances content provider.
+            val uri = CalendarContract.Instances.CONTENT_URI.buildUpon().let {
+                ContentUris.appendId(it, now)
+                ContentUris.appendId(it, rangeEnd)
+                it.build()
+            }
 
             val projection = arrayOf(
-                CalendarContract.Events._ID,
-                CalendarContract.Events.TITLE,
-                CalendarContract.Events.DTSTART,
-                CalendarContract.Events.DTEND,
-                CalendarContract.Events.ALL_DAY,
-                CalendarContract.Events.CALENDAR_COLOR
+                CalendarContract.Instances.EVENT_ID,
+                CalendarContract.Instances.TITLE,
+                CalendarContract.Instances.BEGIN,
+                CalendarContract.Instances.END,
+                CalendarContract.Instances.ALL_DAY,
+                CalendarContract.Instances.CALENDAR_COLOR
             )
 
-            val selection = buildString {
-                append("${CalendarContract.Events.DTSTART} >= ? AND ")
-                append("${CalendarContract.Events.DTSTART} <= ? AND ")
-                append("${CalendarContract.Events.DELETED} = 0")
-                if (query.isNotBlank()) {
-                    append(" AND ${CalendarContract.Events.TITLE} LIKE ?")
-                }
-            }
-            val selectionArgs = if (query.isNotBlank())
-                arrayOf(now.toString(), rangeEnd.toString(), "%$query%")
-            else
-                arrayOf(now.toString(), rangeEnd.toString())
+            // Title filter applied in-memory after fetch (Instances URI does not
+            // support LIKE selection on Android < 26 reliably).
+            val selection = "${CalendarContract.Instances.BEGIN} >= ? AND " +
+                            "${CalendarContract.Instances.DELETED} = 0"
+            val selectionArgs = arrayOf(now.toString())
+
+            val events = mutableListOf<EventItem>()
+            val seen   = mutableSetOf<String>() // deduplicate by "eventId-begin"
 
             try {
                 context.contentResolver.query(
-                    CalendarContract.Events.CONTENT_URI,
+                    uri,
                     projection,
                     selection,
                     selectionArgs,
-                    "${CalendarContract.Events.DTSTART} ASC"
+                    "${CalendarContract.Instances.BEGIN} ASC"
                 )?.use { cursor ->
-                    val iId     = cursor.getColumnIndex(CalendarContract.Events._ID)
-                    val iTitle  = cursor.getColumnIndex(CalendarContract.Events.TITLE)
-                    val iStart  = cursor.getColumnIndex(CalendarContract.Events.DTSTART)
-                    val iEnd    = cursor.getColumnIndex(CalendarContract.Events.DTEND)
-                    val iAllDay = cursor.getColumnIndex(CalendarContract.Events.ALL_DAY)
-                    val iColor  = cursor.getColumnIndex(CalendarContract.Events.CALENDAR_COLOR)
-                    while (cursor.moveToNext() && events.size < limit) {
+                    val iId     = cursor.getColumnIndex(CalendarContract.Instances.EVENT_ID)
+                    val iTitle  = cursor.getColumnIndex(CalendarContract.Instances.TITLE)
+                    val iBegin  = cursor.getColumnIndex(CalendarContract.Instances.BEGIN)
+                    val iEnd    = cursor.getColumnIndex(CalendarContract.Instances.END)
+                    val iAllDay = cursor.getColumnIndex(CalendarContract.Instances.ALL_DAY)
+                    val iColor  = cursor.getColumnIndex(CalendarContract.Instances.CALENDAR_COLOR)
+
+                    while (cursor.moveToNext() && events.size < effectiveLimit) {
                         val title = cursor.getString(iTitle)?.takeIf { it.isNotBlank() }
                             ?: continue
+
+                        // Apply title filter in-memory for reliable cross-version behaviour
+                        if (query.isNotBlank() &&
+                            !title.contains(query, ignoreCase = true)) continue
+
+                        val eventId = cursor.getLong(iId)
+                        val begin   = cursor.getLong(iBegin)
+                        val key     = "$eventId-$begin"
+                        if (!seen.add(key)) continue   // skip duplicates
+
                         events += EventItem(
-                            id            = cursor.getLong(iId),
+                            id            = eventId,
                             title         = title,
-                            startMs       = cursor.getLong(iStart),
-                            endMs         = cursor.getLong(iEnd).let { if (it == 0L) cursor.getLong(iStart) + 3_600_000L else it },
+                            startMs       = begin,
+                            endMs         = cursor.getLong(iEnd).let {
+                                if (it == 0L) begin + 3_600_000L else it
+                            },
                             allDay        = cursor.getInt(iAllDay) == 1,
-                            calendarColor = cursor.getInt(iColor).let { if (it == 0) 0xFF4285F4.toInt() else it }
+                            calendarColor = cursor.getInt(iColor).let {
+                                if (it == 0) 0xFF4285F4.toInt() else it
+                            }
                         )
                     }
                 }
