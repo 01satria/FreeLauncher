@@ -1,6 +1,7 @@
 package com.flowlauncher
 
 import android.app.AppOpsManager
+import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.os.Process
@@ -19,51 +20,91 @@ object ScreenTimeHelper {
     }
 
     /**
-     * Returns a map of packageName -> usage minutes for TODAY only (since 00:00 local time).
+     * Calculates per-app foreground time strictly within [startMs, nowMs] by
+     * replaying raw UsageEvents (ACTIVITY_RESUMED / ACTIVITY_PAUSED / ACTIVITY_STOPPED).
      *
-     * Why NOT queryAndAggregateUsageStats:
-     * Many OEMs (Samsung, Xiaomi, etc.) ignore the startTime in that API and return
-     * cumulative data from their internal bucket boundary, causing yesterday's usage
-     * to bleed into today's count.
+     * This is the ONLY method that is reliable across all OEMs.
+     * queryUsageStats / queryAndAggregateUsageStats both return totalTimeInForeground
+     * scoped to internal OS bucket boundaries (often calendar day in UTC or OEM-defined),
+     * so they bleed previous-day usage into the current reading.
      *
-     * Fix: use queryUsageStats(INTERVAL_BEST, midnight, now).
-     * Each UsageStat object from this call has totalTimeInForeground scoped to the
-     * queried window [midnight, now], so it's strictly today's data.
-     * We also guard with lastTimeUsed >= midnight to skip stale entries the OS may return.
+     * queryEvents gives us the raw timeline of when each app went foreground/background,
+     * so we can compute exactly how many ms each app was in foreground since [startMs].
+     *
+     * Reset boundary: 01:00 local time (not midnight) — avoids edge cases where
+     * users are still active at 00:xx and the day hasn't meaningfully "started" yet.
      */
     fun getTodayUsage(context: Context): Map<String, Long> {
         return try {
             if (!hasPermission(context)) return emptyMap()
 
             val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+            val startMs = todayResetMs()
+            val nowMs   = System.currentTimeMillis()
 
-            val midnightMs = todayMidnightMs()
-            val nowMs = System.currentTimeMillis()
+            // Query raw events in our window
+            val events = usm.queryEvents(startMs, nowMs) ?: return emptyMap()
 
-            val stats = usm.queryUsageStats(
-                UsageStatsManager.INTERVAL_BEST,
-                midnightMs,
-                nowMs
-            ) ?: return emptyMap()
+            // foregroundStart[pkg] = timestamp when app last came to foreground
+            val foregroundStart = mutableMapOf<String, Long>()
+            // totalMs[pkg] = accumulated foreground ms within [startMs, nowMs]
+            val totalMs = mutableMapOf<String, Long>()
 
-            // Accumulate per package (there can be multiple entries per package)
-            // Only include entries where the app was actually used today
-            val result = mutableMapOf<String, Long>()
-            for (stat in stats) {
-                if (stat.lastTimeUsed < midnightMs) continue   // not used today — skip
-                val minutes = stat.totalTimeInForeground / 60_000L
-                if (minutes <= 0) continue
-                result[stat.packageName] = (result[stat.packageName] ?: 0L) + minutes
+            val event = UsageEvents.Event()
+            while (events.hasNextEvent()) {
+                events.getNextEvent(event)
+                val pkg = event.packageName ?: continue
+                val ts  = event.timeStamp
+
+                when (event.eventType) {
+                    UsageEvents.Event.ACTIVITY_RESUMED -> {
+                        // App came to foreground — record start time (clamped to startMs)
+                        foregroundStart[pkg] = maxOf(ts, startMs)
+                    }
+                    UsageEvents.Event.ACTIVITY_PAUSED,
+                    UsageEvents.Event.ACTIVITY_STOPPED -> {
+                        val start = foregroundStart.remove(pkg) ?: continue
+                        val elapsed = ts - start
+                        if (elapsed > 0) {
+                            totalMs[pkg] = (totalMs[pkg] ?: 0L) + elapsed
+                        }
+                    }
+                }
             }
-            result
+
+            // Apps still in foreground right now — add time up to now
+            for ((pkg, start) in foregroundStart) {
+                val elapsed = nowMs - start
+                if (elapsed > 0) {
+                    totalMs[pkg] = (totalMs[pkg] ?: 0L) + elapsed
+                }
+            }
+
+            // Convert ms → minutes, drop zeros
+            totalMs
+                .mapValues { it.value / 60_000L }
+                .filter { it.value > 0 }
+
         } catch (e: Exception) {
             emptyMap()
         }
     }
 
-    private fun todayMidnightMs(): Long {
-        val cal = Calendar.getInstance()  // uses device local timezone
-        cal.set(Calendar.HOUR_OF_DAY, 0)
+    /**
+     * Returns the start-of-day boundary: 01:00 AM local time today.
+     * If current time is before 01:00, returns 01:00 AM of yesterday
+     * (so the "day" always covers the most recent 01:00 AM).
+     */
+    private fun todayResetMs(): Long {
+        val cal = Calendar.getInstance()
+        val hour = cal.get(Calendar.HOUR_OF_DAY)
+
+        // If it's before 1 AM, the current "day" started at 1 AM yesterday
+        if (hour < 1) {
+            cal.add(Calendar.DATE, -1)
+        }
+
+        cal.set(Calendar.HOUR_OF_DAY, 1)
         cal.set(Calendar.MINUTE, 0)
         cal.set(Calendar.SECOND, 0)
         cal.set(Calendar.MILLISECOND, 0)
