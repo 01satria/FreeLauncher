@@ -4,6 +4,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
@@ -38,16 +39,19 @@ class HomeAppAdapter(
     override fun onBindViewHolder(holder: VH, pos: Int) = holder.bind(apps[pos])
 
     inner class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val icon: android.widget.ImageView = itemView.findViewById(R.id.iv_icon)
-        private val label: TextView = itemView.findViewById(R.id.tv_label)
+        private val icon: ImageView      = itemView.findViewById(R.id.iv_icon)
+        private val label: TextView      = itemView.findViewById(R.id.tv_label)
         private val layoutST: LinearLayout = itemView.findViewById(R.id.layoutScreenTime)
         private val screenTime: TextView = itemView.findViewById(R.id.tv_screen_time)
 
         fun bind(app: AppInfo) {
-            label.text = app.label
+            label.text    = app.label
             label.gravity = Gravity.START
 
-            icon.setImageDrawable(app.icon)
+            // Fetch from LruCache — O(1), no I/O, no Drawable allocation.
+            val bmp = AppRepository.getIcon(app.packageName)
+            if (bmp != null) icon.setImageBitmap(bmp)
+            else             icon.setImageDrawable(null)
 
             if (showScreenTime && app.screenTimeMinutes > 0) {
                 layoutST.visibility = View.VISIBLE

@@ -128,8 +128,8 @@ class MainActivity : FragmentActivity() {
                     binding.drawerDim.visibility = View.GONE
                     binding.viewPager.isUserInputEnabled = true
                     isSearching = false
-                    // Release icon bitmaps — biggest RAM consumer when drawer not visible
-                    AppRepository.clearIcons()
+                    // Icons are managed by AppRepository.iconCache (LruCache) —
+                    // no manual clear needed; LruCache handles memory pressure.
                 }
             }
         })
@@ -137,12 +137,12 @@ class MainActivity : FragmentActivity() {
         binding.rvDrawerApps.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = drawerAdapter
-            setItemViewCacheSize(5)
+            setItemViewCacheSize(8)
             setHasFixedSize(false)
             overScrollMode = View.OVER_SCROLL_NEVER
             itemAnimator = null
-            recycledViewPool.setMaxRecycledViews(0, 20)
-            recycledViewPool.setMaxRecycledViews(1, 5)
+            recycledViewPool.setMaxRecycledViews(0, 5)   // headers — few needed
+            recycledViewPool.setMaxRecycledViews(1, 15)  // app rows
         }
 
         binding.etSearch.showSoftInputOnFocus = false
@@ -202,12 +202,7 @@ class MainActivity : FragmentActivity() {
         scope.launch {
             val fresh = try { AppRepository.loadApps(this@MainActivity, prefs) }
                         catch (_: Exception) { allDrawerApps }
-            // BUG FIX: only update adapter when fresh list has icons, or when the
-            // current list also has no icons — prevents a null-icon background refresh
-            // from wiping out icons that are already displayed.
-            val freshHasIcons = fresh.any { it.icon != null }
-            val currentHasIcons = allDrawerApps.any { it.icon != null }
-            if (fresh != allDrawerApps && (freshHasIcons || !currentHasIcons)) {
+            if (fresh != allDrawerApps) {
                 allDrawerApps = fresh
                 drawerAdapter.setApps(allDrawerApps)
             }

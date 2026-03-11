@@ -10,10 +10,9 @@ class AppDiffCallback(
     override fun getNewListSize() = new.size
     override fun areItemsTheSame(o: Int, n: Int) = old[o].packageName == new[n].packageName
     override fun areContentsTheSame(o: Int, n: Int) =
-        old[o].label == new[n].label &&
+        old[o].label             == new[n].label &&
         old[o].screenTimeMinutes == new[n].screenTimeMinutes &&
-        old[o].isFavorite == new[n].isFavorite &&
-        // BUG FIX: treat a null→non-null (or non-null→null) icon transition as a
-        // content change so the adapter rebinds the view and the icon reappears.
-        (old[o].icon != null) == (new[n].icon != null)
+        old[o].isFavorite        == new[n].isFavorite
+        // Note: icon state not compared here because icons are managed by
+        // AppRepository.iconCache — not stored in AppInfo.
 }

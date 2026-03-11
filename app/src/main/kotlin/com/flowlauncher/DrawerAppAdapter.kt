@@ -5,11 +5,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 
 /**
  * Drawer adapter with alphabetical section headers.
  * Item types: TYPE_HEADER = 0, TYPE_APP = 1
+ *
+ * Performance notes:
+ * ─ setApps() uses DiffUtil — only changed rows are rebound.
+ * ─ Icons fetched from AppRepository.iconCache (LruCache) — O(1), no I/O.
+ * ─ ViewHolder resets icon visibility on every bind to prevent recycle glitch.
  */
 class DrawerAppAdapter(
     private val onAppClick: (AppInfo) -> Unit,
@@ -21,7 +27,6 @@ class DrawerAppAdapter(
         private const val TYPE_APP    = 1
     }
 
-    // Sealed list item: either a section header or an app
     sealed class ListItem {
         data class Header(val letter: String) : ListItem()
         data class App(val info: AppInfo)     : ListItem()
@@ -29,32 +34,40 @@ class DrawerAppAdapter(
 
     private val items = mutableListOf<ListItem>()
 
-    fun setApps(apps: List<AppInfo>) {
-        items.clear()
-        if (apps.isEmpty()) {
-            notifyDataSetChanged()
-            return
-        }
-        // Group by first letter, sorted
+    // ── Data helpers ──────────────────────────────────────────────────────────
+
+    private fun buildItems(apps: List<AppInfo>): List<ListItem> {
+        if (apps.isEmpty()) return emptyList()
+        val result = mutableListOf<ListItem>()
         val grouped = apps.sortedBy { it.label.lowercase() }
             .groupBy { it.label.firstOrNull()?.uppercaseChar()?.toString() ?: "#" }
-            .entries.sortedBy { (k, _) ->
-                if (k == "#") "\u0000" else k   // # sorts first
-            }
+            .entries.sortedBy { (k, _) -> if (k == "#") "\u0000" else k }
 
         grouped.forEach { (letter, appsInGroup) ->
-            items += ListItem.Header(letter)
-            appsInGroup.forEach { items += ListItem.App(it) }
+            result += ListItem.Header(letter)
+            appsInGroup.forEach { result += ListItem.App(it) }
         }
-        notifyDataSetChanged()
+        return result
     }
 
-    /** For search results — flat list without headers */
-    fun setSearchApps(apps: List<AppInfo>) {
+    fun setApps(apps: List<AppInfo>) {
+        val newItems = buildItems(apps)
+        val diff = DiffUtil.calculateDiff(ItemDiffCallback(items, newItems))
         items.clear()
-        apps.forEach { items += ListItem.App(it) }
-        notifyDataSetChanged()
+        items.addAll(newItems)
+        diff.dispatchUpdatesTo(this)
     }
+
+    /** For search results — flat list without section headers */
+    fun setSearchApps(apps: List<AppInfo>) {
+        val newItems = apps.map { ListItem.App(it) }
+        val diff = DiffUtil.calculateDiff(ItemDiffCallback(items, newItems))
+        items.clear()
+        items.addAll(newItems)
+        diff.dispatchUpdatesTo(this)
+    }
+
+    // ── RecyclerView.Adapter ──────────────────────────────────────────────────
 
     override fun getItemCount() = items.size
     override fun getItemViewType(pos: Int) = when (items[pos]) {
@@ -64,11 +77,10 @@ class DrawerAppAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-        return if (viewType == TYPE_HEADER) {
+        return if (viewType == TYPE_HEADER)
             HeaderVH(inflater.inflate(R.layout.item_drawer_header, parent, false))
-        } else {
+        else
             AppVH(inflater.inflate(R.layout.item_drawer_app, parent, false))
-        }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, pos: Int) {
@@ -78,41 +90,71 @@ class DrawerAppAdapter(
         }
     }
 
+    // ── ViewHolders ───────────────────────────────────────────────────────────
+
     inner class HeaderVH(v: View) : RecyclerView.ViewHolder(v) {
         private val tv: TextView = v.findViewById(R.id.tvHeader)
         fun bind(h: ListItem.Header) { tv.text = h.letter }
     }
 
     inner class AppVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val icon: ImageView = itemView.findViewById(R.id.iv_icon)
-        private val label: TextView = itemView.findViewById(R.id.tv_label)
-        private val dot: View       = itemView.findViewById(R.id.dotScreenTime)
+        private val icon: ImageView  = itemView.findViewById(R.id.iv_icon)
+        private val label: TextView  = itemView.findViewById(R.id.tv_label)
+        private val dot: View        = itemView.findViewById(R.id.dotScreenTime)
         private val stTime: TextView = itemView.findViewById(R.id.tv_screen_time)
 
         fun bind(app: AppInfo) {
             label.text = app.label
 
-            // BUG FIX: always reset to VISIBLE before setting drawable so that a recycled
-            // ViewHolder that was previously INVISIBLE does not stay invisible when it
-            // gets reused for an app that does have an icon.
+            // Always reset to VISIBLE before setting image — prevents recycled
+            // ViewHolders from carrying an INVISIBLE state to a new app.
             icon.visibility = View.VISIBLE
-            if (app.icon != null) {
-                icon.setImageDrawable(app.icon)
-            } else {
-                icon.setImageDrawable(null)
-            }
+            val bmp = AppRepository.getIcon(app.packageName)
+            if (bmp != null) icon.setImageBitmap(bmp)
+            else             icon.setImageDrawable(null)
 
             if (app.screenTimeMinutes > 0) {
-                dot.visibility = View.VISIBLE
+                dot.visibility   = View.VISIBLE
                 stTime.visibility = View.VISIBLE
                 stTime.text = ScreenTimeHelper.formatMinutes(app.screenTimeMinutes)
             } else {
-                dot.visibility = View.GONE
+                dot.visibility   = View.GONE
                 stTime.visibility = View.GONE
             }
 
             itemView.setOnClickListener { onAppClick(app) }
             itemView.setOnLongClickListener { onAppLongClick(app, it); true }
+        }
+    }
+
+    // ── DiffUtil ──────────────────────────────────────────────────────────────
+
+    private class ItemDiffCallback(
+        private val old: List<ListItem>,
+        private val new: List<ListItem>
+    ) : DiffUtil.Callback() {
+        override fun getOldListSize() = old.size
+        override fun getNewListSize() = new.size
+
+        override fun areItemsTheSame(o: Int, n: Int): Boolean {
+            val a = old[o]; val b = new[n]
+            return when {
+                a is ListItem.Header && b is ListItem.Header -> a.letter == b.letter
+                a is ListItem.App    && b is ListItem.App    -> a.info.packageName == b.info.packageName
+                else -> false
+            }
+        }
+
+        override fun areContentsTheSame(o: Int, n: Int): Boolean {
+            val a = old[o]; val b = new[n]
+            return when {
+                a is ListItem.Header && b is ListItem.Header -> a.letter == b.letter
+                a is ListItem.App    && b is ListItem.App    ->
+                    a.info.label             == b.info.label &&
+                    a.info.screenTimeMinutes == b.info.screenTimeMinutes &&
+                    a.info.isFavorite        == b.info.isFavorite
+                else -> false
+            }
         }
     }
 }

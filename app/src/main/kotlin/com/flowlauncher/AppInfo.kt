@@ -1,11 +1,13 @@
 package com.flowlauncher
 
-import android.graphics.drawable.Drawable
-
+/**
+ * Lean app metadata — no Drawable/Bitmap field.
+ * Icons are managed by AppRepository.iconCache (LruCache<String,Bitmap>)
+ * and fetched by adapters via AppRepository.getIcon(packageName).
+ */
 data class AppInfo(
     val label: String,
     val packageName: String,
-    var icon: Drawable? = null,
     var screenTimeMinutes: Long = 0L,
     var isHidden: Boolean = false,
     var isFavorite: Boolean = false
