@@ -170,10 +170,14 @@ class HomeFragment : Fragment() {
                        catch (_: Exception) { emptyList() }
             val b = _binding ?: return@launch
 
-            val homeApps = if (prefs.favoritePackages.isNotEmpty())
-                AppRepository.getFavorites(prefs).take(prefs.homeAppCount)
-            else
-                AppRepository.getMostUsed(prefs.homeAppCount)
+            val homeApps = if (apps.isNotEmpty()) {
+                if (prefs.favoritePackages.isNotEmpty())
+                    AppRepository.getFavorites(prefs).take(prefs.homeAppCount)
+                else
+                    AppRepository.getMostUsed(prefs.homeAppCount)
+            } else {
+                emptyList()
+            }
 
             homeAdapter.showScreenTime = prefs.showScreenTime
             homeAdapter.setApps(homeApps)

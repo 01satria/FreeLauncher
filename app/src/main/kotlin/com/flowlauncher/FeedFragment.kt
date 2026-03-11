@@ -59,7 +59,7 @@ class FeedFragment : Fragment() {
         setupTasks()
         setupEvents()
         setupScreenTime()
-        applyTheme()
+        applyTheme()  // dipanggil SETELAH semua adapter diinisialisasi
 
         b.btnFeedSettings.setOnClickListener {
             startActivity(android.content.Intent(requireContext(), SettingsActivity::class.java))
@@ -128,7 +128,7 @@ class FeedFragment : Fragment() {
         // Push theme into adapters (partial rebind — no full layout pass)
         eventAdapter.applyTheme(t)
         pinnedAdapter.applyTheme(t)
-        todoAdapter.applyTheme(t)
+        if (::todoAdapter.isInitialized) todoAdapter.applyTheme(t)
     }
 
     // ── Events ────────────────────────────────────────────────────────────────
