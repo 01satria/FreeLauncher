@@ -1,13 +1,55 @@
-# Minimal Launcher ⚡
+<div align="center">
 
-Launcher Android **super ringan** berbasis pure Kotlin. Tidak ada background service, tidak ada widget, tidak ada animasi berlebihan.
+<img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="96" alt="Flow Launcher icon" />
 
-## Fitur
+# Flow Launcher
 
-- ✅ **Background transparan** — wallpaper terlihat langsung
-- ✅ **Icon aplikasi** di bagian bawah layar, swipe kiri-kanan untuk memilih
-- ✅ **Tap untuk membuka** aplikasi
-- ✅ **Tidak ada background usage** — zero service, zero alarm, zero worker
-- ✅ **Split APK per ABI** — ukuran minimal sesuai CPU device
-- ✅ **Auto-update daftar app** saat install/uninstall
+![Platform](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white&style=flat-square)
+![Min SDK](https://img.shields.io/badge/min_sdk-23-4A90D9?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)
+![Build](https://img.shields.io/github/actions/workflow/status/01satria/FreeLauncher/release.yml?label=build&style=flat-square)
+
+**A minimal Android home screen.**
+Your apps, your clock, your wallpaper.
+
+**Layar utama Android yang minimalis.**
+Aplikasi kamu, jam, wallpaper.
+
+</div>
+
+
+
+<div align="center">
+
+| Home | Drawer | Feed |
+|:---:|:---:|:---:|
+| Clock · Date · Weather | Alphabetical + Search | Tasks · Calendar · Screen Time |
+| Jam · Tanggal · Cuaca | Alfabet + Pencarian | Tugas · Kalender · Screen Time |
+
+</div>
+
+
+
+## Features
+
+- Clock, date, and weather at a glance / Jam, tanggal, dan cuaca sekilas
+- Pinned or most-used apps on the home screen / Aplikasi yang di pin atau paling sering dipakai
+- Alphabetical app drawer with live search / Laci aplikasi alfabet dengan pencarian langsung
+- Calendar events and task list on the feed screen / Event kalender dan daftar tugas di layar feed
+- Transparent background support / Dukungan background transparan
+
+## License
+
+MIT
+
+
+
+
+<div align="center">
+
+
+<img src="https://github.com/01satria.png" width="64" style="border-radius:50%" alt="01satria" />
+Made by [@01satria](https://github.com/01satria)
+
+</div>
 
