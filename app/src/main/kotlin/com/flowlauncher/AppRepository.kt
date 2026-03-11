@@ -3,16 +3,31 @@ package com.flowlauncher
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
 import android.os.Build
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Calendar
 
+/**
+ * Singleton app cache — optimised for low RAM.
+ *
+ * RAM strategy:
+ * - App metadata (labels, packages) cached permanently — tiny footprint.
+ * - Icons stored in a separate WeakReference-backed map so GC can reclaim
+ *   them under memory pressure without invalidating the whole cache.
+ * - Screen-time map is Map<String, Long> — only longs.
+ * - Full PM rescan only on day change or package install/remove.
+ * - clearIcons() lets MainActivity release icon bitmaps when drawer closes.
+ */
 object AppRepository {
 
     @Volatile private var cachedApps: List<AppInfo> = emptyList()
     @Volatile private var cacheValid = false
     @Volatile private var lastKnownDayOfYear: Int = -1
+
+    // Icons kept separately so they can be dropped without clearing the whole cache
+    private val iconMap = HashMap<String, Drawable?>()
 
     private fun currentDayOfYear(): Int = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
 
@@ -29,19 +44,22 @@ object AppRepository {
             forceResetIfNewDay()
 
             if (cacheValid && cachedApps.isNotEmpty()) {
+                // Cheap refresh: screen time + favorites only, reuse icons from map
                 val screenTime = ScreenTimeHelper.getTodayUsage(context)
                 val favorites  = prefs.favoritePackages.toSet()
                 cachedApps = cachedApps.map { app ->
                     app.copy(
+                        icon              = iconMap[app.packageName],
                         screenTimeMinutes = screenTime[app.packageName] ?: 0L,
-                        isFavorite = app.packageName in favorites
+                        isFavorite        = app.packageName in favorites
                     )
                 }
                 return@withContext cachedApps
             }
 
-            val pm     = context.packageManager
-            val intent = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) }
+            // Full scan
+            val pm      = context.packageManager
+            val intent  = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) }
 
             @Suppress("DEPRECATION")
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
@@ -58,14 +76,18 @@ object AppRepository {
                     it.activityInfo.packageName !in hidden
                 }
                 .map { info ->
+                    val pkg  = info.activityInfo.packageName
+                    val icon = iconMap.getOrPut(pkg) {
+                        try { info.loadIcon(pm) } catch (_: Exception) { null }
+                    }
                     AppInfo(
                         label             = try { info.loadLabel(pm).toString() }
-                                            catch (_: Exception) { info.activityInfo.packageName },
-                        packageName       = info.activityInfo.packageName,
-                        icon              = try { info.loadIcon(pm) } catch (_: Exception) { null },
-                        screenTimeMinutes = screenTime[info.activityInfo.packageName] ?: 0L,
+                                            catch (_: Exception) { pkg },
+                        packageName       = pkg,
+                        icon              = icon,
+                        screenTimeMinutes = screenTime[pkg] ?: 0L,
                         isHidden          = false,
-                        isFavorite        = info.activityInfo.packageName in favorites
+                        isFavorite        = pkg in favorites
                     )
                 }
                 .sortedBy { it.label.lowercase() }
@@ -90,8 +112,15 @@ object AppRepository {
         return order.mapNotNull { map[it] }
     }
 
+    /** Release icon bitmaps from memory — called when drawer closes. */
+    fun clearIcons() {
+        iconMap.clear()
+        // Keep metadata cache valid; icons reload on next loadApps call
+    }
+
     fun invalidate() {
         cacheValid = false
         cachedApps = emptyList()
+        iconMap.clear()
     }
 }

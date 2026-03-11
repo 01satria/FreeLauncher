@@ -141,57 +141,102 @@ class SettingsActivity : Activity() {
         binding.tvWeatherLocationStatus.text = "Getting location..."
 
         scope.launch {
-            val loc = withContext(Dispatchers.IO) { getLastLocation() }
+            val loc = getCurrentLocationSuspend()
             if (loc == null) {
-                Toast.makeText(this@SettingsActivity, "Could not get location. Try again.", Toast.LENGTH_SHORT).show()
                 binding.btnSetWeatherLocation.isEnabled = true
-                updateWeatherLocationLabel()
+                binding.tvWeatherLocationStatus.text = "Could not get location. Try again."
                 return@launch
             }
 
+            // ✅ Save location coords immediately — no waiting for geocode/weather
             prefs.weatherLat = loc.first
             prefs.weatherLon = loc.second
+            // Show coords right away as placeholder
+            val coordLabel = "${String.format("%.4f", loc.first)}, ${String.format("%.4f", loc.second)}"
+            prefs.weatherCity = coordLabel
+            binding.btnSetWeatherLocation.isEnabled = true
+            binding.tvWeatherLocationStatus.text = "Location: $coordLabel"
+            Toast.makeText(this@SettingsActivity, "Location saved!", Toast.LENGTH_SHORT).show()
 
-            // Reverse geocode city name
-            val city = withContext(Dispatchers.IO) {
-                try {
-                    val geo = Geocoder(this@SettingsActivity, Locale.getDefault())
-                    @Suppress("DEPRECATION")
-                    val addrs = geo.getFromLocation(loc.first, loc.second, 1)
-                    addrs?.firstOrNull()?.locality
-                        ?: addrs?.firstOrNull()?.subAdminArea
-                        ?: "${String.format("%.2f", loc.first)}, ${String.format("%.2f", loc.second)}"
-                } catch (_: Exception) {
-                    "${String.format("%.2f", loc.first)}, ${String.format("%.2f", loc.second)}"
+            // Geocode + weather fetch in background — non-blocking
+            scope.launch {
+                val city = withContext(Dispatchers.IO) {
+                    try {
+                        val geo = Geocoder(this@SettingsActivity, Locale.getDefault())
+                        @Suppress("DEPRECATION")
+                        val addrs = geo.getFromLocation(loc.first, loc.second, 1)
+                        addrs?.firstOrNull()?.locality
+                            ?: addrs?.firstOrNull()?.subAdminArea
+                            ?: coordLabel
+                    } catch (_: Exception) { coordLabel }
+                }
+                prefs.weatherCity = city
+                updateWeatherLocationLabel()
+
+                val result = WeatherHelper.fetch(loc.first, loc.second)
+                if (result != null) {
+                    prefs.weatherTempC  = result.tempC
+                    prefs.weatherCode   = result.code
+                    prefs.weatherLastMs = System.currentTimeMillis()
                 }
             }
-            prefs.weatherCity = city
-
-            // Fetch weather immediately
-            val result = WeatherHelper.fetch(loc.first, loc.second)
-            if (result != null) {
-                prefs.weatherTempC  = result.tempC
-                prefs.weatherCode   = result.code
-                prefs.weatherLastMs = System.currentTimeMillis()
-            }
-
-            binding.btnSetWeatherLocation.isEnabled = true
-            updateWeatherLocationLabel()
-            Toast.makeText(this@SettingsActivity, "Location set: $city", Toast.LENGTH_SHORT).show()
         }
     }
 
+    /**
+     * Gets current location using active request (not just cached).
+     * Tries GPS first, falls back to NETWORK. Times out after 15s.
+     * Uses suspendCancellableCoroutine so it works cleanly in coroutines.
+     */
     @Suppress("MissingPermission")
-    private fun getLastLocation(): Pair<Double, Double>? {
-        return try {
-            val lm = getSystemService(LOCATION_SERVICE) as LocationManager
-            val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER)
-            for (p in providers) {
-                val loc = lm.getLastKnownLocation(p)
-                if (loc != null) return Pair(loc.latitude, loc.longitude)
+    private suspend fun getCurrentLocationSuspend(): Pair<Double, Double>? {
+        val lm = getSystemService(LOCATION_SERVICE) as LocationManager
+
+        // Try cached first as instant fallback
+        val cached = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER)
+            .mapNotNull { p ->
+                try { if (lm.isProviderEnabled(p)) lm.getLastKnownLocation(p) else null }
+                catch (_: Exception) { null }
             }
-            null
-        } catch (_: Exception) { null }
+            .maxByOrNull { it.time }
+        
+        // If cached is recent enough (< 10 min), use it
+        if (cached != null && System.currentTimeMillis() - cached.time < 10 * 60 * 1000L) {
+            return Pair(cached.latitude, cached.longitude)
+        }
+
+        // Request a fresh location
+        val providers = listOf(LocationManager.NETWORK_PROVIDER, LocationManager.GPS_PROVIDER)
+            .filter { try { lm.isProviderEnabled(it) } catch (_: Exception) { false } }
+
+        if (providers.isEmpty()) {
+            // Last resort: use stale cache
+            return cached?.let { Pair(it.latitude, it.longitude) }
+        }
+
+        return withTimeoutOrNull(15_000L) {
+            kotlinx.coroutines.suspendCancellableCoroutine { cont ->
+                val listener = object : android.location.LocationListener {
+                    override fun onLocationChanged(loc: android.location.Location) {
+                        lm.removeUpdates(this)
+                        if (cont.isActive) cont.resume(Pair(loc.latitude, loc.longitude))
+                    }
+                    @Deprecated("Deprecated")
+                    override fun onStatusChanged(p: String?, s: Int, e: android.os.Bundle?) {}
+                    override fun onProviderEnabled(p: String) {}
+                    override fun onProviderDisabled(p: String) {}
+                }
+                cont.invokeOnCancellation { lm.removeUpdates(listener) }
+                try {
+                    // Request from all available providers simultaneously
+                    providers.forEach { p ->
+                        lm.requestLocationUpdates(p, 0L, 0f, listener, android.os.Looper.getMainLooper())
+                    }
+                } catch (e: Exception) {
+                    if (cont.isActive) cont.resume(null)
+                }
+            }
+        } ?: cached?.let { Pair(it.latitude, it.longitude) }  // timeout fallback
     }
 
     override fun onDestroy() {

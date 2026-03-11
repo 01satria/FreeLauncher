@@ -63,6 +63,7 @@ class MainActivity : FragmentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.setDecorFitsSystemWindows(true)
         }
+        applySystemBarColors()
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -70,10 +71,19 @@ class MainActivity : FragmentActivity() {
         setupViewPager()
         setupDrawer()
         registerReceivers()
+
+        // Pre-load app list so drawer is instant on first open
+        scope.launch {
+            allDrawerApps = try { AppRepository.loadApps(this@MainActivity, prefs) }
+                            catch (_: Exception) { emptyList() }
+            if (::homeFragment.isInitialized) homeFragment.loadHomeApps()
+        }
     }
 
     override fun onResume() {
         super.onResume()
+        prefs = Prefs(this)
+        applySystemBarColors()
     }
 
     // ── ViewPager ─────────────────────────────────────────────────────────────
@@ -118,6 +128,8 @@ class MainActivity : FragmentActivity() {
                     binding.drawerDim.visibility = View.GONE
                     binding.viewPager.isUserInputEnabled = true
                     isSearching = false
+                    // Release icon bitmaps — biggest RAM consumer when drawer not visible
+                    AppRepository.clearIcons()
                 }
             }
         })
@@ -125,10 +137,12 @@ class MainActivity : FragmentActivity() {
         binding.rvDrawerApps.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = drawerAdapter
-            setItemViewCacheSize(3)
+            setItemViewCacheSize(5)
             setHasFixedSize(false)
             overScrollMode = View.OVER_SCROLL_NEVER
             itemAnimator = null
+            recycledViewPool.setMaxRecycledViews(0, 20)
+            recycledViewPool.setMaxRecycledViews(1, 5)
         }
 
         binding.etSearch.showSoftInputOnFocus = false
@@ -151,11 +165,6 @@ class MainActivity : FragmentActivity() {
         binding.btnDrawerSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
-
-        scope.launch {
-            allDrawerApps = try { AppRepository.loadApps(this@MainActivity, prefs) }
-                            catch (_: Exception) { emptyList() }
-        }
     }
 
     private fun filterApps(query: String) {
@@ -174,16 +183,29 @@ class MainActivity : FragmentActivity() {
     }
 
     fun openDrawer() {
+        // Show cached apps immediately — no visible delay
+        val cached = AppRepository.getCached()
+        if (cached.isNotEmpty() && allDrawerApps.isEmpty()) {
+            allDrawerApps = cached
+            drawerAdapter.setApps(allDrawerApps)
+        } else if (allDrawerApps.isNotEmpty()) {
+            drawerAdapter.setApps(allDrawerApps)
+        }
+
         binding.viewPager.isUserInputEnabled = false
         binding.drawerDim.alpha = 0f
         binding.drawerDim.visibility = View.VISIBLE
-        binding.drawerDim.animate().alpha(1f).setDuration(200).start()
+        binding.drawerDim.animate().alpha(1f).setDuration(180).start()
         drawerSheet.state = BottomSheetBehavior.STATE_EXPANDED
 
+        // Refresh in background (screen time / new installs)
         scope.launch {
-            allDrawerApps = try { AppRepository.loadApps(this@MainActivity, prefs) }
-                            catch (_: Exception) { emptyList() }
-            drawerAdapter.setApps(allDrawerApps)
+            val fresh = try { AppRepository.loadApps(this@MainActivity, prefs) }
+                        catch (_: Exception) { allDrawerApps }
+            if (fresh != allDrawerApps) {
+                allDrawerApps = fresh
+                drawerAdapter.setApps(allDrawerApps)
+            }
         }
     }
 
@@ -300,6 +322,18 @@ class MainActivity : FragmentActivity() {
             drawerSheet.state != BottomSheetBehavior.STATE_HIDDEN -> closeDrawer()
             binding.viewPager.currentItem != PAGE_HOME ->
                 binding.viewPager.setCurrentItem(PAGE_HOME, true)
+        }
+    }
+
+    // ── System bar colors ─────────────────────────────────────────────────────
+
+    private fun applySystemBarColors() {
+        if (prefs.transparentBg) {
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        } else {
+            window.statusBarColor = android.graphics.Color.BLACK
+            window.navigationBarColor = android.graphics.Color.BLACK
         }
     }
 
