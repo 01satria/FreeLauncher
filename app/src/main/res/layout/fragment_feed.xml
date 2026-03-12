@@ -334,13 +334,41 @@
 
             </LinearLayout>
 
-            <!-- Shown when permission granted: top apps list -->
+            <!-- Shown when permission granted: 3 kotak horizontal top apps -->
             <LinearLayout
                 android:id="@+id/layoutTopApps"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="2dp" />
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp"
+                android:weightSum="3">
+
+                <!-- Chip 1 — diisi secara programmatic -->
+                <include layout="@layout/item_screentime_chip"
+                    android:id="@+id/chipApp1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <Space android:layout_width="8dp" android:layout_height="1dp" />
+
+                <!-- Chip 2 -->
+                <include layout="@layout/item_screentime_chip"
+                    android:id="@+id/chipApp2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <Space android:layout_width="8dp" android:layout_height="1dp" />
+
+                <!-- Chip 3 -->
+                <include layout="@layout/item_screentime_chip"
+                    android:id="@+id/chipApp3"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

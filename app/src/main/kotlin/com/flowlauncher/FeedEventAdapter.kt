@@ -67,6 +67,7 @@ class FeedEventAdapter(
             when (p) {
                 PAYLOAD_PIN   -> holder.refreshPin(items[pos])
                 PAYLOAD_THEME -> holder.applyTheme(items[pos], theme)
+                PAYLOAD_TICK  -> holder.refreshCountdown(items[pos])
             }
         }
     }
@@ -112,6 +113,14 @@ class FeedEventAdapter(
             btnPin.setOnClickListener { onPin?.invoke(e) }
         }
 
+        fun refreshCountdown(e: EventItem) {
+            val cd = e.countdown   // computed fresh each call via System.currentTimeMillis()
+            tvCountdown.text = cd
+            val (bg, txt) = cdColors(cd)
+            cdBg.setColor(bg)
+            tvCountdown.setTextColor(txt)
+        }
+
         fun refreshPin(e: EventItem) {
             val pinned = e.id in pinnedIds
             btnPin.visibility = if (showPinButton) View.VISIBLE else View.GONE
@@ -134,6 +143,7 @@ class FeedEventAdapter(
     companion object {
         private const val PAYLOAD_PIN   = "pin"
         private const val PAYLOAD_THEME = "theme"
+        const val  PAYLOAD_TICK  = "tick"   // countdown refresh — exposed for FeedFragment
 
         private val DATE_FMT     = SimpleDateFormat("EEE, MMM d", Locale.getDefault())
         private val DATETIME_FMT = SimpleDateFormat("EEE, MMM d · HH:mm", Locale.getDefault())

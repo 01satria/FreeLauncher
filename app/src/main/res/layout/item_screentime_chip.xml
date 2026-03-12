@@ -1,28 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Kotak screen time per app — ukuran sama, disusun horizontal via layout_weight -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/chipRoot"
     android:layout_width="0dp"
     android:layout_height="wrap_content"
+    android:layout_weight="1"
     android:orientation="vertical"
-    android:background="@drawable/bg_st_chip"
-    android:paddingHorizontal="10dp"
-    android:paddingVertical="10dp">
+    android:paddingHorizontal="12dp"
+    android:paddingVertical="14dp"
+    android:background="@drawable/bg_st_chip">
 
+    <!-- Nama aplikasi -->
     <TextView
         android:id="@+id/tvChipName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#AAFFFFFF"
-        android:textSize="12sp"
+        android:textSize="11sp"
+        android:letterSpacing="0.01"
         android:maxLines="1"
-        android:ellipsize="end" />
+        android:ellipsize="end"
+        android:textColor="#AAFFFFFF" />
 
+    <!-- Durasi penggunaan -->
     <TextView
         android:id="@+id/tvChipTime"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF"
-        android:textSize="13sp"
+        android:textSize="15sp"
         android:textStyle="bold"
-        android:layout_marginTop="2dp" />
+        android:layout_marginTop="4dp"
+        android:textColor="#FFFFFF" />
+
 </LinearLayout>

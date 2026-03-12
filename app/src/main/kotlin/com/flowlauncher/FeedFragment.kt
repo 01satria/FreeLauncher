@@ -381,10 +381,30 @@ class FeedFragment : Fragment() {
 
     // ── Screen Time ───────────────────────────────────────────────────────────
 
+    // Pre-allocated GradientDrawable untuk 3 chip — tidak dialokasikan ulang saat bind
+    // Warna berbeda untuk tiap chip (indeks 0,1,2)
+    private val chipBg = Array(3) { GradientDrawable() }
+
+    // Palet warna chip: soft, kontras baik di dark & light
+    private val CHIP_COLORS = intArrayOf(
+        0xFF1A237E.toInt(),   // indigo deep — chip 1
+        0xFF1B5E20.toInt(),   // green deep  — chip 2
+        0xFF4A148C.toInt()    // purple deep  — chip 3
+    )
+    private val CHIP_COLORS_LIGHT = intArrayOf(
+        0xFFBBDEFB.toInt(),   // blue light   — chip 1
+        0xFFC8E6C9.toInt(),   // green light  — chip 2
+        0xFFE1BEE7.toInt()    // purple light — chip 3
+    )
+
     private fun setupScreenTime() {
+        // Set cornerRadius sekali saja ke semua chip bg
+        val r = dpToPx(14f)
+        chipBg.forEach { it.cornerRadius = r }
+
         _b?.btnGrantUsageAccess?.setOnClickListener {
             try {
-                startActivity(android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS))
+                startActivity(android.content.Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
             } catch (_: Exception) {}
         }
         refreshScreenTime()
@@ -403,14 +423,12 @@ class FeedFragment : Fragment() {
         bv.cardScreenTime.visibility = View.VISIBLE
 
         if (!ScreenTimeHelper.hasPermission(requireContext())) {
-            // Tampilkan prompt minta izin
             bv.layoutScreenTimePermission.visibility = View.VISIBLE
             bv.layoutTopApps.visibility = View.GONE
             bv.tvScreenTimeTotal.text = ""
             return
         }
 
-        // Izin sudah ada
         bv.layoutScreenTimePermission.visibility = View.GONE
         bv.layoutTopApps.visibility = View.VISIBLE
 
@@ -421,46 +439,47 @@ class FeedFragment : Fragment() {
 
             val total = apps.sumOf { it.screenTimeMinutes }
             bv2.tvScreenTimeTotal.text = if (total > 0)
-                ScreenTimeHelper.formatMinutes(total) else "No data yet"
+                ScreenTimeHelper.formatMinutes(total) else ""
 
-            val top = apps.filter { it.screenTimeMinutes > 0 }
-                .sortedByDescending { it.screenTimeMinutes }.take(5)
+            // Hanya top 3
+            val top3 = apps.filter { it.screenTimeMinutes > 0 }
+                .sortedByDescending { it.screenTimeMinutes }
+                .take(3)
 
-            val maxMin = top.firstOrNull()?.screenTimeMinutes?.toFloat() ?: 1f
-            val t = currentTheme
-            bv2.layoutTopApps.removeAllViews()
+            // ID 3 chip yang sudah di-include di XML
+            val chipIds = intArrayOf(R.id.chipApp1, R.id.chipApp2, R.id.chipApp3)
+            val isLight = currentTheme?.isLight == true
+            val palette = if (isLight) CHIP_COLORS_LIGHT else CHIP_COLORS
 
-            top.forEach { app ->
-                val row = LayoutInflater.from(requireContext())
-                    .inflate(R.layout.item_screentime_row, bv2.layoutTopApps, false)
+            chipIds.forEachIndexed { idx, chipId ->
+                val chip = bv2.layoutTopApps.findViewById<View>(chipId) ?: return@forEachIndexed
+                val app  = top3.getOrNull(idx)
 
-                row.findViewById<TextView>(R.id.tvStName).apply {
+                if (app == null) {
+                    // Tidak ada data cukup → sembunyikan chip ini
+                    chip.visibility = View.INVISIBLE
+                    return@forEachIndexed
+                }
+
+                chip.visibility = View.VISIBLE
+
+                // Terapkan warna background chip — reuse GradientDrawable yang sudah ada
+                chipBg[idx].setColor(palette[idx])
+                chip.background = chipBg[idx]
+
+                chip.findViewById<TextView>(R.id.tvChipName).apply {
                     text = app.label
-                    setTextColor(t?.onSurface ?: Color.WHITE)
+                    setTextColor(if (isLight) 0xCC000000.toInt() else 0xAAFFFFFF.toInt())
                 }
-                row.findViewById<TextView>(R.id.tvStTime).apply {
+                chip.findViewById<TextView>(R.id.tvChipTime).apply {
                     text = ScreenTimeHelper.formatMinutes(app.screenTimeMinutes)
-                    setTextColor(t?.subtle ?: 0x88FFFFFF.toInt())
+                    setTextColor(if (isLight) 0xFF000000.toInt() else Color.WHITE)
                 }
-
-                val barView = row.findViewById<View>(R.id.viewStBar)
-                val frac = app.screenTimeMinutes / maxMin
-                val barBg = GradientDrawable().apply {
-                    cornerRadius = 100f
-                    setColor(if (t?.isLight == true) Color.parseColor("#CCCCCC") else 0x55FFFFFF.toInt())
-                }
-                barView.background = barBg
-                barView.post {
-                    val parent = barView.parent as? View ?: return@post
-                    val targetW = (parent.width * frac).toInt().coerceAtLeast(4)
-                    barView.layoutParams = barView.layoutParams.also { it.width = targetW }
-                    barView.requestLayout()
-                }
-                bv2.layoutTopApps.addView(row)
             }
 
-            if (top.isEmpty()) {
-                bv2.tvScreenTimeTotal.text = "No data yet today"
+            if (top3.isEmpty()) {
+                bv2.tvScreenTimeTotal.text = ""
+                bv2.layoutTopApps.visibility = View.GONE
             }
         }
     }
@@ -472,12 +491,16 @@ class FeedFragment : Fragment() {
         tickJob = viewLifecycleOwner.lifecycleScope.launch {
             while (isActive) {
                 delay(30_000L)
-                if (_b != null && CalendarHelper.hasPermission(requireContext())) {
-                    if (eventsExpanded) eventAdapter.notifyItemRangeChanged(
-                        0, eventAdapter.itemCount, "tick")
-                    else pinnedAdapter.notifyItemRangeChanged(
-                        0, pinnedAdapter.itemCount, "tick")
-                }
+                if (_b == null || !CalendarHelper.hasPermission(requireContext())) continue
+                // Selalu update keduanya — pinned event harus tetap berjalan
+                // meski section di-collapse. PAYLOAD_TICK hanya rebind countdown,
+                // tidak trigger full layout pass → biaya sangat kecil.
+                if (eventAdapter.itemCount > 0)
+                    eventAdapter.notifyItemRangeChanged(0, eventAdapter.itemCount,
+                        FeedEventAdapter.PAYLOAD_TICK)
+                if (pinnedAdapter.itemCount > 0)
+                    pinnedAdapter.notifyItemRangeChanged(0, pinnedAdapter.itemCount,
+                        FeedEventAdapter.PAYLOAD_TICK)
             }
         }
     }
