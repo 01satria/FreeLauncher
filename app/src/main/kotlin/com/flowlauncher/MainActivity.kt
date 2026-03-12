@@ -158,12 +158,6 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        // ViewPager touch listener to detect swipe up only on Home page
-        binding.viewPager.rootView.setOnTouchListener { _, event ->
-            gestureDetector.onTouchEvent(event)
-            false
-        }
-
         binding.rvDrawerApps.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = drawerAdapter
@@ -386,6 +380,13 @@ class MainActivity : AppCompatActivity() {
             window.statusBarColor = android.graphics.Color.BLACK
             window.navigationBarColor = android.graphics.Color.BLACK
         }
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        if (::gestureDetector.isInitialized && ev != null) {
+            gestureDetector.onTouchEvent(ev)
+        }
+        return super.dispatchTouchEvent(ev)
     }
 
     override fun onDestroy() {
