@@ -115,6 +115,8 @@ class MainActivity : AppCompatActivity() {
 
     // ── App Drawer ────────────────────────────────────────────────────────────
 
+    private lateinit var gestureDetector: GestureDetector
+
     @SuppressLint("ClickableViewAccessibility")
     private fun setupDrawer() {
         drawerSheet = BottomSheetBehavior.from(binding.drawerSheet)
@@ -133,11 +135,32 @@ class MainActivity : AppCompatActivity() {
                     binding.drawerDim.visibility = View.GONE
                     binding.viewPager.isUserInputEnabled = true
                     isSearching = false
-                    // Icons are managed by AppRepository.iconCache (LruCache) —
-                    // no manual clear needed; LruCache handles memory pressure.
                 }
             }
         })
+
+        // Swipe up gesture detector
+        gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
+                if (e1 == null) return false
+                val diffY = e2.y - e1.y
+                val diffX = e2.x - e1.x
+                // Detect swipe up (negative diffY)
+                if (Math.abs(diffY) > Math.abs(diffX) && diffY < -100 && Math.abs(vy) > 100) {
+                    if (binding.viewPager.currentItem == PAGE_HOME && drawerSheet.state == BottomSheetBehavior.STATE_HIDDEN) {
+                        openDrawer()
+                        return true
+                    }
+                }
+                return false
+            }
+        })
+
+        // ViewPager touch listener to detect swipe up only on Home page
+        binding.viewPager.rootView.setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+            false
+        }
 
         binding.rvDrawerApps.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)

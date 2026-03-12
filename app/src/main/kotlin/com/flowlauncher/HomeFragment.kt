@@ -146,9 +146,19 @@ class HomeFragment : Fragment() {
             b.tvClock.format24Hour = null
         }
         b.tvDate.visibility = if (prefs.showDate) View.VISIBLE else View.GONE
-        b.tvClock.gravity = Gravity.START
-        b.tvDate.gravity  = Gravity.START
-        b.tvUsageToday.gravity = Gravity.START
+        
+        val grav = when (prefs.alignment) {
+            Prefs.ALIGN_CENTER -> Gravity.CENTER_HORIZONTAL
+            Prefs.ALIGN_RIGHT  -> Gravity.END
+            else               -> Gravity.START
+        }
+        
+        b.tvClock.gravity = grav
+        b.tvDate.gravity  = grav
+        b.tvUsageToday.gravity = grav
+        
+        // Also align the containers if needed
+        (b.tvDate.parent as? android.widget.LinearLayout)?.gravity = grav or Gravity.CENTER_VERTICAL
     }
 
     // ── Weather ───────────────────────────────────────────────────────────────
