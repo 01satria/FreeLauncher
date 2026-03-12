@@ -62,9 +62,18 @@ class TodoAdapter(
             applyDoneState(todo.done)
             applyTheme(todo, theme)
 
-            check.setOnClickListener { onToggle(pos) }
-            itemView.setOnClickListener { onToggle(pos) }
-            delete.setOnClickListener { onDelete(pos) }
+            check.setOnClickListener { 
+                val currentPos = bindingAdapterPosition
+                if (currentPos != RecyclerView.NO_POSITION) onToggle(currentPos)
+            }
+            itemView.setOnClickListener { 
+                val currentPos = bindingAdapterPosition
+                if (currentPos != RecyclerView.NO_POSITION) onToggle(currentPos)
+            }
+            delete.setOnClickListener { 
+                val currentPos = bindingAdapterPosition
+                if (currentPos != RecyclerView.NO_POSITION) onDelete(currentPos)
+            }
         }
 
         fun applyTheme(todo: TodoItem, t: FeedTheme?) {

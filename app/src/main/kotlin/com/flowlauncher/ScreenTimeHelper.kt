@@ -35,31 +35,39 @@ object ScreenTimeHelper {
 
             val events = usm.queryEvents(startOfDay, now) ?: return emptyMap()
 
-            val lastForeground = mutableMapOf<String, Long>() // pkg -> timestamp mulai foreground
             val totalMs = mutableMapOf<String, Long>()
+            var currentPkg: String? = null
+            var lastTs: Long = startOfDay
 
             val event = UsageEvents.Event()
             while (events.hasNextEvent()) {
                 events.getNextEvent(event)
                 val pkg = event.packageName ?: continue
                 val ts  = event.timeStamp
+                val type = event.eventType
 
-                when (event.eventType) {
-                    UsageEvents.Event.MOVE_TO_FOREGROUND -> {
-                        lastForeground[pkg] = ts
+                if (type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                    // Close previous app if it was foreground
+                    currentPkg?.let { prev ->
+                        val duration = ts - lastTs
+                        if (duration > 0) totalMs[prev] = (totalMs[prev] ?: 0L) + duration
                     }
-                    UsageEvents.Event.MOVE_TO_BACKGROUND -> {
-                        val start = lastForeground.remove(pkg) ?: continue
-                        val elapsed = ts - start
-                        if (elapsed > 0) totalMs[pkg] = (totalMs[pkg] ?: 0L) + elapsed
+                    currentPkg = pkg
+                    lastTs = ts
+                } else if (type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+                    if (currentPkg == pkg) {
+                        val duration = ts - lastTs
+                        if (duration > 0) totalMs[pkg] = (totalMs[pkg] ?: 0L) + duration
+                        currentPkg = null
+                        lastTs = ts
                     }
                 }
             }
 
-            // App yang masih foreground sampai sekarang
-            for ((pkg, start) in lastForeground) {
-                val elapsed = now - start
-                if (elapsed > 0) totalMs[pkg] = (totalMs[pkg] ?: 0L) + elapsed
+            // App still in foreground at end of events
+            currentPkg?.let { pkg ->
+                val duration = now - lastTs
+                if (duration > 0) totalMs[pkg] = (totalMs[pkg] ?: 0L) + duration
             }
 
             totalMs.mapValues { it.value / 60_000L }.filter { it.value > 0 }
