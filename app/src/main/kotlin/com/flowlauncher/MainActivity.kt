@@ -11,6 +11,8 @@ import android.os.Bundle
 import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
@@ -146,7 +148,7 @@ class MainActivity : AppCompatActivity() {
                 val diffY = e2.y - e1.y
                 val diffX = e2.x - e1.x
                 // Detect swipe up (negative diffY)
-                if (Math.abs(diffY) > Math.abs(diffX) && diffY < -100 && Math.abs(vy) > 100) {
+                if (kotlin.math.abs(diffY) > kotlin.math.abs(diffX) && diffY < -100 && kotlin.math.abs(vy) > 100) {
                     if (binding.viewPager.currentItem == PAGE_HOME && drawerSheet.state == BottomSheetBehavior.STATE_HIDDEN) {
                         openDrawer()
                         return true

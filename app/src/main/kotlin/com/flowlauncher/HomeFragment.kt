@@ -54,8 +54,6 @@ class HomeFragment : Fragment() {
             overScrollMode = View.OVER_SCROLL_NEVER
         }
 
-        binding.btnDrawer.setOnClickListener { onOpenDrawer?.invoke() }
-
         // Weather: click to refresh
         binding.tvWeather.setOnClickListener { fetchWeather(showToast = true) }
 
@@ -76,11 +74,6 @@ class HomeFragment : Fragment() {
             // Content area: top = statusBar + 16dp, bottom = navBar + BottomBar height + 16dp
             binding.homeContentLayout.setPadding(
                 28.dp(), statusBar + 16.dp(), 28.dp(), navBar + 72.dp()
-            )
-
-            // Bottom action bar: float di atas navigation bar
-            binding.bottomBar.setPadding(
-                28.dp(), 12.dp(), 28.dp(), navBar + 8.dp()
             )
             insets
         }
@@ -131,7 +124,6 @@ class HomeFragment : Fragment() {
         b.tvUsageToday.setTextColor(textSecondary)
         b.tvWeather.setTextColor(if (isLight) Color.parseColor("#88000000") else Color.parseColor("#AAFFFFFF"))
         b.tvScreenTimeHint.setTextColor(if (isLight) Color.parseColor("#44000000") else Color.parseColor("#44FFFFFF"))
-        b.btnDrawer.setColorFilter(if (isLight) Color.parseColor("#88000000") else Color.parseColor("#88FFFFFF"))
     }
 
     // ── Clock format ─────────────────────────────────────────────────────────
