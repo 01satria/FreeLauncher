@@ -77,6 +77,7 @@ class MainActivity : AppCompatActivity() {
         setupViewPager()
         setupDrawer()
         applyWindowInsets()
+        applyDrawerTheme()
         registerReceivers()
 
         // Pre-load app list so drawer is instant on first open
@@ -91,6 +92,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         prefs = Prefs(this)
         applySystemBarColors()
+        applyDrawerTheme()
     }
 
     // ── ViewPager ─────────────────────────────────────────────────────────────
@@ -331,9 +333,9 @@ class MainActivity : AppCompatActivity() {
             val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
             val navBar    = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
 
-            // Drawer header: top padding = status bar + 16dp
+            // Drawer header: symmetric horizontal padding, top = status bar + 16dp
             binding.drawerHeader.setPadding(
-                24.dp(), statusBar + 16.dp(), 20.dp(), 8.dp()
+                24.dp(), statusBar + 16.dp(), 24.dp(), 8.dp()
             )
             // Drawer list: bottom padding = nav bar
             binding.rvDrawerApps.setPadding(0, 0, 0, navBar + 16.dp())
@@ -342,6 +344,65 @@ class MainActivity : AppCompatActivity() {
         }
         ViewCompat.requestApplyInsets(binding.mainRoot)
     }
+
+    // ── Drawer theming ────────────────────────────────────────────────────────
+
+    private fun applyDrawerTheme() {
+        val isLight = prefs.theme == Prefs.THEME_LIGHT
+        val density = resources.displayMetrics.density
+        fun Float.dp() = (this * density).toInt()
+
+        val textPrimary   = if (isLight) android.graphics.Color.parseColor("#0A0A0A") else android.graphics.Color.WHITE
+        val textSecondary = if (isLight) android.graphics.Color.parseColor("#666666")  else android.graphics.Color.parseColor("#55FFFFFF")
+        val searchBgColor = if (isLight) android.graphics.Color.parseColor("#ECECEC")  else android.graphics.Color.parseColor("#111111")
+        val searchStroke  = if (isLight) android.graphics.Color.parseColor("#DDDDDD")  else android.graphics.Color.parseColor("#22FFFFFF")
+        val drawerBgColor = if (isLight) android.graphics.Color.parseColor("#F8F8F8")  else android.graphics.Color.parseColor("#050505")
+        val handleColor   = if (isLight) android.graphics.Color.parseColor("#CCCCCC")  else android.graphics.Color.parseColor("#44FFFFFF")
+        val settingsColor = if (isLight) android.graphics.Color.parseColor("#888888")  else android.graphics.Color.parseColor("#55FFFFFF")
+
+        // Drawer sheet background
+        val drawerBg = android.graphics.drawable.GradientDrawable().apply {
+            setColor(drawerBgColor)
+            cornerRadii = floatArrayOf(28.dpToPx(), 28.dpToPx(), 28.dpToPx(), 28.dpToPx(), 0f, 0f, 0f, 0f)
+        }
+        binding.drawerSheet.background = drawerBg
+
+        // Handle bar color
+        binding.drawerHandleBar.background = android.graphics.drawable.GradientDrawable().apply {
+            setColor(handleColor)
+            cornerRadius = 100.dpToPx()
+        }
+
+        // Apps title
+        binding.tvAppsTitle.setTextColor(textPrimary)
+        FontHelper.applyFont(this, prefs, binding.tvAppsTitle)
+
+        // Settings button
+        binding.btnDrawerSettings.setColorFilter(settingsColor)
+
+        // Search bar background
+        val searchBg = android.graphics.drawable.GradientDrawable().apply {
+            setColor(searchBgColor)
+            setStroke(1.dpToPxInt(), searchStroke)
+            cornerRadius = 14.dpToPx()
+        }
+        binding.drawerSearchContainer.background = searchBg
+
+        // Search EditText
+        binding.etSearch.setTextColor(textPrimary)
+        binding.etSearch.setHintTextColor(if (isLight) android.graphics.Color.parseColor("#AAAAAA") else android.graphics.Color.parseColor("#33FFFFFF"))
+        FontHelper.applyFont(this, prefs, binding.etSearch)
+
+        // Search icon tint
+        binding.ivSearchIcon.setColorFilter(if (isLight) android.graphics.Color.parseColor("#AAAAAA") else android.graphics.Color.parseColor("#44FFFFFF"))
+
+        // Notify drawer adapter about theme change (force re-bind for font + colors)
+        drawerAdapter.setTheme(isLight)
+    }
+
+    private fun Float.dpToPx() = this * resources.displayMetrics.density
+    private fun Int.dpToPx()   = this.toFloat() * resources.displayMetrics.density
+    private fun Int.dpToPxInt() = (this.toFloat() * resources.displayMetrics.density).toInt()
 
     private fun registerReceivers() {
         val filter = IntentFilter().apply {

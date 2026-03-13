@@ -113,32 +113,62 @@ class FeedFragment : Fragment() {
         // Page background
         bv.feedRoot.setBackgroundColor(FeedTheme.pageBg(prefs))
 
-        // Section card backgrounds come from XML — only text colors update dynamically
+        // ── Card backgrounds — update dynamically so light/dark mode is visible ──
+        val cardDrawable = android.graphics.drawable.GradientDrawable().apply {
+            setColor(t.cardBg)
+            setStroke(1.dpToPxInt(), t.cardStroke)
+            cornerRadius = 16.dpToPx()
+        }
+        val cardDrawable2 = android.graphics.drawable.GradientDrawable().apply {
+            setColor(t.cardBg)
+            setStroke(1.dpToPxInt(), t.cardStroke)
+            cornerRadius = 16.dpToPx()
+        }
+        val cardDrawable3 = android.graphics.drawable.GradientDrawable().apply {
+            setColor(t.cardBg)
+            setStroke(1.dpToPxInt(), t.cardStroke)
+            cornerRadius = 16.dpToPx()
+        }
+        bv.sectionEvents.background   = cardDrawable
+        bv.sectionTasks.background    = cardDrawable2
+        bv.cardScreenTime.background  = cardDrawable3
 
-        // Header
+        // Event search bar background
+        val searchDrawable = android.graphics.drawable.GradientDrawable().apply {
+            setColor(t.surface2)
+            cornerRadius = 8.dpToPx()
+        }
+        bv.containerEventSearch.background = searchDrawable
+
+        // ── Header ──
         bv.tvFeedTitle.setTextColor(t.onSurface)
         bv.btnFeedSettings.setColorFilter(t.subtle)
 
-        // Events section labels
+        // ── Events section ──
         bv.tvEventsLabel.setTextColor(t.subtle)
         bv.tvEventsChevron.setTextColor(t.faint)
         bv.tvEventsEmpty.setTextColor(t.faint)
         bv.etEventSearch.setTextColor(t.onSurface)
         bv.etEventSearch.setHintTextColor(t.faint)
         bv.dividerEventSearch.setBackgroundColor(t.divider)
-        
-        FontHelper.applyFont(requireContext(), prefs, bv.tvFeedTitle, bv.tvEventsLabel, bv.tvEventsChevron, bv.tvEventsEmpty, bv.etEventSearch)
 
-        // Tasks section
+        FontHelper.applyFont(requireContext(), prefs,
+            bv.tvFeedTitle, bv.tvEventsLabel, bv.tvEventsChevron,
+            bv.tvEventsEmpty, bv.etEventSearch)
+
+        // ── Tasks section ──
         bv.tvTasksLabel.setTextColor(t.subtle)
         bv.btnAddTodo.setColorFilter(t.subtle)
         bv.tvTasksEmpty.setTextColor(t.faint)
 
-        // Screen time
+        // ── Screen time section ──
         bv.tvScreenTimeLabel.setTextColor(t.subtle)
         bv.tvScreenTimeTotal.setTextColor(t.onSurface)
-        
-        FontHelper.applyFont(requireContext(), prefs, bv.tvTasksLabel, bv.tvTasksEmpty, bv.tvScreenTimeLabel, bv.tvScreenTimeTotal)
+
+        FontHelper.applyFont(requireContext(), prefs,
+            bv.tvTasksLabel, bv.tvTasksEmpty,
+            bv.tvScreenTimeLabel, bv.tvScreenTimeTotal)
+
         // Re-check permission state on theme change (onResume path)
         if (prefs.showScreenTime && !ScreenTimeHelper.hasPermission(requireContext())) {
             bv.cardScreenTime.visibility = View.VISIBLE
@@ -512,4 +542,8 @@ class FeedFragment : Fragment() {
 
     private fun dpToPx(dp: Float): Float =
         dp * (resources.displayMetrics.density)
+
+    private fun Float.dpToPx(): Float = this * resources.displayMetrics.density
+    private fun Int.dpToPx(): Float   = this.toFloat() * resources.displayMetrics.density
+    private fun Int.dpToPxInt(): Int  = (this.toFloat() * resources.displayMetrics.density).toInt()
 }

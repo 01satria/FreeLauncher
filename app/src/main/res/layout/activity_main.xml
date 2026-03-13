@@ -44,6 +44,7 @@
             android:paddingBottom="4dp">
 
             <View
+                android:id="@+id/drawerHandleBar"
                 android:layout_width="36dp"
                 android:layout_height="4dp"
                 android:background="@drawable/bg_nothing_handle" />
@@ -57,11 +58,12 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingStart="24dp"
-            android:paddingEnd="20dp"
+            android:paddingEnd="24dp"
             android:paddingTop="12dp"
             android:paddingBottom="8dp">
 
             <TextView
+                android:id="@+id/tvAppsTitle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -83,6 +85,7 @@
 
         <!-- Search bar — Nothing minimal style -->
         <LinearLayout
+            android:id="@+id/drawerSearchContainer"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:orientation="horizontal"
@@ -91,9 +94,10 @@
             android:layout_marginBottom="4dp"
             android:background="@drawable/bg_nothing_search"
             android:paddingStart="14dp"
-            android:paddingEnd="12dp">
+            android:paddingEnd="14dp">
 
             <ImageView
+                android:id="@+id/ivSearchIcon"
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:src="@drawable/ic_search"

@@ -29,6 +29,7 @@ class DrawerAppAdapter(
 
     private val items = mutableListOf<ListItem>()
     private var cachedPrefs: Prefs? = null
+    private var isLightTheme: Boolean = false
 
     private fun buildItems(apps: List<AppInfo>): List<ListItem> {
         if (apps.isEmpty()) return emptyList()
@@ -55,6 +56,13 @@ class DrawerAppAdapter(
         val diff = DiffUtil.calculateDiff(ItemDiffCallback(items, newItems))
         items.clear(); items.addAll(newItems)
         diff.dispatchUpdatesTo(this)
+    }
+
+    /** Call this when the theme changes to force a full re-bind */
+    fun setTheme(isLight: Boolean) {
+        if (isLightTheme == isLight) return
+        isLightTheme = isLight
+        notifyItemRangeChanged(0, items.size)
     }
 
     override fun getItemCount() = items.size
@@ -84,6 +92,10 @@ class DrawerAppAdapter(
             tv.text = h.letter
             val prefs = cachedPrefs ?: Prefs(itemView.context).also { cachedPrefs = it }
             FontHelper.applyFont(itemView.context, prefs, tv)
+            // Header letter color: subtle, readable in both themes
+            tv.setTextColor(
+                if (isLightTheme) 0xFF999999.toInt() else 0x55FFFFFF.toInt()
+            )
         }
     }
 
@@ -99,17 +111,30 @@ class DrawerAppAdapter(
             val prefs = cachedPrefs ?: Prefs(itemView.context).also { cachedPrefs = it }
             FontHelper.applyFont(itemView.context, prefs, label)
 
+            // App label color: primary text per theme
+            label.setTextColor(
+                if (isLightTheme) 0xFF0A0A0A.toInt() else 0xFFFFFFFF.toInt()
+            )
+
             icon.visibility = View.VISIBLE
             val bmp = AppRepository.getIcon(app.packageName)
             if (bmp != null) icon.setImageBitmap(bmp) else icon.setImageDrawable(null)
 
             if (app.screenTimeMinutes > 0) {
-                dot.visibility   = View.VISIBLE
+                dot.visibility    = View.VISIBLE
                 stTime.visibility = View.VISIBLE
                 stTime.text = ScreenTimeHelper.formatMinutes(app.screenTimeMinutes)
+                stTime.setTextColor(
+                    if (isLightTheme) 0xFF999999.toInt() else 0x44FFFFFF.toInt()
+                )
             } else {
-                dot.visibility   = View.GONE
+                dot.visibility    = View.GONE
                 stTime.visibility = View.GONE
+            }
+
+            // Dot color per theme
+            dot.background = itemView.context.getDrawable(R.drawable.bg_dot)?.apply {
+                setTint(if (isLightTheme) 0xFF999999.toInt() else 0x55FFFFFF.toInt())
             }
 
             itemView.setOnClickListener { onAppClick(app) }

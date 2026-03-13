@@ -110,14 +110,14 @@ class HomeFragment : Fragment() {
         }
 
         val textPrimary   = if (isLight) Color.parseColor("#0A0A0A") else Color.WHITE
-        val textSecondary = if (isLight) Color.parseColor("#66000000") else Color.parseColor("#77FFFFFF")
-        val textTertiary  = if (isLight) Color.parseColor("#33000000") else Color.parseColor("#44FFFFFF")
-        val weatherColor  = if (isLight) Color.parseColor("#77000000") else Color.parseColor("#AAFFFFFF")
+        val textSecondary = if (isLight) Color.parseColor("#555555") else Color.parseColor("#77FFFFFF")
+        val textTertiary  = if (isLight) Color.parseColor("#999999") else Color.parseColor("#44FFFFFF")
+        val weatherColor  = if (isLight) Color.parseColor("#555555") else Color.parseColor("#AAFFFFFF")
 
         b.tvClock.setTextColor(textPrimary)
         b.tvDate.setTextColor(textSecondary)
         b.tvUsageToday.setTextColor(textTertiary)
-        b.tvNextEvent.setTextColor(if (isLight) Color.parseColor("#88000000") else Color.parseColor("#CCFFFFFF"))
+        b.tvNextEvent.setTextColor(if (isLight) Color.parseColor("#444444") else Color.parseColor("#CCFFFFFF"))
         b.ivWeatherIcon.setColorFilter(weatherColor)
         b.tvWeatherTemp.setTextColor(weatherColor)
         b.tvScreenTimeHint.setTextColor(textTertiary)
@@ -125,6 +125,9 @@ class HomeFragment : Fragment() {
         FontHelper.applyFont(requireContext(), prefs,
             b.tvClock, b.tvDate, b.tvUsageToday, b.tvWeatherTemp,
             b.tvScreenTimeHint, b.tvNextEvent)
+
+        // Refresh adapter so font + color changes propagate to all visible rows
+        homeAdapter.setLightTheme(isLight)
     }
 
     private fun setupClockFormat() {

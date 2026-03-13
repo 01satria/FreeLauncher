@@ -49,6 +49,20 @@ class SettingsActivity : AppCompatActivity() {
 
         binding.btnBack.setColorFilter(btnTint)
 
+        // Card backgrounds
+        val cardBg     = if (isLight) Color.parseColor("#FFFFFF") else Color.parseColor("#0D0D0D")
+        val cardStroke = if (isLight) Color.parseColor("#E0E0E0") else 0x1AFFFFFF.toInt()
+        val cardRadius  = 16 * resources.displayMetrics.density
+
+        listOf(binding.cardAppearance, binding.cardClock, binding.cardHome,
+               binding.cardWeather, binding.cardApps).forEach { card ->
+            card.background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(cardBg)
+                setStroke((1 * resources.displayMetrics.density).toInt(), cardStroke)
+                cornerRadius = cardRadius
+            }
+        }
+
         // Apply font and colors to all TextViews via traversal
         applyTextColors(binding.settingsContent, textColor, subTextColor)
     }

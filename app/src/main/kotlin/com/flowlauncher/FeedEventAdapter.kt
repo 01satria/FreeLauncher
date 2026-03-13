@@ -102,14 +102,15 @@ class FeedEventAdapter(
             // Countdown pill
             val cd = e.countdown
             tvCountdown.text = cd
-            val (bg, txt) = cdColors(cd)
+            val t = theme
+            val (bg, txt) = cdColors(cd, t?.isLight == true)
             cdBg.setColor(bg)
             tvCountdown.setTextColor(txt)
 
             // Theme text colors
-            theme?.let { t ->
-                tvTitle.setTextColor(t.onSurface)
-                tvDate.setTextColor(t.subtle)
+            t?.let {
+                tvTitle.setTextColor(it.onSurface)
+                tvDate.setTextColor(it.subtle)
             }
 
             refreshPin(e)
@@ -117,9 +118,9 @@ class FeedEventAdapter(
         }
 
         fun refreshCountdown(e: EventItem) {
-            val cd = e.countdown   // computed fresh each call via System.currentTimeMillis()
+            val cd = e.countdown
             tvCountdown.text = cd
-            val (bg, txt) = cdColors(cd)
+            val (bg, txt) = cdColors(cd, theme?.isLight == true)
             cdBg.setColor(bg)
             tvCountdown.setTextColor(txt)
         }
@@ -152,17 +153,23 @@ class FeedEventAdapter(
         private val DATETIME_FMT = SimpleDateFormat("EEE, MMM d · HH:mm", Locale.getDefault())
 
         // Countdown badge colors
-        private val COLOR_NOW_BG      = 0xCC00C853.toInt()
-        private val COLOR_NOW_TEXT    = Color.WHITE
-        private val COLOR_DONE_BG     = 0x22FFFFFF
-        private val COLOR_DONE_TEXT   = 0x55FFFFFF.toInt()
-        private val COLOR_FUTURE_BG   = 0x18FFFFFF
-        private val COLOR_FUTURE_TEXT = 0xCCFFFFFF.toInt()
+        private val COLOR_NOW_BG        = 0xCC00C853.toInt()
+        private val COLOR_NOW_TEXT      = Color.WHITE
+        private val COLOR_DONE_BG_DARK  = 0x22FFFFFF
+        private val COLOR_DONE_TEXT_DARK  = 0x55FFFFFF.toInt()
+        private val COLOR_FUTURE_BG_DARK  = 0x18FFFFFF
+        private val COLOR_FUTURE_TEXT_DARK = 0xCCFFFFFF.toInt()
+        private val COLOR_DONE_BG_LIGHT   = 0x22000000
+        private val COLOR_DONE_TEXT_LIGHT  = 0x55000000.toInt()
+        private val COLOR_FUTURE_BG_LIGHT  = 0x12000000
+        private val COLOR_FUTURE_TEXT_LIGHT = 0xCC000000.toInt()
 
-        fun cdColors(cd: String): Pair<Int, Int> = when (cd) {
-            "Now"  -> COLOR_NOW_BG    to COLOR_NOW_TEXT
-            "Done" -> COLOR_DONE_BG   to COLOR_DONE_TEXT
-            else   -> COLOR_FUTURE_BG to COLOR_FUTURE_TEXT
+        fun cdColors(cd: String, isLight: Boolean = false): Pair<Int, Int> = when (cd) {
+            "Now"  -> COLOR_NOW_BG to COLOR_NOW_TEXT
+            "Done" -> if (isLight) COLOR_DONE_BG_LIGHT   to COLOR_DONE_TEXT_LIGHT
+                      else         COLOR_DONE_BG_DARK     to COLOR_DONE_TEXT_DARK
+            else   -> if (isLight) COLOR_FUTURE_BG_LIGHT to COLOR_FUTURE_TEXT_LIGHT
+                      else         COLOR_FUTURE_BG_DARK   to COLOR_FUTURE_TEXT_DARK
         }
     }
 }

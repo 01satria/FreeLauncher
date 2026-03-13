@@ -22,8 +22,8 @@ class HomeAppAdapter(
     init { setHasStableIds(true) }
 
     private val apps = mutableListOf<AppInfo>()
-    // Reuse prefs per context — lazily cached in VH
     private var cachedPrefs: Prefs? = null
+    private var isLightTheme: Boolean = false
 
     fun setApps(newApps: List<AppInfo>) {
         val old = apps.toList()
@@ -31,6 +31,13 @@ class HomeAppAdapter(
         apps.clear()
         apps.addAll(newApps)
         diff.dispatchUpdatesTo(this)
+    }
+
+    /** Force re-bind all visible rows when theme changes */
+    fun setLightTheme(isLight: Boolean) {
+        if (isLightTheme == isLight) return
+        isLightTheme = isLight
+        notifyItemRangeChanged(0, apps.size)
     }
 
     override fun getItemId(pos: Int): Long {
@@ -54,6 +61,7 @@ class HomeAppAdapter(
         private val label: TextView        = itemView.findViewById(R.id.tv_label)
         private val layoutST: LinearLayout = itemView.findViewById(R.id.layoutScreenTime)
         private val screenTime: TextView   = itemView.findViewById(R.id.tv_screen_time)
+        private val arrow: TextView        = itemView.findViewById(R.id.tvArrow)
 
         fun bind(app: AppInfo) {
             label.text    = app.label
@@ -61,6 +69,17 @@ class HomeAppAdapter(
 
             val prefs = cachedPrefs ?: Prefs(itemView.context).also { cachedPrefs = it }
             FontHelper.applyFont(itemView.context, prefs, label, screenTime)
+
+            // Theme-aware colors
+            label.setTextColor(
+                if (isLightTheme) 0xFF0A0A0A.toInt() else 0xFFFFFFFF.toInt()
+            )
+            screenTime.setTextColor(
+                if (isLightTheme) 0xFF999999.toInt() else 0x44FFFFFF.toInt()
+            )
+            arrow.setTextColor(
+                if (isLightTheme) 0x33000000.toInt() else 0x22FFFFFF.toInt()
+            )
 
             if (showScreenTime && app.screenTimeMinutes > 0) {
                 layoutST.visibility = View.VISIBLE
