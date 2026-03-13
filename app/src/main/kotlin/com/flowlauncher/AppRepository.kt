@@ -32,9 +32,9 @@ object AppRepository {
     @Volatile private var cacheValid = false
     @Volatile private var lastKnownDayOfYear: Int = -1
 
-    // ── Icon LruCache — fixed 4 MB upper bound ────────────────────────────────
-    // 96 × 96 × 4 bytes = ~36.9 KB per icon → fits ~110 icons in 4 MB.
-    private const val MAX_ICON_CACHE_BYTES = 4 * 1024 * 1024 // 4 MB
+    // ── Icon LruCache — fixed 3 MB upper bound ────────────────────────────────
+    // 96 × 96 × 4 bytes = ~36.9 KB per icon → fits ~80 icons in 3 MB.
+    private const val MAX_ICON_CACHE_BYTES = 3 * 1024 * 1024 // 3 MB
 
     private val iconCache = object : LruCache<String, Bitmap>(MAX_ICON_CACHE_BYTES) {
         override fun sizeOf(key: String, value: Bitmap): Int = value.byteCount

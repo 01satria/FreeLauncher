@@ -12,6 +12,12 @@ class Prefs(context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences("flow_prefs", Context.MODE_PRIVATE)
 
+    // ── In-memory caches ──────────────────────────────────────────────────────
+    private var _cachedFavorites: List<String>? = null
+    private var _cachedTodos: List<TodoItem>? = null
+    private var _cachedHidden: Set<String>? = null
+    private var _cachedPinned: Set<Long>? = null
+
     var theme: String
         get() = prefs.getString("theme", THEME_DARK)!!
         set(v) = prefs.edit().putString("theme", v).apply()
@@ -38,23 +44,32 @@ class Prefs(context: Context) {
 
     var favoritePackages: List<String>
         get() {
+            _cachedFavorites?.let { return it }
             val json = prefs.getString("favorites", null) ?: return emptyList()
             return try {
                 val arr = JSONArray(json)
-                (0 until arr.length()).map { arr.getString(it) }
+                (0 until arr.length()).map { arr.getString(it) }.also { _cachedFavorites = it }
             } catch (_: Exception) { emptyList() }
         }
         set(list) {
+            _cachedFavorites = list
             prefs.edit().putString("favorites",
                 JSONArray().also { a -> list.forEach { a.put(it) } }.toString()).apply()
         }
 
     var hiddenPackages: Set<String>
-        get() = prefs.getStringSet("hidden_apps", emptySet())!!
-        set(v) = prefs.edit().putStringSet("hidden_apps", v).apply()
+        get() {
+            _cachedHidden?.let { return it }
+            return (prefs.getStringSet("hidden_apps", emptySet()) ?: emptySet()).also { _cachedHidden = it }
+        }
+        set(v) {
+            _cachedHidden = v
+            prefs.edit().putStringSet("hidden_apps", v).apply()
+        }
 
     var todoItems: List<TodoItem>
         get() {
+            _cachedTodos?.let { return it }
             val json = prefs.getString("todos_v2", null)
             if (json != null) {
                 return try {
@@ -62,19 +77,20 @@ class Prefs(context: Context) {
                     (0 until arr.length()).map {
                         val obj = arr.getJSONObject(it)
                         TodoItem(obj.getString("t"), obj.optBoolean("d", false))
-                    }
+                    }.also { _cachedTodos = it }
                 } catch (_: Exception) { emptyList() }
             }
             val legacy = prefs.getString("todos", null)
             if (legacy != null) {
                 return try {
                     val arr = JSONArray(legacy)
-                    (0 until arr.length()).map { TodoItem(arr.getString(it), false) }
+                    (0 until arr.length()).map { TodoItem(arr.getString(it), false) }.also { _cachedTodos = it }
                 } catch (_: Exception) { emptyList() }
             }
             return emptyList()
         }
         set(list) {
+            _cachedTodos = list
             val arr = JSONArray()
             list.forEach { item ->
                 arr.put(JSONObject().apply { put("t", item.text); put("d", item.done) })
@@ -85,13 +101,15 @@ class Prefs(context: Context) {
     // ── Pinned calendar events ────────────────────────────────────────────────
     var pinnedEventIds: Set<Long>
         get() {
+            _cachedPinned?.let { return it }
             val json = prefs.getString("pinned_events", null) ?: return emptySet()
             return try {
                 val arr = org.json.JSONArray(json)
-                (0 until arr.length()).map { arr.getLong(it) }.toSet()
+                (0 until arr.length()).map { arr.getLong(it) }.toSet().also { _cachedPinned = it }
             } catch (_: Exception) { emptySet() }
         }
         set(ids) {
+            _cachedPinned = ids
             val arr = org.json.JSONArray()
             ids.forEach { arr.put(it) }
             prefs.edit().putString("pinned_events", arr.toString()).apply()

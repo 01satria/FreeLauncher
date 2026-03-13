@@ -299,14 +299,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun uninstallApp(app: AppInfo) {
         try {
-            startActivity(Intent(Intent.ACTION_UNINSTALL_PACKAGE,
-                Uri.fromParts("package", app.packageName, null)).apply {
-                putExtra(Intent.EXTRA_RETURN_RESULT, false)
-            })
+            val intent = Intent(Intent.ACTION_DELETE).apply {
+                data = Uri.parse("package:${app.packageName}")
+            }
+            startActivity(intent)
         } catch (_: Exception) {
-            try { startActivity(Intent(Intent.ACTION_DELETE,
-                Uri.fromParts("package", app.packageName, null))) }
-            catch (_: Exception) {}
+            Toast.makeText(this, "Uninstall not supported", Toast.LENGTH_SHORT).show()
         }
     }
 
