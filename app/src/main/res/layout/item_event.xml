@@ -5,15 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingVertical="10dp">
-
-    <!-- Color accent bar -->
-    <View
-        android:id="@+id/viewEventAccent"
-        android:layout_width="3dp"
-        android:layout_height="36dp"
-        android:layout_marginEnd="12dp"
-        android:background="@drawable/bg_event_accent" />
+    android:paddingVertical="14dp">
 
     <!-- Event info -->
     <LinearLayout
@@ -27,7 +19,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#EEFFFFFF"
-            android:textSize="14sp"
+            android:textSize="18sp"
             android:maxLines="1"
             android:ellipsize="end" />
 
@@ -35,25 +27,37 @@
             android:id="@+id/tvEventDate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#55FFFFFF"
-            android:textSize="11sp"
-            android:layout_marginTop="1dp" />
-
-        <TextView
-            android:id="@+id/tvCountdown"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#44FFFFFF"
-            android:textSize="11sp"
-            android:layout_marginTop="1dp" />
-
+            android:textColor="#88FFFFFF"
+            android:textSize="12sp"
+            android:layout_marginTop="2dp" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvCountdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="4dp"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:textSize="12sp" />
+
+    <View
+        android:id="@+id/viewEventAccent"
+        android:layout_width="4dp"
+        android:layout_height="4dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/bg_event_accent"
+        android:visibility="gone" />
 
     <!-- Pin button -->
     <ImageButton
         android:id="@+id/btnPinEvent"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="8dp"
         android:src="@drawable/ic_pin_outline"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="Pin"

@@ -43,7 +43,7 @@ data class EventItem(
                 if (h == 0L) "${d}d" else "${d}d ${h}h"
             }
             else -> {
-                // For far events, use rounding to nearest day to avoid course 24h floor jumps
+                // Round to nearest day accurately
                 val d = Math.round(ms.toDouble() / TimeUnit.DAYS.toMillis(1))
                 "${d}d"
             }
