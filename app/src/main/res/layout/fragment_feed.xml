@@ -16,13 +16,13 @@
         android:paddingBottom="64dp"
         android:paddingHorizontal="20dp">
 
-        <!-- ── PAGE HEADER ─────────────────────────────────────────────── -->
+        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="28dp">
 
             <TextView
                 android:id="@+id/tvFeedTitle"
@@ -30,32 +30,32 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Feed"
-                android:textSize="28sp"
+                android:textSize="36sp"
                 android:textStyle="bold"
-                android:letterSpacing="-0.02"
+                android:letterSpacing="-0.03"
                 android:textColor="#FFFFFF" />
 
             <ImageButton
                 android:id="@+id/btnFeedSettings"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:src="@drawable/ic_settings"
-                android:tint="#55FFFFFF"
+                android:tint="#44FFFFFF"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Settings" />
         </LinearLayout>
 
-        <!-- ── EVENTS SECTION ──────────────────────────────────────────── -->
+        <!-- EVENTS SECTION -->
         <LinearLayout
             android:id="@+id/sectionEvents"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginBottom="14dp"
-            android:background="@drawable/bg_feed_section"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_nothing_card"
             android:padding="18dp">
 
-            <!-- Section header row -->
+            <!-- Header row -->
             <LinearLayout
                 android:id="@+id/layoutEventsHeader"
                 android:layout_width="match_parent"
@@ -67,27 +67,26 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless">
 
                 <TextView
+                    android:id="@+id/tvEventsLabel"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Calendar"
-                    android:textSize="13sp"
-                    android:letterSpacing="0.06"
-                    android:textAllCaps="true"
-                    android:textColor="#66FFFFFF"
-                    android:id="@+id/tvEventsLabel" />
+                    android:text="CALENDAR"
+                    android:textSize="10sp"
+                    android:letterSpacing="0.15"
+                    android:textColor="#44FFFFFF" />
 
                 <TextView
                     android:id="@+id/tvEventsChevron"
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:text="▾"
-                    android:textColor="#44FFFFFF"
+                    android:textColor="#33FFFFFF"
                     android:textSize="14sp"
                     android:gravity="center" />
             </LinearLayout>
 
-            <!-- Pinned events strip — visible ONLY when collapsed -->
+            <!-- Pinned events (collapsed state) -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvPinnedEvents"
                 android:layout_width="match_parent"
@@ -95,7 +94,7 @@
                 android:overScrollMode="never"
                 android:visibility="gone" />
 
-            <!-- Collapsible body -->
+            <!-- Expanded content -->
             <LinearLayout
                 android:id="@+id/layoutEventsContent"
                 android:layout_width="match_parent"
@@ -116,45 +115,44 @@
                         android:layout_height="wrap_content"
                         android:text="No calendar access"
                         android:textColor="#FFFFFF"
-                        android:textSize="15sp"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Grant access to see your events here."
+                        android:text="Grant access to see your events."
                         android:textColor="#55FFFFFF"
-                        android:textSize="13sp"
+                        android:textSize="12sp"
                         android:layout_marginTop="4dp"
-                        android:layout_marginBottom="14dp"
-                        android:lineSpacingMultiplier="1.4" />
+                        android:layout_marginBottom="12dp" />
 
                     <Button
                         android:id="@+id/btnGrantCalendar"
                         android:layout_width="match_parent"
-                        android:layout_height="42dp"
+                        android:layout_height="40dp"
                         android:text="Grant Access"
                         android:textColor="#FFFFFF"
-                        android:textSize="13sp"
-                        android:background="@drawable/bg_btn_outline" />
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_nothing_chip" />
                 </LinearLayout>
 
                 <!-- Search bar -->
                 <LinearLayout
+                    android:id="@+id/containerEventSearch"
                     android:layout_width="match_parent"
-                    android:layout_height="40dp"
+                    android:layout_height="38dp"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:id="@+id/containerEventSearch"
-                    android:layout_marginTop="2dp"
-                    android:layout_marginBottom="8dp">
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="6dp">
 
                     <ImageView
-                        android:layout_width="15dp"
-                        android:layout_height="15dp"
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
                         android:src="@drawable/ic_search"
                         android:layout_marginEnd="8dp"
-                        android:alpha="0.4"
+                        android:alpha="0.3"
                         android:contentDescription="Search" />
 
                     <EditText
@@ -165,7 +163,7 @@
                         android:hint="Search events…"
                         android:textColorHint="#33FFFFFF"
                         android:textColor="#FFFFFF"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:background="@null"
                         android:inputType="text"
                         android:maxLines="1"
@@ -174,34 +172,31 @@
 
                     <ImageButton
                         android:id="@+id/btnClearEventSearch"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
                         android:src="@drawable/ic_close_small"
                         android:background="?android:attr/selectableItemBackgroundBorderless"
                         android:contentDescription="Clear"
                         android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- Divider below search -->
                 <View
                     android:id="@+id/dividerEventSearch"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="@drawable/bg_divider"
-                    android:layout_marginBottom="10dp" />
+                    android:background="#0FFFFFFF"
+                    android:layout_marginBottom="8dp" />
 
-                <!-- Empty state -->
                 <TextView
                     android:id="@+id/tvEventsEmpty"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="No upcoming events."
                     android:textColor="#33FFFFFF"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     android:paddingVertical="4dp"
                     android:visibility="gone" />
 
-                <!-- Events list -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvEvents"
                     android:layout_width="match_parent"
@@ -212,17 +207,16 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- ── TASKS SECTION ───────────────────────────────────────────── -->
+        <!-- TASKS SECTION -->
         <LinearLayout
             android:id="@+id/sectionTasks"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginBottom="14dp"
-            android:background="@drawable/bg_feed_section"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_nothing_card"
             android:padding="18dp">
 
-            <!-- Header -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="44dp"
@@ -234,16 +228,15 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Tasks"
-                    android:textSize="13sp"
-                    android:letterSpacing="0.06"
-                    android:textAllCaps="true"
-                    android:textColor="#66FFFFFF" />
+                    android:text="TASKS"
+                    android:textSize="10sp"
+                    android:letterSpacing="0.15"
+                    android:textColor="#44FFFFFF" />
 
                 <ImageButton
                     android:id="@+id/btnAddTodo"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:src="@drawable/ic_add"
                     android:tint="#44FFFFFF"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
@@ -256,7 +249,7 @@
                 android:layout_height="wrap_content"
                 android:text="Nothing here yet."
                 android:textColor="#33FFFFFF"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:paddingBottom="4dp"
                 android:visibility="gone" />
 
@@ -274,11 +267,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_feed_section"
+            android:background="@drawable/bg_nothing_card"
             android:padding="18dp"
             android:visibility="gone">
 
-            <!-- Header -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="44dp"
@@ -290,22 +282,21 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Screen Time"
-                    android:textSize="13sp"
-                    android:letterSpacing="0.06"
-                    android:textAllCaps="true"
-                    android:textColor="#66FFFFFF" />
+                    android:text="SCREEN TIME"
+                    android:textSize="10sp"
+                    android:letterSpacing="0.15"
+                    android:textColor="#44FFFFFF" />
 
                 <TextView
                     android:id="@+id/tvScreenTimeTotal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#FFFFFF"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Shown when Usage Access NOT granted -->
+            <!-- No permission state -->
             <LinearLayout
                 android:id="@+id/layoutScreenTimePermission"
                 android:layout_width="match_parent"
@@ -317,15 +308,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Enable Usage Access to see screen time stats."
-                    android:textColor="#88FFFFFF"
-                    android:textSize="13sp"
-                    android:layout_marginBottom="12dp" />
+                    android:textColor="#77FFFFFF"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="10dp" />
 
                 <Button
                     android:id="@+id/btnGrantUsageAccess"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
-                    android:text="Enable Usage Access"
+                    android:text="Enable"
                     android:textSize="12sp"
                     android:textColor="#000000"
                     android:backgroundTint="#FFFFFF"
@@ -334,16 +325,15 @@
 
             </LinearLayout>
 
-            <!-- Shown when permission granted: 3 kotak horizontal top apps -->
+            <!-- Top 3 apps chips -->
             <LinearLayout
                 android:id="@+id/layoutTopApps"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:weightSum="3">
 
-                <!-- Chip 1 — diisi secara programmatic -->
                 <include layout="@layout/item_screentime_chip"
                     android:id="@+id/chipApp1"
                     android:layout_width="0dp"
@@ -352,7 +342,6 @@
 
                 <Space android:layout_width="8dp" android:layout_height="1dp" />
 
-                <!-- Chip 2 -->
                 <include layout="@layout/item_screentime_chip"
                     android:id="@+id/chipApp2"
                     android:layout_width="0dp"
@@ -361,7 +350,6 @@
 
                 <Space android:layout_width="8dp" android:layout_height="1dp" />
 
-                <!-- Chip 3 -->
                 <include layout="@layout/item_screentime_chip"
                     android:id="@+id/chipApp3"
                     android:layout_width="0dp"

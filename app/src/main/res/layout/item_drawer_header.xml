@@ -4,10 +4,11 @@
     android:id="@+id/tvHeader"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:textColor="#33FFFFFF"
+    android:textSize="11sp"
+    android:textStyle="bold"
+    android:letterSpacing="0.12"
     android:paddingStart="24dp"
     android:paddingEnd="24dp"
-    android:paddingTop="20dp"
-    android:paddingBottom="4dp"
-    android:textColor="#44FFFFFF"
-    android:textSize="14sp"
-    android:textStyle="bold" />
+    android:paddingTop="16dp"
+    android:paddingBottom="4dp" />

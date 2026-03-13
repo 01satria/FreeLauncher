@@ -8,7 +8,6 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
@@ -54,7 +53,6 @@ class HomeFragment : Fragment() {
             overScrollMode = View.OVER_SCROLL_NEVER
         }
 
-        // Weather: click to refresh
         binding.llWeather.setOnClickListener { fetchWeather(showToast = true) }
 
         applyTheme()
@@ -70,8 +68,6 @@ class HomeFragment : Fragment() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val navBar    = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
             val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
-
-            // Content area: top = statusBar + 16dp, bottom = navBar + BottomBar height + 16dp
             binding.homeContentLayout.setPadding(
                 28.dp(), statusBar + 16.dp(), 28.dp(), navBar + 72.dp()
             )
@@ -89,7 +85,6 @@ class HomeFragment : Fragment() {
         updateScreenTimeHint()
         loadNextEvent()
         showCachedWeather()
-        // Auto-refresh weather if cache is older than 30 min
         val age = System.currentTimeMillis() - prefs.weatherLastMs
         if (prefs.hasWeatherLocation() && age > 30 * 60 * 1000L) fetchWeather()
     }
@@ -99,8 +94,6 @@ class HomeFragment : Fragment() {
         super.onDestroyView()
     }
 
-    // ── Theme ─────────────────────────────────────────────────────────────────
-
     fun applyTheme() {
         val b = _binding ?: return
         val isLight = prefs.theme == Prefs.THEME_LIGHT
@@ -109,30 +102,30 @@ class HomeFragment : Fragment() {
             b.homePageRoot.setBackgroundColor(Color.TRANSPARENT)
         } else {
             val bgColor = when (prefs.theme) {
-                Prefs.THEME_LIGHT -> Color.parseColor("#F5F5F7")
+                Prefs.THEME_LIGHT -> Color.parseColor("#F0F0F0")
                 Prefs.THEME_OLED  -> Color.BLACK
-                else              -> Color.parseColor("#151515") // slightly dark grey
+                else              -> Color.parseColor("#080808")
             }
             b.homePageRoot.setBackgroundColor(bgColor)
         }
 
-        val textPrimary   = if (isLight) Color.parseColor("#111111") else Color.WHITE
-        val textSecondary = if (isLight) Color.parseColor("#66000000") else Color.parseColor("#88FFFFFF")
+        val textPrimary   = if (isLight) Color.parseColor("#0A0A0A") else Color.WHITE
+        val textSecondary = if (isLight) Color.parseColor("#66000000") else Color.parseColor("#77FFFFFF")
+        val textTertiary  = if (isLight) Color.parseColor("#33000000") else Color.parseColor("#44FFFFFF")
+        val weatherColor  = if (isLight) Color.parseColor("#77000000") else Color.parseColor("#AAFFFFFF")
 
         b.tvClock.setTextColor(textPrimary)
         b.tvDate.setTextColor(textSecondary)
-        b.tvUsageToday.setTextColor(textSecondary)
-        
-        val weatherColor = if (isLight) Color.parseColor("#88000000") else Color.parseColor("#AAFFFFFF")
+        b.tvUsageToday.setTextColor(textTertiary)
+        b.tvNextEvent.setTextColor(if (isLight) Color.parseColor("#88000000") else Color.parseColor("#CCFFFFFF"))
         b.ivWeatherIcon.setColorFilter(weatherColor)
         b.tvWeatherTemp.setTextColor(weatherColor)
-        
-        b.tvScreenTimeHint.setTextColor(if (isLight) Color.parseColor("#44000000") else Color.parseColor("#44FFFFFF"))
+        b.tvScreenTimeHint.setTextColor(textTertiary)
 
-        FontHelper.applyFont(requireContext(), prefs, b.tvClock, b.tvDate, b.tvUsageToday, b.tvWeatherTemp, b.tvScreenTimeHint, b.tvNextEvent)
+        FontHelper.applyFont(requireContext(), prefs,
+            b.tvClock, b.tvDate, b.tvUsageToday, b.tvWeatherTemp,
+            b.tvScreenTimeHint, b.tvNextEvent)
     }
-
-    // ── Clock format ─────────────────────────────────────────────────────────
 
     private fun setupClockFormat() {
         val b = _binding ?: return
@@ -144,22 +137,17 @@ class HomeFragment : Fragment() {
             b.tvClock.format24Hour = null
         }
         b.tvDate.visibility = if (prefs.showDate) View.VISIBLE else View.GONE
-        
+
         val grav = when (prefs.alignment) {
             Prefs.ALIGN_CENTER -> Gravity.CENTER_HORIZONTAL
             Prefs.ALIGN_RIGHT  -> Gravity.END
             else               -> Gravity.START
         }
-        
+
         b.tvClock.gravity = grav
         b.tvDate.gravity  = grav
         b.tvUsageToday.gravity = grav
-        
-        // Also align the containers if needed
-        (b.tvDate.parent as? android.widget.LinearLayout)?.gravity = grav or Gravity.CENTER_VERTICAL
     }
-
-    // ── Weather ───────────────────────────────────────────────────────────────
 
     private fun showCachedWeather() {
         val b = _binding ?: return
@@ -168,7 +156,7 @@ class HomeFragment : Fragment() {
             return
         }
         val iconRes = WeatherHelper.codeToIcon(prefs.weatherCode)
-        val temp = WeatherHelper.formatTemp(prefs.weatherTempC)
+        val temp    = WeatherHelper.formatTemp(prefs.weatherTempC)
         b.ivWeatherIcon.setImageResource(iconRes)
         b.tvWeatherTemp.text = temp
         b.llWeather.visibility = View.VISIBLE
@@ -184,20 +172,16 @@ class HomeFragment : Fragment() {
                 prefs.weatherCode   = result.code
                 prefs.weatherLastMs = System.currentTimeMillis()
                 val iconRes = WeatherHelper.codeToIcon(result.code)
-                val temp = WeatherHelper.formatTemp(result.tempC)
+                val temp    = WeatherHelper.formatTemp(result.tempC)
                 b.ivWeatherIcon.setImageResource(iconRes)
                 b.tvWeatherTemp.text = temp
                 b.llWeather.visibility = View.VISIBLE
-                if (showToast) {
-                    Toast.makeText(requireContext(), "Weather updated", Toast.LENGTH_SHORT).show()
-                }
+                if (showToast) android.widget.Toast.makeText(requireContext(), "Weather updated", android.widget.Toast.LENGTH_SHORT).show()
             } else if (showToast) {
-                Toast.makeText(requireContext(), "Failed to update weather", Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(requireContext(), "Update failed", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
     }
-
-    // ── Home apps ─────────────────────────────────────────────────────────────
 
     fun loadHomeApps() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -220,19 +204,17 @@ class HomeFragment : Fragment() {
             val totalMin = apps.sumOf { it.screenTimeMinutes }
             if (totalMin > 0 && prefs.showScreenTime) {
                 b.tvUsageToday.visibility = View.VISIBLE
-                b.tvUsageToday.text = "Today: ${ScreenTimeHelper.formatMinutes(totalMin)}"
+                b.tvUsageToday.text = "Today · ${ScreenTimeHelper.formatMinutes(totalMin)}"
             } else {
                 b.tvUsageToday.visibility = View.GONE
             }
         }
     }
 
-    // ── Next event chip ───────────────────────────────────────────────────────
-
     private fun loadNextEvent() {
         val b = _binding ?: return
         if (!CalendarHelper.hasPermission(requireContext())) {
-            b.tvNextEvent.visibility = View.GONE
+            b.llNextEvent.visibility = View.GONE
             return
         }
         viewLifecycleOwner.lifecycleScope.launch {
@@ -241,21 +223,17 @@ class HomeFragment : Fragment() {
             val bv = _binding ?: return@launch
             if (ev != null) {
                 bv.tvNextEvent.text = "${ev.title}  ·  ${ev.countdown}"
-                bv.tvNextEvent.visibility = View.VISIBLE
+                bv.llNextEvent.visibility = View.VISIBLE
             } else {
-                bv.tvNextEvent.visibility = View.GONE
+                bv.llNextEvent.visibility = View.GONE
             }
         }
     }
 
-    // ── Screen time hint ─────────────────────────────────────────────────────
-
     private fun updateScreenTimeHint() {
         val b = _binding ?: return
-        // Tampilkan hint hanya jika fitur aktif tapi izin belum diberikan
         if (prefs.showScreenTime && !ScreenTimeHelper.hasPermission(requireContext())) {
             b.tvScreenTimeHint.visibility = View.VISIBLE
-            b.tvScreenTimeHint.text = "Tap to enable Screen Time"
             b.tvScreenTimeHint.setOnClickListener {
                 try { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
                 catch (_: Exception) {}
@@ -264,8 +242,6 @@ class HomeFragment : Fragment() {
             b.tvScreenTimeHint.visibility = View.GONE
         }
     }
-
-    // ── Launch ────────────────────────────────────────────────────────────────
 
     private fun launchApp(app: AppInfo) {
         try {

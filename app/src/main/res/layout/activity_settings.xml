@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/settingsRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -24,7 +23,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="36dp"
+            android:layout_marginBottom="40dp"
             android:layout_marginTop="24dp">
 
             <ImageButton
@@ -42,119 +41,133 @@
                 android:layout_weight="1"
                 android:text="Settings"
                 android:textColor="#FFFFFF"
-                android:textSize="26sp"
+                android:textSize="30sp"
                 android:textStyle="bold"
-                android:letterSpacing="-0.02"
+                android:letterSpacing="-0.03"
                 android:layout_marginStart="12dp" />
         </LinearLayout>
 
-        <!-- ── APPEARANCE ─────────────────────────────────────────────────── -->
+        <!-- APPEARANCE -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="APPEARANCE"
-            android:textColor="#55FFFFFF"
-            android:textSize="11sp"
-            android:letterSpacing="0.12"
-            android:layout_marginStart="8dp"
-            android:layout_marginBottom="10dp" />
+            android:textColor="#44FFFFFF"
+            android:textSize="10sp"
+            android:letterSpacing="0.15"
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="8dp" />
 
         <LinearLayout
             android:id="@+id/cardAppearance"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_feed_section"
-            android:padding="20dp"
-            android:layout_marginBottom="24dp">
+            android:background="@drawable/bg_nothing_card"
+            android:layout_marginBottom="28dp">
 
+            <!-- Theme -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:text="Launcher Theme"
+                    android:layout_weight="1" android:text="Theme"
                     android:textColor="#FFFFFF" android:textSize="15sp" />
                 <androidx.appcompat.widget.AppCompatSpinner android:id="@+id/spinnerTheme"
-                    android:layout_width="150dp" android:layout_height="44dp"
-                    android:backgroundTint="#44FFFFFF" />
+                    android:layout_width="140dp" android:layout_height="44dp"
+                    android:backgroundTint="#33FFFFFF" />
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="1dp"
-                android:background="#15FFFFFF" android:layout_marginVertical="14dp" />
+                android:background="#0FFFFFFF" android:layout_marginHorizontal="18dp"/>
 
+            <!-- Alignment -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                     android:layout_weight="1" android:text="Text Alignment"
                     android:textColor="#FFFFFF" android:textSize="15sp" />
                 <androidx.appcompat.widget.AppCompatSpinner android:id="@+id/spinnerAlignment"
-                    android:layout_width="150dp" android:layout_height="44dp"
-                    android:backgroundTint="#44FFFFFF" />
+                    android:layout_width="140dp" android:layout_height="44dp"
+                    android:backgroundTint="#33FFFFFF" />
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="1dp"
-                android:background="#15FFFFFF" android:layout_marginVertical="14dp" />
+                android:background="#0FFFFFFF" android:layout_marginHorizontal="18dp"/>
 
+            <!-- Font -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:text="Font Style"
-                    android:textColor="#FFFFFF" android:textSize="15sp" />
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Font Style" android:textColor="#FFFFFF" android:textSize="15sp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Default or Pixel (dot matrix)"
+                        android:textColor="#44FFFFFF" android:textSize="11sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
                 <androidx.appcompat.widget.AppCompatSpinner android:id="@+id/spinnerFont"
-                    android:layout_width="150dp" android:layout_height="44dp"
-                    android:backgroundTint="#44FFFFFF" />
+                    android:layout_width="140dp" android:layout_height="44dp"
+                    android:backgroundTint="#33FFFFFF" />
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="1dp"
-                android:background="#15FFFFFF" android:layout_marginVertical="14dp" />
+                android:background="#0FFFFFFF" android:layout_marginHorizontal="18dp"/>
 
+            <!-- Transparent -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:text="Transparent UI"
+                    android:layout_weight="1" android:text="Transparent Background"
                     android:textColor="#FFFFFF" android:textSize="15sp" />
                 <androidx.appcompat.widget.SwitchCompat android:id="@+id/switchTransparentBg"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
                     android:thumbTint="#FFFFFF" android:trackTint="#33FFFFFF" />
             </LinearLayout>
+
         </LinearLayout>
 
-        <!-- ── CLOCK & DATE ────────────────────────────────────────────────── -->
+        <!-- CLOCK & DATE -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="CLOCK &amp; DATE"
-            android:textColor="#55FFFFFF"
-            android:textSize="11sp"
-            android:letterSpacing="0.12"
-            android:layout_marginStart="8dp"
-            android:layout_marginBottom="10dp" />
+            android:textColor="#44FFFFFF"
+            android:textSize="10sp"
+            android:letterSpacing="0.15"
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="8dp" />
 
         <LinearLayout
             android:id="@+id/cardClock"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_feed_section"
-            android:padding="20dp"
-            android:layout_marginBottom="24dp">
+            android:background="@drawable/bg_nothing_card"
+            android:layout_marginBottom="28dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                     android:layout_weight="1" android:text="24-Hour Format"
                     android:textColor="#FFFFFF" android:textSize="15sp" />
@@ -164,15 +177,16 @@
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="1dp"
-                android:background="#15FFFFFF" android:layout_marginVertical="14dp" />
+                android:background="#0FFFFFFF" android:layout_marginHorizontal="18dp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:text="Show Current Date"
+                    android:layout_weight="1" android:text="Show Date"
                     android:textColor="#FFFFFF" android:textSize="15sp" />
                 <androidx.appcompat.widget.SwitchCompat android:id="@+id/switchShowDate"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -180,130 +194,163 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- ── HOME SCREEN ────────────────────────────────────────────────── -->
+        <!-- HOME CONTENT -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="HOME CONTENT"
-            android:textColor="#55FFFFFF"
-            android:textSize="11sp"
-            android:letterSpacing="0.12"
-            android:layout_marginStart="8dp"
-            android:layout_marginBottom="10dp" />
+            android:textColor="#44FFFFFF"
+            android:textSize="10sp"
+            android:letterSpacing="0.15"
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="8dp" />
 
         <LinearLayout
             android:id="@+id/cardHome"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_feed_section"
-            android:padding="20dp"
-            android:layout_marginBottom="24dp">
+            android:background="@drawable/bg_nothing_card"
+            android:layout_marginBottom="28dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                     android:layout_weight="1" android:text="Max Apps on Home"
                     android:textColor="#FFFFFF" android:textSize="15sp" />
                 <NumberPicker android:id="@+id/npHomeApps"
-                    android:layout_width="wrap_content" android:layout_height="72dp" />
+                    android:layout_width="wrap_content" android:layout_height="60dp" />
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="1dp"
-                android:background="#15FFFFFF" android:layout_marginVertical="14dp" />
+                android:background="#0FFFFFFF" android:layout_marginHorizontal="18dp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:text="Enable Screen Time"
+                    android:layout_weight="1" android:text="Show Screen Time"
                     android:textColor="#FFFFFF" android:textSize="15sp" />
                 <androidx.appcompat.widget.SwitchCompat android:id="@+id/switchScreenTime"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
                     android:thumbTint="#FFFFFF" android:trackTint="#33FFFFFF" />
             </LinearLayout>
 
-            <Button
-                android:id="@+id/btnGrantUsage"
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#0FFFFFFF" android:layout_marginHorizontal="18dp"/>
+
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="44dp"
-                android:text="Grant Usage Access"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"
-                android:background="@drawable/bg_btn_outline"
-                android:layout_marginTop="16dp" />
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="Grant Usage Access"
+                    android:textColor="#88FFFFFF" android:textSize="14sp" />
+                <ImageButton
+                    android:id="@+id/btnGrantUsage"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_back"
+                    android:rotation="180"
+                    android:tint="#55FFFFFF"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Grant" />
+            </LinearLayout>
         </LinearLayout>
 
-        <!-- ── WEATHER ───────────────────────────────────────────────────── -->
+        <!-- WEATHER -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="WEATHER INFOS"
-            android:textColor="#55FFFFFF"
-            android:textSize="11sp"
-            android:letterSpacing="0.12"
-            android:layout_marginStart="8dp"
-            android:layout_marginBottom="10dp" />
+            android:text="WEATHER"
+            android:textColor="#44FFFFFF"
+            android:textSize="10sp"
+            android:letterSpacing="0.15"
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="8dp" />
 
         <LinearLayout
             android:id="@+id/cardWeather"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_feed_section"
-            android:padding="20dp"
-            android:layout_marginBottom="24dp">
+            android:background="@drawable/bg_nothing_card"
+            android:layout_marginBottom="28dp">
 
-            <TextView
-                android:id="@+id/tvWeatherLocationStatus"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#77FFFFFF"
-                android:textSize="13sp"
-                android:layout_marginBottom="14dp" />
-
-            <Button
-                android:id="@+id/btnSetWeatherLocation"
-                android:layout_width="match_parent"
-                android:layout_height="44dp"
-                android:text="Auto-detect Location"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"
-                android:background="@drawable/bg_btn_outline" />
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
+                <TextView
+                    android:id="@+id/tvWeatherLocationStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="#77FFFFFF"
+                    android:textSize="13sp" />
+                <Button
+                    android:id="@+id/btnSetWeatherLocation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="Detect"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:paddingHorizontal="14dp"
+                    android:background="@drawable/bg_nothing_chip" />
+            </LinearLayout>
         </LinearLayout>
 
-        <!-- ── APPS MANAGEMENT ───────────────────────────────────────────── -->
+        <!-- APPS MANAGEMENT -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="APPS MANAGEMENT"
-            android:textColor="#55FFFFFF"
-            android:textSize="11sp"
-            android:letterSpacing="0.12"
-            android:layout_marginStart="8dp"
-            android:layout_marginBottom="10dp" />
+            android:text="APPS"
+            android:textColor="#44FFFFFF"
+            android:textSize="10sp"
+            android:letterSpacing="0.15"
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="8dp" />
 
         <LinearLayout
             android:id="@+id/cardApps"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_feed_section"
-            android:padding="20dp">
+            android:background="@drawable/bg_nothing_card">
 
-            <Button
-                android:id="@+id/btnManageHidden"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="44dp"
-                android:text="Manage Hidden Apps"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"
-                android:background="@drawable/bg_btn_outline" />
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="Manage Hidden Apps"
+                    android:textColor="#FFFFFF" android:textSize="15sp" />
+                <ImageButton
+                    android:id="@+id/btnManageHidden"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_back"
+                    android:rotation="180"
+                    android:tint="#55FFFFFF"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Manage" />
+            </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>

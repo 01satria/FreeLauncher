@@ -5,33 +5,26 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingVertical="9dp"
+    android:paddingVertical="10dp"
     android:clickable="true"
     android:focusable="true"
     android:background="?android:attr/selectableItemBackground">
 
-    <!-- App icon (small) -->
-    <ImageView
-        android:id="@+id/iv_icon"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:layout_marginEnd="12dp"
-        android:contentDescription="App icon" />
-
-    <!-- App name -->
+    <!-- App name — Nothing style: large, bold, no icon -->
     <TextView
         android:id="@+id/tv_label"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:textColor="#FFFFFF"
-        android:textSize="20sp"
-        android:gravity="start"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:letterSpacing="-0.02"
         android:maxLines="1"
         android:ellipsize="end"
-        android:singleLine="true"
-        android:layout_marginEnd="8dp" />
+        android:singleLine="true" />
 
-    <!-- Screen time dot + time -->
+    <!-- Screen time — subtle -->
     <LinearLayout
         android:id="@+id/layoutScreenTime"
         android:layout_width="wrap_content"
@@ -41,17 +34,27 @@
         android:visibility="gone">
 
         <View
-            android:layout_width="4dp"
-            android:layout_height="4dp"
-            android:layout_marginEnd="4dp"
+            android:id="@+id/dotScreenTime"
+            android:layout_width="3dp"
+            android:layout_height="3dp"
+            android:layout_marginEnd="5dp"
             android:background="@drawable/bg_dot" />
 
         <TextView
             android:id="@+id/tv_screen_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#66FFFFFF"
-            android:textSize="13sp" />
+            android:textColor="#44FFFFFF"
+            android:textSize="12sp" />
     </LinearLayout>
+
+    <!-- Small arrow indicator -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="›"
+        android:textColor="#22FFFFFF"
+        android:textSize="20sp"
+        android:layout_marginStart="8dp" />
 
 </LinearLayout>

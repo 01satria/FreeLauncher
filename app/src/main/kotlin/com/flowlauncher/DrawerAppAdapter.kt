@@ -9,13 +9,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 
 /**
- * Drawer adapter with alphabetical section headers.
- * Item types: TYPE_HEADER = 0, TYPE_APP = 1
- *
- * Performance notes:
- * ─ setApps() uses DiffUtil — only changed rows are rebound.
- * ─ Icons fetched from AppRepository.iconCache (LruCache) — O(1), no I/O.
- * ─ ViewHolder resets icon visibility on every bind to prevent recycle glitch.
+ * Nothing-style drawer: alphabetical headers + app rows with icon + name.
+ * Icons from LruCache — O(1), no I/O.
  */
 class DrawerAppAdapter(
     private val onAppClick: (AppInfo) -> Unit,
@@ -33,19 +28,17 @@ class DrawerAppAdapter(
     }
 
     private val items = mutableListOf<ListItem>()
-
-    // ── Data helpers ──────────────────────────────────────────────────────────
+    private var cachedPrefs: Prefs? = null
 
     private fun buildItems(apps: List<AppInfo>): List<ListItem> {
         if (apps.isEmpty()) return emptyList()
-        val result = mutableListOf<ListItem>()
+        val result  = mutableListOf<ListItem>()
         val grouped = apps.sortedBy { it.label.lowercase() }
             .groupBy { it.label.firstOrNull()?.uppercaseChar()?.toString() ?: "#" }
             .entries.sortedBy { (k, _) -> if (k == "#") "\u0000" else k }
-
-        grouped.forEach { (letter, appsInGroup) ->
+        grouped.forEach { (letter, group) ->
             result += ListItem.Header(letter)
-            appsInGroup.forEach { result += ListItem.App(it) }
+            group.forEach { result += ListItem.App(it) }
         }
         return result
     }
@@ -53,21 +46,16 @@ class DrawerAppAdapter(
     fun setApps(apps: List<AppInfo>) {
         val newItems = buildItems(apps)
         val diff = DiffUtil.calculateDiff(ItemDiffCallback(items, newItems))
-        items.clear()
-        items.addAll(newItems)
+        items.clear(); items.addAll(newItems)
         diff.dispatchUpdatesTo(this)
     }
 
-    /** For search results — flat list without section headers */
     fun setSearchApps(apps: List<AppInfo>) {
         val newItems = apps.map { ListItem.App(it) }
         val diff = DiffUtil.calculateDiff(ItemDiffCallback(items, newItems))
-        items.clear()
-        items.addAll(newItems)
+        items.clear(); items.addAll(newItems)
         diff.dispatchUpdatesTo(this)
     }
-
-    // ── RecyclerView.Adapter ──────────────────────────────────────────────────
 
     override fun getItemCount() = items.size
     override fun getItemViewType(pos: Int) = when (items[pos]) {
@@ -76,11 +64,11 @@ class DrawerAppAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val inflater = LayoutInflater.from(parent.context)
+        val inf = LayoutInflater.from(parent.context)
         return if (viewType == TYPE_HEADER)
-            HeaderVH(inflater.inflate(R.layout.item_drawer_header, parent, false))
+            HeaderVH(inf.inflate(R.layout.item_drawer_header, parent, false))
         else
-            AppVH(inflater.inflate(R.layout.item_drawer_app, parent, false))
+            AppVH(inf.inflate(R.layout.item_drawer_app, parent, false))
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, pos: Int) {
@@ -90,13 +78,12 @@ class DrawerAppAdapter(
         }
     }
 
-    // ── ViewHolders ───────────────────────────────────────────────────────────
-
     inner class HeaderVH(v: View) : RecyclerView.ViewHolder(v) {
         private val tv: TextView = v.findViewById(R.id.tvHeader)
-        fun bind(h: ListItem.Header) { 
+        fun bind(h: ListItem.Header) {
             tv.text = h.letter
-            FontHelper.applyFont(itemView.context, Prefs(itemView.context), tv)
+            val prefs = cachedPrefs ?: Prefs(itemView.context).also { cachedPrefs = it }
+            FontHelper.applyFont(itemView.context, prefs, tv)
         }
     }
 
@@ -109,12 +96,12 @@ class DrawerAppAdapter(
         fun bind(app: AppInfo) {
             label.text = app.label
 
-            // Always reset to VISIBLE before setting image — prevents recycled
-            // ViewHolders from carrying an INVISIBLE state to a new app.
+            val prefs = cachedPrefs ?: Prefs(itemView.context).also { cachedPrefs = it }
+            FontHelper.applyFont(itemView.context, prefs, label)
+
             icon.visibility = View.VISIBLE
             val bmp = AppRepository.getIcon(app.packageName)
-            if (bmp != null) icon.setImageBitmap(bmp)
-            else             icon.setImageDrawable(null)
+            if (bmp != null) icon.setImageBitmap(bmp) else icon.setImageDrawable(null)
 
             if (app.screenTimeMinutes > 0) {
                 dot.visibility   = View.VISIBLE
@@ -130,15 +117,12 @@ class DrawerAppAdapter(
         }
     }
 
-    // ── DiffUtil ──────────────────────────────────────────────────────────────
-
     private class ItemDiffCallback(
         private val old: List<ListItem>,
         private val new: List<ListItem>
     ) : DiffUtil.Callback() {
         override fun getOldListSize() = old.size
         override fun getNewListSize() = new.size
-
         override fun areItemsTheSame(o: Int, n: Int): Boolean {
             val a = old[o]; val b = new[n]
             return when {
@@ -147,15 +131,14 @@ class DrawerAppAdapter(
                 else -> false
             }
         }
-
         override fun areContentsTheSame(o: Int, n: Int): Boolean {
             val a = old[o]; val b = new[n]
             return when {
                 a is ListItem.Header && b is ListItem.Header -> a.letter == b.letter
                 a is ListItem.App    && b is ListItem.App    ->
-                    a.info.label             == b.info.label &&
+                    a.info.label == b.info.label &&
                     a.info.screenTimeMinutes == b.info.screenTimeMinutes &&
-                    a.info.isFavorite        == b.info.isFavorite
+                    a.info.isFavorite == b.info.isFavorite
                 else -> false
             }
         }

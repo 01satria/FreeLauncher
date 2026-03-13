@@ -7,7 +7,6 @@
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
-    <!-- ViewPager: Feed(0) | Home(1) — NO page dots -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
@@ -24,18 +23,33 @@
         android:clickable="true"
         android:focusable="true" />
 
-    <!-- ── APP DRAWER (full-screen bottom sheet) ─────────────────────── -->
+    <!-- App Drawer — Nothing style bottom sheet -->
     <LinearLayout
         android:id="@+id/drawerSheet"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="@drawable/bg_drawer"
+        android:background="@drawable/bg_nothing_drawer"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
         app:behavior_hideable="true"
         app:behavior_skipCollapsed="true">
 
-        <!-- Drawer header: title + settings icon -->
+        <!-- Drag handle -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingTop="12dp"
+            android:paddingBottom="4dp">
+
+            <View
+                android:layout_width="36dp"
+                android:layout_height="4dp"
+                android:background="@drawable/bg_nothing_handle" />
+        </LinearLayout>
+
+        <!-- Drawer header: Apps title + settings -->
         <LinearLayout
             android:id="@+id/drawerHeader"
             android:layout_width="match_parent"
@@ -44,7 +58,7 @@
             android:gravity="center_vertical"
             android:paddingStart="24dp"
             android:paddingEnd="20dp"
-            android:paddingTop="20dp"
+            android:paddingTop="12dp"
             android:paddingBottom="8dp">
 
             <TextView
@@ -53,35 +67,37 @@
                 android:layout_weight="1"
                 android:text="Apps"
                 android:textColor="#FFFFFF"
-                android:textSize="32sp"
-                android:textStyle="bold" />
+                android:textSize="36sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.03" />
 
             <ImageButton
                 android:id="@+id/btnDrawerSettings"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
                 android:src="@drawable/ic_settings"
-                android:tint="#88FFFFFF"
-                android:background="@drawable/bg_chip"
+                android:tint="#55FFFFFF"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Settings" />
         </LinearLayout>
 
-        <!-- Search bar with icon -->
+        <!-- Search bar — Nothing minimal style -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="52dp"
+            android:layout_height="48dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginHorizontal="24dp"
+            android:layout_marginHorizontal="20dp"
             android:layout_marginBottom="4dp"
-            android:background="@drawable/bg_search"
-            android:paddingStart="16dp"
+            android:background="@drawable/bg_nothing_search"
+            android:paddingStart="14dp"
             android:paddingEnd="12dp">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
                 android:src="@drawable/ic_search"
+                android:tint="#44FFFFFF"
                 android:layout_marginEnd="10dp"
                 android:contentDescription="Search" />
 
@@ -90,10 +106,11 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:hint="Search apps"
-                android:textColorHint="#55FFFFFF"
+                android:hint="Search"
+                android:textColorHint="#33FFFFFF"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
+                android:letterSpacing="-0.01"
                 android:background="@null"
                 android:inputType="text"
                 android:maxLines="1"
@@ -103,7 +120,7 @@
                 android:focusableInTouchMode="true" />
         </LinearLayout>
 
-        <!-- Apps list (alphabetical with section headers) -->
+        <!-- App list -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvDrawerApps"
             android:layout_width="match_parent"

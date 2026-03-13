@@ -36,11 +36,7 @@ class FeedFragment : Fragment() {
     private var eventsExpanded = true
     private var currentQuery   = ""
 
-    // Pre-allocated GradientDrawable for section cards (set once, color updated per theme)
-    // cornerRadius diset di onViewCreated setelah context tersedia — BUKAN di property init
-    private val sectionBg     = GradientDrawable()
-    private val sectionBg2    = GradientDrawable()
-    private val sectionBg3    = GradientDrawable()
+    // Section backgrounds are set via XML (bg_nothing_card) — no dynamic GradientDrawable needed
 
     private val calendarPermLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -55,16 +51,7 @@ class FeedFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         prefs = Prefs(requireContext())
 
-        // Set cornerRadius setelah context tersedia (resources.displayMetrics sudah siap)
-        val r = dpToPx(20f)
-        sectionBg.cornerRadius  = r
-        sectionBg2.cornerRadius = r
-        sectionBg3.cornerRadius = r
-
-        // Assign pre-allocated backgrounds so we only update color, never allocate
-        b.sectionEvents.background    = sectionBg
-        b.sectionTasks.background     = sectionBg2
-        b.cardScreenTime.background   = sectionBg3
+        // Section backgrounds defined in XML (bg_nothing_card) — no GradientDrawable override
 
         setupTasks()
         setupEvents()
@@ -126,10 +113,7 @@ class FeedFragment : Fragment() {
         // Page background
         bv.feedRoot.setBackgroundColor(FeedTheme.pageBg(prefs))
 
-        // Section card backgrounds (single GradientDrawable, just setColor)
-        sectionBg.setColor(t.surface)
-        sectionBg2.setColor(t.surface)
-        sectionBg3.setColor(t.surface)
+        // Section card backgrounds come from XML — only text colors update dynamically
 
         // Header
         bv.tvFeedTitle.setTextColor(t.onSurface)
@@ -397,16 +381,16 @@ class FeedFragment : Fragment() {
     // Warna berbeda untuk tiap chip (indeks 0,1,2)
     private val chipBg = Array(3) { GradientDrawable() }
 
-    // Palet warna chip: soft, kontras baik di dark & light
+    // Chip colors — Nothing-style: dark subtle tones
     private val CHIP_COLORS = intArrayOf(
-        0xFF1A237E.toInt(),   // indigo deep — chip 1
-        0xFF1B5E20.toInt(),   // green deep  — chip 2
-        0xFF4A148C.toInt()    // purple deep  — chip 3
+        0xFF141414.toInt(),   // near-black chip 1
+        0xFF141414.toInt(),   // near-black chip 2
+        0xFF141414.toInt()    // near-black chip 3
     )
     private val CHIP_COLORS_LIGHT = intArrayOf(
-        0xFFBBDEFB.toInt(),   // blue light   — chip 1
-        0xFFC8E6C9.toInt(),   // green light  — chip 2
-        0xFFE1BEE7.toInt()    // purple light — chip 3
+        0xFFF0F0F0.toInt(),   // light chip 1
+        0xFFF0F0F0.toInt(),   // light chip 2
+        0xFFF0F0F0.toInt()    // light chip 3
     )
 
     private fun setupScreenTime() {

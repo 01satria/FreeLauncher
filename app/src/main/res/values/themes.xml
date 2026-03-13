@@ -1,34 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.FlowLauncher" parent="Theme.MaterialComponents.NoActionBar">
+    <style name="Theme.FlowLauncher" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorBackground">@android:color/black</item>
+        <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowShowWallpaper">true</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:textColor">#FFFFFF</item>
         <item name="colorPrimary">#FFFFFF</item>
         <item name="colorPrimaryVariant">#CCCCCC</item>
         <item name="colorOnPrimary">#000000</item>
-        <item name="colorAccent">#FFFFFF</item>
-        <item name="colorSurface">#121212</item>
-        <item name="colorOnSurface">#FFFFFF</item>
-        <item name="rippleColor">#33FFFFFF</item>
-        <item name="alertDialogTheme">@style/Theme.FlowLauncher.Dialog</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges</item>
     </style>
 
-    <style name="Theme.FlowLauncher.Dialog" parent="Theme.MaterialComponents.Dialog.Alert">
-        <item name="android:background">#1E1E1E</item>
-        <item name="android:textColor">#FFFFFF</item>
-        <item name="colorAccent">#FFFFFF</item>
+    <style name="Theme.FlowLauncher.Settings" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
         <item name="colorPrimary">#FFFFFF</item>
-    </style>
-
-    <!-- Settings dan Focus: solid background, tidak ada wallpaper -->
-    <style name="Theme.FlowLauncher.Settings" parent="Theme.FlowLauncher">
-        <item name="android:windowBackground">#000000</item>
-        <item name="android:windowShowWallpaper">false</item>
+        <item name="colorPrimaryVariant">#CCCCCC</item>
+        <item name="colorOnPrimary">#000000</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
     </style>
 
 </resources>
