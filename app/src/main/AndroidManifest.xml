@@ -76,19 +76,6 @@
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan"
             android:label="@string/focus_mode" />
 
-        <activity
-            android:name=".LoginActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.FlowLauncher"
-            android:windowSoftInputMode="stateAlwaysHidden|adjustResize" />
-
-        <activity
-            android:name=".ChatActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.FlowLauncher"
-            android:windowSoftInputMode="stateAlwaysHidden|adjustResize" />
 
     </application>
 </manifest>

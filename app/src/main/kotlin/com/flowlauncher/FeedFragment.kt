@@ -41,7 +41,6 @@ class FeedFragment : Fragment() {
     private val sectionBg     = GradientDrawable()
     private val sectionBg2    = GradientDrawable()
     private val sectionBg3    = GradientDrawable()
-    private val sectionBg4    = GradientDrawable()
 
     private val calendarPermLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -61,13 +60,11 @@ class FeedFragment : Fragment() {
         sectionBg.cornerRadius  = r
         sectionBg2.cornerRadius = r
         sectionBg3.cornerRadius = r
-        sectionBg4.cornerRadius = r
 
         // Assign pre-allocated backgrounds so we only update color, never allocate
         b.sectionEvents.background    = sectionBg
         b.sectionTasks.background     = sectionBg2
         b.cardScreenTime.background   = sectionBg3
-        b.sectionGemini.background    = sectionBg4
 
         setupTasks()
         setupEvents()
@@ -76,9 +73,6 @@ class FeedFragment : Fragment() {
 
         b.btnFeedSettings.setOnClickListener {
             startActivity(android.content.Intent(requireContext(), SettingsActivity::class.java))
-        }
-        b.btnChatGemini.setOnClickListener {
-            startActivity(android.content.Intent(requireContext(), LoginActivity::class.java))
         }
         applyFeedWindowInsets()
     }
@@ -136,7 +130,6 @@ class FeedFragment : Fragment() {
         sectionBg.setColor(t.surface)
         sectionBg2.setColor(t.surface)
         sectionBg3.setColor(t.surface)
-        sectionBg4.setColor(t.surface)
 
         // Header
         bv.tvFeedTitle.setTextColor(t.onSurface)
