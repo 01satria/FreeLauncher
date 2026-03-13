@@ -540,9 +540,6 @@ class FeedFragment : Fragment() {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private fun dpToPx(dp: Float): Float =
-        dp * (resources.displayMetrics.density)
-
     private fun Float.dpToPx(): Float = this * resources.displayMetrics.density
     private fun Int.dpToPx(): Float   = this.toFloat() * resources.displayMetrics.density
     private fun Int.dpToPxInt(): Int  = (this.toFloat() * resources.displayMetrics.density).toInt()
