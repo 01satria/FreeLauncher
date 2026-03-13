@@ -30,8 +30,11 @@ class LoginActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
 
         // Configure Google Sign-In
+        // TODO: Replace with your actual Web Client ID from Google Cloud Console / Firebase
+        val webClientId = "YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com" 
+        
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id)) // Requires google-services.json to generate this string
+            .requestIdToken(webClientId)
             .requestEmail()
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso)
