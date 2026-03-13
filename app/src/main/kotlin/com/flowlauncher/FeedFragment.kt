@@ -299,9 +299,17 @@ class FeedFragment : Fragment() {
         if (ids.isEmpty()) { bv.rvPinnedEvents.visibility = View.GONE; return }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val pinned = CalendarHelper
+            val allEvents = CalendarHelper
                 .getUpcomingEvents(requireContext(), limit = Int.MAX_VALUE, rangeDays = 365)
+            
+            // Deduplicate: If multiple instances for the same event ID exist (recurring), 
+            // only take the first one (closest to now).
+            val pinned = allEvents
                 .filter { it.id in ids }
+                .groupBy { it.id }
+                .map { it.value.first() }
+                .sortedBy { it.startMs }
+
             val bv2 = _b ?: return@launch
             if (pinned.isEmpty()) {
                 bv2.rvPinnedEvents.visibility = View.GONE
@@ -489,18 +497,25 @@ class FeedFragment : Fragment() {
     private fun startCountdownTicker() {
         tickJob?.cancel()
         tickJob = viewLifecycleOwner.lifecycleScope.launch {
+            var counter = 0
             while (isActive) {
                 delay(30_000L)
                 if (_b == null || !CalendarHelper.hasPermission(requireContext())) continue
-                // Selalu update keduanya — pinned event harus tetap berjalan
-                // meski section di-collapse. PAYLOAD_TICK hanya rebind countdown,
-                // tidak trigger full layout pass → biaya sangat kecil.
+                
+                // 1. Refresh UI countdown components (smooth 30s update)
                 if (eventAdapter.itemCount > 0)
-                    eventAdapter.notifyItemRangeChanged(0, eventAdapter.itemCount,
-                        FeedEventAdapter.PAYLOAD_TICK)
+                    eventAdapter.notifyItemRangeChanged(0, eventAdapter.itemCount, FeedEventAdapter.PAYLOAD_TICK)
                 if (pinnedAdapter.itemCount > 0)
-                    pinnedAdapter.notifyItemRangeChanged(0, pinnedAdapter.itemCount,
-                        FeedEventAdapter.PAYLOAD_TICK)
+                    pinnedAdapter.notifyItemRangeChanged(0, pinnedAdapter.itemCount, FeedEventAdapter.PAYLOAD_TICK)
+
+                // 2. Periodically refresh data from Calendar provider (every 5 mins)
+                // This ensures we pick up external changes and update instances for recurring events.
+                counter++
+                if (counter >= 10) { // 10 * 30s = 5m
+                    counter = 0
+                    if (currentQuery.isBlank()) refreshEvents()
+                    if (!eventsExpanded) refreshPinnedEvents()
+                }
             }
         }
     }

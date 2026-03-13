@@ -36,13 +36,15 @@ data class EventItem(
                 val m = TimeUnit.MILLISECONDS.toMinutes(ms) % 60
                 if (m == 0L) "${h}h" else "${h}h ${m}m"
             }
-            ms < TimeUnit.DAYS.toMillis(7) -> {
+            ms < TimeUnit.DAYS.toMillis(4) -> {
+                // For near events (under 4 days), show "d h" for precision
                 val d = TimeUnit.MILLISECONDS.toDays(ms)
                 val h = TimeUnit.MILLISECONDS.toHours(ms) % 24
                 if (h == 0L) "${d}d" else "${d}d ${h}h"
             }
             else -> {
-                val d = TimeUnit.MILLISECONDS.toDays(ms)
+                // For far events, use rounding to nearest day to avoid course 24h floor jumps
+                val d = Math.round(ms.toDouble() / TimeUnit.DAYS.toMillis(1))
                 "${d}d"
             }
         }
