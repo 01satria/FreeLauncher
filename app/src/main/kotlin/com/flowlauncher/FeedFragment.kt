@@ -369,11 +369,11 @@ class FeedFragment : Fragment() {
             setHintTextColor(t?.faint ?: 0x55FFFFFF.toInt())
             setTextColor(t?.onSurface ?: Color.WHITE)
             background = null
-            setPadding(dpToPx(4f).toInt(), dpToPx(8f).toInt(), dpToPx(4f).toInt(), dpToPx(8f).toInt())
+            setPadding(4f.dpToPx().toInt(), 8f.dpToPx().toInt(), 4f.dpToPx().toInt(), 8f.dpToPx().toInt())
         }
         val wrap = LinearLayout(ctx).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dpToPx(24f).toInt(), dpToPx(8f).toInt(), dpToPx(24f).toInt(), 0)
+            setPadding(24f.dpToPx().toInt(), 8f.dpToPx().toInt(), 24f.dpToPx().toInt(), 0)
             addView(input)
         }
         AlertDialog.Builder(ctx)
@@ -425,7 +425,7 @@ class FeedFragment : Fragment() {
 
     private fun setupScreenTime() {
         // Set cornerRadius sekali saja ke semua chip bg
-        val r = dpToPx(14f)
+        val r = 14f.dpToPx()
         chipBg.forEach { it.cornerRadius = r }
 
         _b?.btnGrantUsageAccess?.setOnClickListener {
