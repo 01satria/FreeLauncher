@@ -380,8 +380,41 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private var touchStartX = 0f
+    private var touchStartY = 0f
+    private var verticalSwipeLocked = false
+
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-        if (::gestureDetector.isInitialized && ev != null) {
+        if (ev != null && ::gestureDetector.isInitialized) {
+            when (ev.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    touchStartX = ev.x
+                    touchStartY = ev.y
+                    verticalSwipeLocked = false
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    if (!verticalSwipeLocked) {
+                        val dx = kotlin.math.abs(ev.x - touchStartX)
+                        val dy = kotlin.math.abs(ev.y - touchStartY)
+                        // If moving vertically more than horizontally (with a small hurdle),
+                        // lock the ViewPager instantly.
+                        if (dy > dx && dy > 10) {
+                            verticalSwipeLocked = true
+                            if (binding.viewPager.currentItem == PAGE_HOME && 
+                                drawerSheet.state == BottomSheetBehavior.STATE_HIDDEN) {
+                                binding.viewPager.isUserInputEnabled = false
+                            }
+                        }
+                    }
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    // Re-enable horizontal scroll ONLY if drawer didn't open
+                    if (drawerSheet.state == BottomSheetBehavior.STATE_HIDDEN) {
+                        binding.viewPager.isUserInputEnabled = true
+                    }
+                    verticalSwipeLocked = false
+                }
+            }
             gestureDetector.onTouchEvent(ev)
         }
         return super.dispatchTouchEvent(ev)
