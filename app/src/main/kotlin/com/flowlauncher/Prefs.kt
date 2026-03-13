@@ -42,6 +42,10 @@ class Prefs(context: Context) {
         get() = prefs.getInt("home_app_count", 5)
         set(v) = prefs.edit().putInt("home_app_count", v).apply()
 
+    var fontStyle: String
+        get() = prefs.getString("font_style", FONT_DEFAULT)!!
+        set(v) = prefs.edit().putString("font_style", v).apply()
+
     var favoritePackages: List<String>
         get() {
             _cachedFavorites?.let { return it }
@@ -155,5 +159,7 @@ class Prefs(context: Context) {
         const val ALIGN_LEFT   = "left"
         const val ALIGN_CENTER = "center"
         const val ALIGN_RIGHT  = "right"
+        const val FONT_DEFAULT = "default"
+        const val FONT_PIXEL   = "pixel"
     }
 }
