@@ -89,6 +89,8 @@ class SettingsActivity : AppCompatActivity() {
                     // Section headers (small, letter spaced) are detected by tag or by being siblings of cards
                     if (v.letterSpacing > 0) v.setTextColor(sub)
                     else v.setTextColor(txt)
+                    
+                    FontHelper.applyFont(this, prefs, v)
                 }
                 is ViewGroup -> applyColorsToViewGroup(v, txt, sub, card, div, light)
                 is View -> {
@@ -122,6 +124,19 @@ class SettingsActivity : AppCompatActivity() {
         binding.spinnerAlignment.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, alignments)
         binding.spinnerAlignment.setSelection(alignVals.indexOf(prefs.alignment).coerceAtLeast(0))
         binding.spinnerAlignment.onItemSelectedListener = listen { prefs.alignment = alignVals[it] }
+
+        // Font Style
+        val fonts     = arrayOf("Default", "Pixel")
+        val fontVals  = arrayOf(Prefs.FONT_DEFAULT, Prefs.FONT_PIXEL)
+        binding.spinnerFont.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, fonts)
+        binding.spinnerFont.setSelection(fontVals.indexOf(prefs.fontStyle).coerceAtLeast(0))
+        binding.spinnerFont.onItemSelectedListener = listen {
+            if (prefs.fontStyle != fontVals[it]) {
+                prefs.fontStyle = fontVals[it]
+                Toast.makeText(this, "Font changed! Need restart for full effect.", Toast.LENGTH_SHORT).show()
+                // You could restart activity if desired, but for minimalism we let them just go back
+            }
+        }
 
         // Switches
         binding.switchTransparentBg.isChecked = prefs.transparentBg

@@ -91,6 +91,9 @@ class FeedEventAdapter(
         fun bind(e: EventItem) {
             tvTitle.text = e.title
             tvDate.text  = formatDate(e)
+            
+            val prefs = Prefs(itemView.context)
+            FontHelper.applyFont(itemView.context, prefs, tvTitle, tvDate, tvCountdown)
 
             // Accent bar color — calendar color, full opacity
             val base = e.calendarColor or 0xFF000000.toInt()

@@ -55,7 +55,7 @@ class HomeFragment : Fragment() {
         }
 
         // Weather: click to refresh
-        binding.tvWeather.setOnClickListener { fetchWeather(showToast = true) }
+        binding.llWeather.setOnClickListener { fetchWeather(showToast = true) }
 
         applyTheme()
         setupClockFormat()
@@ -109,9 +109,9 @@ class HomeFragment : Fragment() {
             b.homePageRoot.setBackgroundColor(Color.TRANSPARENT)
         } else {
             val bgColor = when (prefs.theme) {
-                Prefs.THEME_LIGHT -> Color.parseColor("#F0F0F0")
+                Prefs.THEME_LIGHT -> Color.parseColor("#F5F5F7")
                 Prefs.THEME_OLED  -> Color.BLACK
-                else              -> Color.parseColor("#090909")
+                else              -> Color.parseColor("#151515") // slightly dark grey
             }
             b.homePageRoot.setBackgroundColor(bgColor)
         }
@@ -122,8 +122,14 @@ class HomeFragment : Fragment() {
         b.tvClock.setTextColor(textPrimary)
         b.tvDate.setTextColor(textSecondary)
         b.tvUsageToday.setTextColor(textSecondary)
-        b.tvWeather.setTextColor(if (isLight) Color.parseColor("#88000000") else Color.parseColor("#AAFFFFFF"))
+        
+        val weatherColor = if (isLight) Color.parseColor("#88000000") else Color.parseColor("#AAFFFFFF")
+        b.ivWeatherIcon.setColorFilter(weatherColor)
+        b.tvWeatherTemp.setTextColor(weatherColor)
+        
         b.tvScreenTimeHint.setTextColor(if (isLight) Color.parseColor("#44000000") else Color.parseColor("#44FFFFFF"))
+
+        FontHelper.applyFont(requireContext(), prefs, b.tvClock, b.tvDate, b.tvUsageToday, b.tvWeatherTemp, b.tvScreenTimeHint, b.tvNextEvent)
     }
 
     // ── Clock format ─────────────────────────────────────────────────────────
@@ -158,13 +164,14 @@ class HomeFragment : Fragment() {
     private fun showCachedWeather() {
         val b = _binding ?: return
         if (!prefs.hasWeatherLocation() || !prefs.hasWeatherCache()) {
-            b.tvWeather.visibility = View.GONE
+            b.llWeather.visibility = View.GONE
             return
         }
-        val icon = WeatherHelper.codeToIcon(prefs.weatherCode)
+        val iconRes = WeatherHelper.codeToIcon(prefs.weatherCode)
         val temp = WeatherHelper.formatTemp(prefs.weatherTempC)
-        b.tvWeather.text = "$icon $temp"
-        b.tvWeather.visibility = View.VISIBLE
+        b.ivWeatherIcon.setImageResource(iconRes)
+        b.tvWeatherTemp.text = temp
+        b.llWeather.visibility = View.VISIBLE
     }
 
     private fun fetchWeather(showToast: Boolean = false) {
@@ -176,12 +183,13 @@ class HomeFragment : Fragment() {
                 prefs.weatherTempC  = result.tempC
                 prefs.weatherCode   = result.code
                 prefs.weatherLastMs = System.currentTimeMillis()
-                val icon = WeatherHelper.codeToIcon(result.code)
+                val iconRes = WeatherHelper.codeToIcon(result.code)
                 val temp = WeatherHelper.formatTemp(result.tempC)
-                b.tvWeather.text = "$icon $temp"
-                b.tvWeather.visibility = View.VISIBLE
+                b.ivWeatherIcon.setImageResource(iconRes)
+                b.tvWeatherTemp.text = temp
+                b.llWeather.visibility = View.VISIBLE
                 if (showToast) {
-                    Toast.makeText(requireContext(), "Weather updated: $icon $temp", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Weather updated", Toast.LENGTH_SHORT).show()
                 }
             } else if (showToast) {
                 Toast.makeText(requireContext(), "Failed to update weather", Toast.LENGTH_SHORT).show()

@@ -54,6 +54,9 @@ class HomeAppAdapter(
         fun bind(app: AppInfo) {
             label.text    = app.label
             label.gravity = Gravity.START
+            
+            val prefs = Prefs(itemView.context)
+            FontHelper.applyFont(itemView.context, prefs, label, screenTime)
 
             // Fetch from LruCache — O(1), no I/O, no Drawable allocation.
             // Reset dulu sebelum set — cegah icon lama flash saat view di-recycle

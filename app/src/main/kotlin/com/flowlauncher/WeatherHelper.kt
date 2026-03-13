@@ -34,19 +34,18 @@ object WeatherHelper {
             }
         }
 
-    /** WMO weather code → single display character */
-    fun codeToIcon(code: Int): String = when (code) {
-        0            -> "☀"
-        1, 2         -> "⛅"
-        3            -> "☁"
-        45, 48       -> "≋"
+    /** WMO weather code â†’ drawable resource */
+    fun codeToIcon(code: Int): Int = when (code) {
+        0            -> R.drawable.ic_weather_sun
+        1, 2, 3      -> R.drawable.ic_weather_cloud
+        45, 48       -> R.drawable.ic_weather_cloud // fog
         51, 53, 55,
         61, 63, 65,
-        80, 81, 82   -> "🌧"
+        80, 81, 82   -> R.drawable.ic_weather_rain
         71, 73, 75,
-        77, 85, 86   -> "❄"
-        95, 96, 99   -> "⛈"
-        else         -> "~"
+        77, 85, 86   -> R.drawable.ic_weather_snow
+        95, 96, 99   -> R.drawable.ic_weather_storm
+        else         -> R.drawable.ic_weather_sun
     }
 
     fun formatTemp(tempC: Double): String = "${tempC.toInt()}°"

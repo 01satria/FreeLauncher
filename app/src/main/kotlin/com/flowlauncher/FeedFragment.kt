@@ -142,6 +142,8 @@ class FeedFragment : Fragment() {
         bv.etEventSearch.setTextColor(t.onSurface)
         bv.etEventSearch.setHintTextColor(t.faint)
         bv.dividerEventSearch.setBackgroundColor(t.divider)
+        
+        FontHelper.applyFont(requireContext(), prefs, bv.tvFeedTitle, bv.tvEventsLabel, bv.tvEventsChevron, bv.tvEventsEmpty, bv.etEventSearch)
 
         // Tasks section
         bv.tvTasksLabel.setTextColor(t.subtle)
@@ -151,6 +153,8 @@ class FeedFragment : Fragment() {
         // Screen time
         bv.tvScreenTimeLabel.setTextColor(t.subtle)
         bv.tvScreenTimeTotal.setTextColor(t.onSurface)
+        
+        FontHelper.applyFont(requireContext(), prefs, bv.tvTasksLabel, bv.tvTasksEmpty, bv.etAddTodo, bv.tvScreenTimeLabel, bv.tvScreenTimeTotal, bv.tvScreenTimePermHint)
         // Re-check permission state on theme change (onResume path)
         if (prefs.showScreenTime && !ScreenTimeHelper.hasPermission(requireContext())) {
             bv.cardScreenTime.visibility = View.VISIBLE

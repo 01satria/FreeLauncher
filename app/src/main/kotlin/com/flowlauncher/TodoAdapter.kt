@@ -61,6 +61,9 @@ class TodoAdapter(
             text.text = todo.text
             applyDoneState(todo.done)
             applyTheme(todo, theme)
+            
+            val prefs = Prefs(itemView.context)
+            FontHelper.applyFont(itemView.context, prefs, text)
 
             check.setOnClickListener { 
                 val currentPos = bindingAdapterPosition

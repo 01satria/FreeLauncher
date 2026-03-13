@@ -94,7 +94,10 @@ class DrawerAppAdapter(
 
     inner class HeaderVH(v: View) : RecyclerView.ViewHolder(v) {
         private val tv: TextView = v.findViewById(R.id.tvHeader)
-        fun bind(h: ListItem.Header) { tv.text = h.letter }
+        fun bind(h: ListItem.Header) { 
+            tv.text = h.letter
+            FontHelper.applyFont(itemView.context, Prefs(itemView.context), tv)
+        }
     }
 
     inner class AppVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
