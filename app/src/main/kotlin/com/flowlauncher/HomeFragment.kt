@@ -26,6 +26,9 @@ class HomeFragment : Fragment() {
 
     var onOpenDrawer: (() -> Unit)? = null
 
+    private var tickJob: kotlinx.coroutines.Job? = null
+    private var currentEvent: EventItem? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -87,9 +90,16 @@ class HomeFragment : Fragment() {
         showCachedWeather()
         val age = System.currentTimeMillis() - prefs.weatherLastMs
         if (prefs.hasWeatherLocation() && age > 30 * 60 * 1000L) fetchWeather()
+        startCountdownTicker()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        tickJob?.cancel()
     }
 
     override fun onDestroyView() {
+        tickJob?.cancel()
         _binding = null
         super.onDestroyView()
     }
@@ -222,13 +232,44 @@ class HomeFragment : Fragment() {
         }
         viewLifecycleOwner.lifecycleScope.launch {
             val events = CalendarHelper.getUpcomingEvents(requireContext(), limit = 1)
-            val ev = events.firstOrNull()
-            val bv = _binding ?: return@launch
-            if (ev != null) {
-                bv.tvNextEvent.text = "${ev.title}  ·  ${ev.countdown}"
-                bv.llNextEvent.visibility = View.VISIBLE
-            } else {
-                bv.llNextEvent.visibility = View.GONE
+            currentEvent = events.firstOrNull()
+            updateNextEventUI()
+        }
+    }
+
+    private fun updateNextEventUI() {
+        val bv = _binding ?: return
+        val ev = currentEvent
+        if (ev != null) {
+            val cd = ev.countdown
+            // Jika sudah "Done" dan event sudah selesai atau lewat, sembunyikan atau fetch ulang.
+            // Biar gampang, fetch ulang di ticker menit berikutnya
+            bv.tvNextEvent.text = "${ev.title}  ·  $cd"
+            bv.llNextEvent.visibility = View.VISIBLE
+        } else {
+            bv.llNextEvent.visibility = View.GONE
+        }
+    }
+
+    private fun startCountdownTicker() {
+        tickJob?.cancel()
+        tickJob = viewLifecycleOwner.lifecycleScope.launch {
+            var secondsPassed = 0
+            while (isActive) {
+                kotlinx.coroutines.delay(30_000L) // 30s
+                if (_binding == null || !CalendarHelper.hasPermission(requireContext())) continue
+
+                // 1. Update text
+                if (currentEvent != null) {
+                    updateNextEventUI()
+                }
+
+                // 2. Tiap 5 menit fetch ulang untuk event baru (30s x 10)
+                secondsPassed += 30
+                if (secondsPassed >= 300) {
+                    secondsPassed = 0
+                    loadNextEvent()
+                }
             }
         }
     }

@@ -172,7 +172,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.etSearch.showSoftInputOnFocus = false
-        binding.etSearch.setOnClickListener { showKeyboard() }
+        binding.etSearch.setOnTouchListener { v, event ->
+            if (event.action == MotionEvent.ACTION_UP) {
+                v.requestFocus()
+                showKeyboard()
+            }
+            false
+        }
         binding.etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) {}
             override fun afterTextChanged(s: Editable?) {}
