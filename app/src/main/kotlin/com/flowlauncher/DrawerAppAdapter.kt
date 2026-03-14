@@ -109,7 +109,7 @@ class DrawerAppAdapter(
             label.text = app.label
 
             val prefs = cachedPrefs ?: Prefs(itemView.context).also { cachedPrefs = it }
-            FontHelper.applyFont(itemView.context, prefs, label)
+            FontHelper.applyFont(itemView.context, prefs, label, stTime)
 
             // App label color: primary text per theme
             label.setTextColor(

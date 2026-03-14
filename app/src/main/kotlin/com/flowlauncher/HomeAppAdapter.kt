@@ -68,7 +68,7 @@ class HomeAppAdapter(
             label.gravity = Gravity.START
 
             val prefs = cachedPrefs ?: Prefs(itemView.context).also { cachedPrefs = it }
-            FontHelper.applyFont(itemView.context, prefs, label, screenTime)
+            FontHelper.applyFont(itemView.context, prefs, label, screenTime, arrow)
 
             // Theme-aware colors
             label.setTextColor(

@@ -370,6 +370,7 @@ class FeedFragment : Fragment() {
             setTextColor(t?.onSurface ?: Color.WHITE)
             background = null
             setPadding(4f.dpToPx().toInt(), 8f.dpToPx().toInt(), 4f.dpToPx().toInt(), 8f.dpToPx().toInt())
+            FontHelper.applyFont(ctx, prefs, this)
         }
         val wrap = LinearLayout(ctx).apply {
             orientation = LinearLayout.VERTICAL
@@ -493,14 +494,17 @@ class FeedFragment : Fragment() {
                 chipBg[idx].setColor(palette[idx])
                 chip.background = chipBg[idx]
 
-                chip.findViewById<TextView>(R.id.tvChipName).apply {
+                val tvName = chip.findViewById<TextView>(R.id.tvChipName)
+                tvName.apply {
                     text = app.label
                     setTextColor(if (isLight) 0xCC000000.toInt() else 0xAAFFFFFF.toInt())
                 }
-                chip.findViewById<TextView>(R.id.tvChipTime).apply {
+                val tvTime = chip.findViewById<TextView>(R.id.tvChipTime)
+                tvTime.apply {
                     text = ScreenTimeHelper.formatMinutes(app.screenTimeMinutes)
                     setTextColor(if (isLight) 0xFF000000.toInt() else Color.WHITE)
                 }
+                FontHelper.applyFont(requireContext(), prefs, tvName, tvTime)
             }
 
             if (top3.isEmpty()) {
