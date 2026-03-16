@@ -175,14 +175,14 @@ class MainActivity : AppCompatActivity() {
                 override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
                     if (isDraggingScroller || isSearching || allDrawerApps.isEmpty()) return
                     
-                    val lm = layoutManager as? LinearLayoutManager ?: return
-                    val firstPos = lm.findFirstVisibleItemPosition()
-                    if (firstPos == -1) return
+                    val offset = recyclerView.computeVerticalScrollOffset()
+                    val range  = recyclerView.computeVerticalScrollRange()
+                    val extent = recyclerView.computeVerticalScrollExtent()
+                    val maxScroll = range - extent
+                    
+                    if (maxScroll <= 0) return
+                    val progress = offset.toFloat() / maxScroll
 
-                    val total = allDrawerApps.size
-                    if (total <= 1) return
-
-                    val progress = firstPos.toFloat() / (total - 1)
                     val containerHeight = binding.drawerScrollerContainer.height.toFloat()
                     val thumbHeight = binding.drawerScrollerThumb.height.toFloat()
                     
