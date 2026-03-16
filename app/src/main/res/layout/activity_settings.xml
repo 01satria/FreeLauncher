@@ -169,6 +169,39 @@
                 android:gravity="center_vertical"
                 android:paddingHorizontal="18dp">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="Show Clock"
+                    android:textColor="#FFFFFF" android:textSize="15sp" />
+                <androidx.appcompat.widget.SwitchCompat android:id="@+id/switchShowClock"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:thumbTint="#FFFFFF" android:trackTint="#33FFFFFF" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#0FFFFFFF" android:layout_marginHorizontal="18dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="Clock Font Size"
+                    android:textColor="#FFFFFF" android:textSize="15sp" />
+                <NumberPicker android:id="@+id/npClockSize"
+                    android:layout_width="wrap_content" android:layout_height="60dp" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#0FFFFFFF" android:layout_marginHorizontal="18dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                     android:layout_weight="1" android:text="24-Hour Format"
                     android:textColor="#FFFFFF" android:textSize="15sp" />
                 <androidx.appcompat.widget.SwitchCompat android:id="@+id/switch24Hour"
@@ -189,6 +222,23 @@
                     android:layout_weight="1" android:text="Show Date"
                     android:textColor="#FFFFFF" android:textSize="15sp" />
                 <androidx.appcompat.widget.SwitchCompat android:id="@+id/switchShowDate"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:thumbTint="#FFFFFF" android:trackTint="#33FFFFFF" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#0FFFFFFF" android:layout_marginHorizontal="18dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="Show Next Event"
+                    android:textColor="#FFFFFF" android:textSize="15sp" />
+                <androidx.appcompat.widget.SwitchCompat android:id="@+id/switchShowNextEvent"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
                     android:thumbTint="#FFFFFF" android:trackTint="#33FFFFFF" />
             </LinearLayout>
@@ -304,7 +354,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
                     android:text="Detect"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#CCFFFFFF"
                     android:textSize="12sp"
                     android:paddingHorizontal="14dp"
                     android:background="@drawable/bg_nothing_chip" />

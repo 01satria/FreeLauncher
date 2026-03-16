@@ -65,6 +65,9 @@ class SettingsActivity : AppCompatActivity() {
 
         // Apply font and colors to all TextViews via traversal
         applyTextColors(binding.settingsContent, textColor, subTextColor)
+
+        // Weather button text color - keep light since background is dark
+        binding.btnSetWeatherLocation.setTextColor(Color.WHITE)
     }
 
     private fun applyTextColors(vg: android.view.ViewGroup, text: Int, sub: Int) {
@@ -125,6 +128,16 @@ class SettingsActivity : AppCompatActivity() {
         binding.switchScreenTime.isChecked = prefs.showScreenTime
         binding.switchScreenTime.setOnCheckedChangeListener { _, c -> prefs.showScreenTime = c }
 
+        binding.switchShowClock.isChecked = prefs.showClock
+        binding.switchShowClock.setOnCheckedChangeListener { _, c -> prefs.showClock = c }
+        binding.switchShowNextEvent.isChecked = prefs.showNextEvent
+        binding.switchShowNextEvent.setOnCheckedChangeListener { _, c -> prefs.showNextEvent = c }
+
+        binding.npClockSize.minValue = 40
+        binding.npClockSize.maxValue = 120
+        binding.npClockSize.value    = prefs.clockFontSize
+        binding.npClockSize.setOnValueChangedListener { _, _, new -> prefs.clockFontSize = new }
+
         // Grant Usage Access — now a tappable row
         binding.btnGrantUsage.setOnClickListener {
             try { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
@@ -136,7 +149,7 @@ class SettingsActivity : AppCompatActivity() {
         updateWeatherLabel()
 
         // Home app count
-        binding.npHomeApps.minValue = 1
+        binding.npHomeApps.minValue = 0
         binding.npHomeApps.maxValue = 10
         binding.npHomeApps.value    = prefs.homeAppCount
         binding.npHomeApps.setOnValueChangedListener { _, _, new -> prefs.homeAppCount = new }

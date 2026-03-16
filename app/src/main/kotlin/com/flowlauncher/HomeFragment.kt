@@ -150,7 +150,9 @@ class HomeFragment : Fragment() {
             b.tvClock.format12Hour = "hh:mm"
             b.tvClock.format24Hour = null
         }
-        b.tvDate.visibility = if (prefs.showDate) View.VISIBLE else View.GONE
+        b.tvClock.textSize = prefs.clockFontSize.toFloat()
+        b.tvClock.visibility = if (prefs.showClock) View.VISIBLE else View.GONE
+        b.tvDate.visibility  = if (prefs.showDate) View.VISIBLE else View.GONE
 
         val grav = when (prefs.alignment) {
             Prefs.ALIGN_CENTER -> Gravity.CENTER_HORIZONTAL
@@ -241,7 +243,7 @@ class HomeFragment : Fragment() {
     private fun updateNextEventUI() {
         val bv = _binding ?: return
         val ev = currentEvent
-        if (ev != null) {
+        if (ev != null && prefs.showNextEvent) {
             val cd = ev.countdown
             // Jika sudah "Done" dan event sudah selesai atau lewat, sembunyikan atau fetch ulang.
             // Biar gampang, fetch ulang di ticker menit berikutnya

@@ -34,6 +34,14 @@ class Prefs(context: Context) {
         get() = prefs.getBoolean("show_screen_time", true)
         set(v) = prefs.edit().putBoolean("show_screen_time", v).apply()
 
+    var showClock: Boolean
+        get() = prefs.getBoolean("show_clock", true)
+        set(v) = prefs.edit().putBoolean("show_clock", v).apply()
+
+    var showNextEvent: Boolean
+        get() = prefs.getBoolean("show_next_event", true)
+        set(v) = prefs.edit().putBoolean("show_next_event", v).apply()
+
     var alignment: String
         get() = prefs.getString("alignment", ALIGN_LEFT)!!
         set(v) = prefs.edit().putString("alignment", v).apply()
@@ -41,6 +49,10 @@ class Prefs(context: Context) {
     var homeAppCount: Int
         get() = prefs.getInt("home_app_count", 5)
         set(v) = prefs.edit().putInt("home_app_count", v).apply()
+
+    var clockFontSize: Int
+        get() = prefs.getInt("clock_font_size", 84)
+        set(v) = prefs.edit().putInt("clock_font_size", v).apply()
 
     var fontStyle: String
         get() = prefs.getString("font_style", FONT_DEFAULT)!!
