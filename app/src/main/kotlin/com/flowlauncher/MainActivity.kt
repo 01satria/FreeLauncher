@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var drawerSheet: BottomSheetBehavior<View>
     private var allDrawerApps: List<AppInfo> = emptyList()
     private var isSearching = false
+    private var isDraggingScroller = false
 
     companion object {
         const val PAGE_FEED = 0
@@ -169,6 +170,28 @@ class MainActivity : AppCompatActivity() {
             itemAnimator = null
             recycledViewPool.setMaxRecycledViews(0, 5)   // headers — few needed
             recycledViewPool.setMaxRecycledViews(1, 15)  // app rows
+
+            addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+                    if (isDraggingScroller || isSearching || allDrawerApps.isEmpty()) return
+                    
+                    val lm = layoutManager as? LinearLayoutManager ?: return
+                    val firstPos = lm.findFirstVisibleItemPosition()
+                    if (firstPos == -1) return
+
+                    val total = allDrawerApps.size
+                    if (total <= 1) return
+
+                    val progress = firstPos.toFloat() / (total - 1)
+                    val containerHeight = binding.drawerScrollerContainer.height.toFloat()
+                    val thumbHeight = binding.drawerScrollerThumb.height.toFloat()
+                    
+                    if (containerHeight > thumbHeight) {
+                        val maxThumbY = containerHeight - thumbHeight
+                        binding.drawerScrollerThumb.translationY = (progress * maxThumbY).coerceIn(0f, maxThumbY)
+                    }
+                }
+            })
         }
 
         binding.etSearch.showSoftInputOnFocus = false
@@ -206,6 +229,7 @@ class MainActivity : AppCompatActivity() {
         binding.drawerScrollerContainer.setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                    isDraggingScroller = true
                     val height = v.height.toFloat()
                     val thumbHeight = binding.drawerScrollerThumb.height.toFloat()
                     if (height > thumbHeight) {
@@ -249,6 +273,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    isDraggingScroller = false
                     binding.tvScrollerPopup.animate().alpha(0f).setDuration(150).withEndAction {
                         binding.tvScrollerPopup.visibility = View.GONE
                         binding.tvScrollerPopup.alpha = 1f
