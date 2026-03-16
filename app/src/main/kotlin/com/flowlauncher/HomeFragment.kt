@@ -166,9 +166,9 @@ class HomeFragment : Fragment() {
         b.tvDate.gravity  = grav
         b.tvUsageToday.gravity = grav
 
-        // Constrain Next Event width to 70% of screen
+        // Constrain Next Event width to 55% of screen
         val screenWidth = resources.displayMetrics.widthPixels
-        b.tvNextEvent.maxWidth = (screenWidth * 0.7).toInt()
+        b.tvNextEvent.maxWidth = (screenWidth * 0.55).toInt()
         
         // Align the whole llNextEvent container
         (b.llNextEvent.layoutParams as? LinearLayout.LayoutParams)?.let { params ->

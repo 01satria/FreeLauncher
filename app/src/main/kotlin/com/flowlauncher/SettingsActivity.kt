@@ -66,8 +66,8 @@ class SettingsActivity : AppCompatActivity() {
         // Apply font and colors to all TextViews via traversal
         applyTextColors(binding.settingsContent, textColor, subTextColor)
 
-        // Weather button text color - keep light since background is dark
-        binding.btnSetWeatherLocation.setTextColor(Color.WHITE)
+        // Weather button text color: White in light mode, black in dark mode for contrast
+        binding.btnSetWeatherLocation.setTextColor(if (isLight) Color.WHITE else Color.BLACK)
     }
 
     private fun applyTextColors(vg: android.view.ViewGroup, text: Int, sub: Int) {

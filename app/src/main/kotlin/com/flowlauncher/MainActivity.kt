@@ -203,19 +203,29 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupFastScroller() {
-        binding.drawerScrollerContainer.setOnTouchListener { _, event ->
+        binding.drawerScrollerContainer.post {
+            val height = binding.drawerScrollerContainer.height
+            val thumbHeight = binding.drawerScrollerThumb.height
+            if (height > 0) {
+                // Initial position: Center
+                binding.drawerScrollerThumb.translationY = (height - thumbHeight) / 2f
+            }
+        }
+
+        binding.drawerScrollerContainer.setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
-                    val y = event.y
-                    val height = binding.drawerScrollerContainer.height
-                    if (height > 0) {
-                        val progress = (y / height).coerceIn(0f, 1f)
-                        
-                        // Move thumb
-                        val thumbHeight = binding.drawerScrollerThumb.height
+                    val height = v.height.toFloat()
+                    val thumbHeight = binding.drawerScrollerThumb.height.toFloat()
+                    if (height > thumbHeight) {
                         val maxThumbY = height - thumbHeight
-                        binding.drawerScrollerThumb.translationY = progress * maxThumbY
+                        
+                        // Follow finger precisely: center thumb on touch Y
+                        val newY = (event.y - thumbHeight / 2f).coerceIn(0f, maxThumbY)
+                        binding.drawerScrollerThumb.translationY = newY
 
+                        val progress = newY / maxThumbY
+                        
                         // Find letter
                         if (allDrawerApps.isNotEmpty() && !isSearching) {
                             val distinctLetters = allDrawerApps.map { 
@@ -229,7 +239,10 @@ class MainActivity : AppCompatActivity() {
                                 // Show popup
                                 binding.tvScrollerPopup.text = letter
                                 binding.tvScrollerPopup.visibility = View.VISIBLE
-                                binding.tvScrollerPopup.translationY = (progress * height) - (binding.tvScrollerPopup.height / 2f)
+                                // Popup follows thumb but stays inside container
+                                val popupHeight = binding.tvScrollerPopup.height.toFloat()
+                                val popupY = (newY + thumbHeight/2f - popupHeight/2f).coerceIn(0f, height - popupHeight)
+                                binding.tvScrollerPopup.translationY = popupY
 
                                 // Scroll RV
                                 val scrollPos = allDrawerApps.indexOfFirst { 
@@ -245,7 +258,10 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    binding.tvScrollerPopup.visibility = View.GONE
+                    binding.tvScrollerPopup.animate().alpha(0f).setDuration(150).withEndAction {
+                        binding.tvScrollerPopup.visibility = View.GONE
+                        binding.tvScrollerPopup.alpha = 1f
+                    }.start()
                     true
                 }
                 else -> false
