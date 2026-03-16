@@ -203,15 +203,6 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupFastScroller() {
-        binding.drawerScrollerContainer.post {
-            val height = binding.drawerScrollerContainer.height
-            val thumbHeight = binding.drawerScrollerThumb.height
-            if (height > 0) {
-                // Initial position: Center
-                binding.drawerScrollerThumb.translationY = (height - thumbHeight) / 2f
-            }
-        }
-
         binding.drawerScrollerContainer.setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {

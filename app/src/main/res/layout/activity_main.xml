@@ -146,7 +146,7 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="end"
                 android:orientation="horizontal"
-                android:gravity="center_vertical|end">
+                android:gravity="end">
 
                 <TextView
                     android:id="@+id/tvScrollerPopup"
