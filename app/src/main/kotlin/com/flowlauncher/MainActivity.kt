@@ -197,6 +197,60 @@ class MainActivity : AppCompatActivity() {
         binding.btnDrawerSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+
+        setupFastScroller()
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupFastScroller() {
+        binding.drawerScrollerContainer.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                    val y = event.y
+                    val height = binding.drawerScrollerContainer.height
+                    if (height > 0) {
+                        val progress = (y / height).coerceIn(0f, 1f)
+                        
+                        // Move thumb
+                        val thumbHeight = binding.drawerScrollerThumb.height
+                        val maxThumbY = height - thumbHeight
+                        binding.drawerScrollerThumb.translationY = progress * maxThumbY
+
+                        // Find letter
+                        if (allDrawerApps.isNotEmpty() && !isSearching) {
+                            val distinctLetters = allDrawerApps.map { 
+                                it.label.firstOrNull()?.uppercaseChar()?.toString() ?: "#" 
+                            }.distinct().sortedBy { if (it == "#") "\u0000" else it }
+                            
+                            if (distinctLetters.isNotEmpty()) {
+                                val letterIndex = (progress * (distinctLetters.size - 1)).toInt()
+                                val letter = distinctLetters[letterIndex]
+                                
+                                // Show popup
+                                binding.tvScrollerPopup.text = letter
+                                binding.tvScrollerPopup.visibility = View.VISIBLE
+                                binding.tvScrollerPopup.translationY = (progress * height) - (binding.tvScrollerPopup.height / 2f)
+
+                                // Scroll RV
+                                val scrollPos = allDrawerApps.indexOfFirst { 
+                                    (it.label.firstOrNull()?.uppercaseChar()?.toString() ?: "#") == letter 
+                                }
+                                if (scrollPos != -1) {
+                                    (binding.rvDrawerApps.layoutManager as? LinearLayoutManager)
+                                        ?.scrollToPositionWithOffset(scrollPos, 0)
+                                }
+                            }
+                        }
+                    }
+                    true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    binding.tvScrollerPopup.visibility = View.GONE
+                    true
+                }
+                else -> false
+            }
+        }
     }
 
     private fun filterApps(query: String) {
@@ -209,6 +263,7 @@ class MainActivity : AppCompatActivity() {
                 it.label.contains(query, ignoreCase = true)
             }
             drawerAdapter.setSearchApps(filtered)
+            binding.drawerScrollerContainer.visibility = View.GONE
             // Auto-launch if exactly 1 result
             if (filtered.size == 1) launchApp(filtered[0])
         }
@@ -223,6 +278,8 @@ class MainActivity : AppCompatActivity() {
         } else if (allDrawerApps.isNotEmpty()) {
             drawerAdapter.setApps(allDrawerApps)
         }
+
+        binding.drawerScrollerContainer.visibility = View.VISIBLE
 
         binding.viewPager.isUserInputEnabled = false
         binding.drawerDim.alpha = 0f
@@ -401,6 +458,15 @@ class MainActivity : AppCompatActivity() {
 
         // Search icon tint
         binding.ivSearchIcon.setColorFilter(if (isLight) android.graphics.Color.parseColor("#AAAAAA") else android.graphics.Color.parseColor("#44FFFFFF"))
+
+        // Scroller Theming
+        binding.drawerScrollerThumb.backgroundTintList = android.content.res.ColorStateList.valueOf(handleColor)
+        binding.tvScrollerPopup.backgroundTintList = android.content.res.ColorStateList.valueOf(searchBgColor)
+        binding.tvScrollerPopup.setTextColor(textPrimary)
+        FontHelper.applyFont(this, prefs, binding.tvScrollerPopup)
+
+        // Hide scroller when searching
+        binding.drawerScrollerContainer.visibility = if (isSearching) View.GONE else View.VISIBLE
 
         // Notify drawer adapter about theme change (force re-bind for font + colors)
         drawerAdapter.setTheme(isLight)

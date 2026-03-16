@@ -15,50 +15,25 @@ import androidx.recyclerview.widget.RecyclerView
 class DrawerAppAdapter(
     private val onAppClick: (AppInfo) -> Unit,
     private val onAppLongClick: (AppInfo, View) -> Unit
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+) : RecyclerView.Adapter<DrawerAppAdapter.AppVH>() {
 
-    companion object {
-        private const val TYPE_HEADER = 0
-        private const val TYPE_APP    = 1
-    }
-
-    sealed class ListItem {
-        data class Header(val letter: String) : ListItem()
-        data class App(val info: AppInfo)     : ListItem()
-    }
-
-    private val items = mutableListOf<ListItem>()
+    private val items = mutableListOf<AppInfo>()
     private var cachedPrefs: Prefs? = null
     private var isLightTheme: Boolean = false
 
-    private fun buildItems(apps: List<AppInfo>): List<ListItem> {
-        if (apps.isEmpty()) return emptyList()
-        val result  = mutableListOf<ListItem>()
-        val grouped = apps.sortedBy { it.label.lowercase() }
-            .groupBy { it.label.firstOrNull()?.uppercaseChar()?.toString() ?: "#" }
-            .entries.sortedBy { (k, _) -> if (k == "#") "\u0000" else k }
-        grouped.forEach { (letter, group) ->
-            result += ListItem.Header(letter)
-            group.forEach { result += ListItem.App(it) }
-        }
-        return result
-    }
-
     fun setApps(apps: List<AppInfo>) {
-        val newItems = buildItems(apps)
+        val newItems = apps.sortedBy { it.label.lowercase() }
         val diff = DiffUtil.calculateDiff(ItemDiffCallback(items, newItems))
         items.clear(); items.addAll(newItems)
         diff.dispatchUpdatesTo(this)
     }
 
     fun setSearchApps(apps: List<AppInfo>) {
-        val newItems = apps.map { ListItem.App(it) }
-        val diff = DiffUtil.calculateDiff(ItemDiffCallback(items, newItems))
-        items.clear(); items.addAll(newItems)
+        val diff = DiffUtil.calculateDiff(ItemDiffCallback(items, apps))
+        items.clear(); items.addAll(apps)
         diff.dispatchUpdatesTo(this)
     }
 
-    /** Call this when the theme changes to force a full re-bind */
     fun setTheme(isLight: Boolean) {
         if (isLightTheme == isLight) return
         isLightTheme = isLight
@@ -66,38 +41,16 @@ class DrawerAppAdapter(
     }
 
     override fun getItemCount() = items.size
-    override fun getItemViewType(pos: Int) = when (items[pos]) {
-        is ListItem.Header -> TYPE_HEADER
-        is ListItem.App    -> TYPE_APP
-    }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppVH {
         val inf = LayoutInflater.from(parent.context)
-        return if (viewType == TYPE_HEADER)
-            HeaderVH(inf.inflate(R.layout.item_drawer_header, parent, false))
-        else
-            AppVH(inf.inflate(R.layout.item_drawer_app, parent, false))
+        return AppVH(inf.inflate(R.layout.item_drawer_app, parent, false))
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, pos: Int) {
-        when (val item = items[pos]) {
-            is ListItem.Header -> (holder as HeaderVH).bind(item)
-            is ListItem.App    -> (holder as AppVH).bind(item.info)
-        }
+    override fun onBindViewHolder(holder: AppVH, pos: Int) {
+        holder.bind(items[pos])
     }
 
-    inner class HeaderVH(v: View) : RecyclerView.ViewHolder(v) {
-        private val tv: TextView = v.findViewById(R.id.tvHeader)
-        fun bind(h: ListItem.Header) {
-            tv.text = h.letter
-            val prefs = cachedPrefs ?: Prefs(itemView.context).also { cachedPrefs = it }
-            FontHelper.applyFont(itemView.context, prefs, tv)
-            // Header letter color: subtle, readable in both themes
-            tv.setTextColor(
-                if (isLightTheme) 0xFF999999.toInt() else 0x55FFFFFF.toInt()
-            )
-        }
-    }
 
     inner class AppVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val icon: ImageView  = itemView.findViewById(R.id.iv_icon)
@@ -143,29 +96,15 @@ class DrawerAppAdapter(
     }
 
     private class ItemDiffCallback(
-        private val old: List<ListItem>,
-        private val new: List<ListItem>
+        private val old: List<AppInfo>,
+        private val new: List<AppInfo>
     ) : DiffUtil.Callback() {
         override fun getOldListSize() = old.size
         override fun getNewListSize() = new.size
-        override fun areItemsTheSame(o: Int, n: Int): Boolean {
-            val a = old[o]; val b = new[n]
-            return when {
-                a is ListItem.Header && b is ListItem.Header -> a.letter == b.letter
-                a is ListItem.App    && b is ListItem.App    -> a.info.packageName == b.info.packageName
-                else -> false
-            }
-        }
-        override fun areContentsTheSame(o: Int, n: Int): Boolean {
-            val a = old[o]; val b = new[n]
-            return when {
-                a is ListItem.Header && b is ListItem.Header -> a.letter == b.letter
-                a is ListItem.App    && b is ListItem.App    ->
-                    a.info.label == b.info.label &&
-                    a.info.screenTimeMinutes == b.info.screenTimeMinutes &&
-                    a.info.isFavorite == b.info.isFavorite
-                else -> false
-            }
-        }
+        override fun areItemsTheSame(o: Int, n: Int) = old[o].packageName == new[n].packageName
+        override fun areContentsTheSame(o: Int, n: Int) = 
+            old[o].label == new[n].label &&
+            old[o].screenTimeMinutes == new[n].screenTimeMinutes &&
+            old[o].isFavorite == new[n].isFavorite
     }
 }

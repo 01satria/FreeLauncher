@@ -124,15 +124,55 @@
                 android:focusableInTouchMode="true" />
         </LinearLayout>
 
-        <!-- App list -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvDrawerApps"
+        <!-- App list + Fast Scroll -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingBottom="32dp"
-            android:clipToPadding="false"
-            android:overScrollMode="never"
-            android:scrollbars="none" />
+            android:layout_weight="1"
+            android:layout_height="0dp">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvDrawerApps"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingBottom="32dp"
+                android:clipToPadding="false"
+                android:overScrollMode="never"
+                android:scrollbars="none" />
+
+            <!-- Fast scroller container -->
+            <LinearLayout
+                android:id="@+id/drawerScrollerContainer"
+                android:layout_width="60dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:orientation="horizontal"
+                android:gravity="center_vertical|end">
+
+                <TextView
+                    android:id="@+id/tvScrollerPopup"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_nothing_pill"
+                    android:backgroundTint="#44FFFFFF"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:text="A"
+                    android:visibility="gone"
+                    android:layout_marginEnd="12dp" />
+
+                <View
+                    android:id="@+id/drawerScrollerThumb"
+                    android:layout_width="4dp"
+                    android:layout_height="100dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_nothing_pill"
+                    android:backgroundTint="#22FFFFFF" />
+
+            </LinearLayout>
+
+        </FrameLayout>
 
     </LinearLayout>
 

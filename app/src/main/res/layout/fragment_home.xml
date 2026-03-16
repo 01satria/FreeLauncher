@@ -30,6 +30,7 @@
             android:includeFontPadding="false" />
 
         <LinearLayout
+            android:id="@+id/llDateWeather"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -38,9 +39,8 @@
 
             <TextClock
                 android:id="@+id/tvDate"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:format12Hour="EEE, d MMM"
                 android:format24Hour="EEE, d MMM"
                 android:textColor="#77FFFFFF"
@@ -58,6 +58,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:paddingHorizontal="6dp"
                 android:paddingVertical="4dp"
+                android:layout_marginStart="4dp"
                 android:visibility="gone">
 
                 <ImageView

@@ -161,8 +161,18 @@ class HomeFragment : Fragment() {
         }
 
         b.tvClock.gravity = grav
+        b.llDateWeather.gravity = grav or Gravity.CENTER_VERTICAL
         b.tvDate.gravity  = grav
         b.tvUsageToday.gravity = grav
+
+        // Constrain Next Event width to 70% of screen
+        val screenWidth = resources.displayMetrics.widthPixels
+        b.llNextEvent.maxWidth = (screenWidth * 0.7).toInt()
+        
+        // Align the whole llNextEvent container
+        val params = b.llNextEvent.layoutParams as LinearLayout.LayoutParams
+        params.gravity = grav
+        b.llNextEvent.layoutParams = params
     }
 
     private fun showCachedWeather() {
