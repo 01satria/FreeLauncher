@@ -13,6 +13,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import android.widget.LinearLayout
 import com.flowlauncher.databinding.FragmentHomeBinding
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -167,12 +168,13 @@ class HomeFragment : Fragment() {
 
         // Constrain Next Event width to 70% of screen
         val screenWidth = resources.displayMetrics.widthPixels
-        b.llNextEvent.maxWidth = (screenWidth * 0.7).toInt()
+        b.tvNextEvent.maxWidth = (screenWidth * 0.7).toInt()
         
         // Align the whole llNextEvent container
-        val params = b.llNextEvent.layoutParams as LinearLayout.LayoutParams
-        params.gravity = grav
-        b.llNextEvent.layoutParams = params
+        (b.llNextEvent.layoutParams as? LinearLayout.LayoutParams)?.let { params ->
+            params.gravity = grav
+            b.llNextEvent.layoutParams = params
+        }
     }
 
     private fun showCachedWeather() {
