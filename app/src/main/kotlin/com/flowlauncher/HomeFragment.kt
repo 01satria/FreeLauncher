@@ -217,15 +217,25 @@ class HomeFragment : Fragment() {
                        catch (_: Exception) { emptyList() }
             val b = _binding ?: return@launch
 
+            val isFavoriteMode = prefs.favoritePackages.isNotEmpty()
             val homeApps = if (apps.isNotEmpty()) {
-                if (prefs.favoritePackages.isNotEmpty())
-                    AppRepository.getFavorites(prefs).take(prefs.homeAppCount)
+                if (isFavoriteMode)
+                    AppRepository.getFavorites(prefs).take(5)
                 else
                     AppRepository.getMostUsed(prefs.homeAppCount)
             } else {
                 emptyList()
             }
 
+            if (isFavoriteMode && homeApps.isNotEmpty()) {
+                val spanCount = homeApps.size.coerceIn(1, 5)
+                b.rvHomeApps.layoutManager = androidx.recyclerview.widget.GridLayoutManager(requireContext(), spanCount)
+                homeAdapter.setMode(HomeAppAdapter.MODE_GRID)
+            } else {
+                b.rvHomeApps.layoutManager = LinearLayoutManager(requireContext())
+                homeAdapter.setMode(HomeAppAdapter.MODE_LIST)
+            }
+            
             homeAdapter.showScreenTime = prefs.showScreenTime
             homeAdapter.setApps(homeApps)
 
