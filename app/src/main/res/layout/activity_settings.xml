@@ -418,5 +418,17 @@
             </LinearLayout>
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/tvVersion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="v1.1"
+            android:textColor="#44FFFFFF"
+            android:textSize="10sp"
+            android:letterSpacing="0.15"
+            android:gravity="center"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="16dp" />
+
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
