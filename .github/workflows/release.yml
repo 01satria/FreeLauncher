@@ -92,7 +92,7 @@ jobs:
           prerelease: false
           generate_release_notes: true
           body: |
-            ## Flow Launcher ${{ github.ref_name }}
+            ## Flow Minimal Launcher ${{ github.ref_name }}
 
             ### Pilih APK sesuai HP kamu / Choose the right APK for your device:
             | Berkas / File | Untuk / For |
