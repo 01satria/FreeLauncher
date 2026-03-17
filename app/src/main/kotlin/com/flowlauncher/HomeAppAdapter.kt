@@ -111,7 +111,7 @@ class HomeAppAdapter(
                     layoutST?.visibility = View.GONE
                 }
             } else {
-                label.visibility = if (showLabels) View.VISIBLE else View.GONE
+                label.visibility = if (showLabels) View.VISIBLE else View.INVISIBLE
                 label.gravity = Gravity.CENTER
                 FontHelper.applyFont(itemView.context, prefs, label)
                 
@@ -120,9 +120,6 @@ class HomeAppAdapter(
                     iv.setImageBitmap(bmp)
                     if (isLightTheme) iv.alpha = 0.8f
                 }
-                
-                // Maximize icon size in grid: reduce root item padding
-                (itemView as? LinearLayout)?.setPadding(4, 8, 4, 8)
             }
 
             itemView.setOnClickListener { onAppClick(app) }
