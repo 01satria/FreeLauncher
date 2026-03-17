@@ -11,10 +11,9 @@
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:pathData="M20,17.58A5,5 0,0 0,18 8h-1.26A8,8 0,1 0,4 16.25"/>
+    <!-- github.com/01satria -->
     <path
         android:fillColor="@android:color/transparent"
-
-<!-- github.com/01satria -->
         android:strokeColor="#FFFFFF"
         android:strokeWidth="2"
         android:strokeLineCap="round"
