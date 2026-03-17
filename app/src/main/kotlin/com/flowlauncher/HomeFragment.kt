@@ -74,7 +74,7 @@ class HomeFragment : Fragment() {
             val navBar    = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
             val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
             binding.homeContentLayout.setPadding(
-                28.dp(), statusBar + 16.dp(), 28.dp(), navBar + 72.dp()
+                12.dp(), statusBar + 16.dp(), 12.dp(), navBar
             )
             insets
         }
