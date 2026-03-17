@@ -113,7 +113,7 @@ class HomeAppAdapter(
                 FontHelper.applyFont(itemView.context, prefs, label)
                 
                 icon?.let { iv ->
-                    val bmp = AppRepository.getIcon(itemView.context, app.packageName)
+                    val bmp = AppRepository.getIcon(app.packageName)
                     iv.setImageBitmap(bmp)
                     // Nothing style: subtle tint/alpha or grayscale if needed
                     // For now keeping original but can add color filter if requested
