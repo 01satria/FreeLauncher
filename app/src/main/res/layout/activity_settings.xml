@@ -187,7 +187,8 @@
                     android:layout_weight="1" android:text="Clock Font Size"
                     android:textColor="#FFFFFF" android:textSize="15sp" />
                 <NumberPicker android:id="@+id/npClockSize"
-                    android:layout_width="wrap_content" android:layout_height="60dp" />
+                    android:layout_width="wrap_content" android:layout_height="60dp"
+                    android:selectionDividerHeight="0dp" />
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="1dp"
@@ -200,7 +201,7 @@
                 android:gravity="center_vertical"
                 android:paddingHorizontal="18dp">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:text="24-Hour Format"
+                    android:layout_weight="1" android:text="24 Hour Format"
                     android:textColor="#FFFFFF" android:textSize="15sp" />
                 <androidx.appcompat.widget.SwitchCompat android:id="@+id/switch24Hour"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -271,7 +272,8 @@
                     android:layout_weight="1" android:text="Max Apps on Home"
                     android:textColor="#FFFFFF" android:textSize="15sp" />
                 <NumberPicker android:id="@+id/npHomeApps"
-                    android:layout_width="wrap_content" android:layout_height="60dp" />
+                    android:layout_width="wrap_content" android:layout_height="60dp"
+                    android:selectionDividerHeight="0dp" />
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="1dp"

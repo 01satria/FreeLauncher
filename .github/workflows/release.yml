@@ -94,16 +94,17 @@ jobs:
           body: |
             ## Flow Launcher ${{ github.ref_name }}
 
-            ### Pilih APK sesuai HP kamu / Choose the right APK for your phone:
-            | File | Untuk / For |
-            |------|-------------|
-            | `*-arm64-v8a.apk` | ✅ **Rekomendasi / Recommended** — HP modern 64-bit / Modern 64-bit phones (2016+) |
-            | `*-armeabi-v7a.apk` | HP lama 32-bit / Older 32-bit phones |
+            ### Pilih APK sesuai HP kamu / Choose the right APK for your device:
+            | Berkas / File | Untuk / For |
+            |---------------|-------------|
+            | `*-arm64-v8a.apk` | ✅ **Rekomendasi / Recommended** — HP modern 64-bit / Modern 64-bit devices (2016+) |
+            | `*-armeabi-v7a.apk` | HP lama 32-bit / Older 32-bit devices |
             | `*-x86_64.apk` | Emulator 64-bit |
             | `*-x86.apk` | Emulator 32-bit |
-            | `*-universal.apk` | Semua device (file lebih besar) / All devices (larger file) |
+            | `*-universal.apk` | Semua perangkat (file lebih besar) / All devices (larger file size) |
 
-            > Tidak tahu pilih yang mana? Gunakan `arm64-v8a`. / Not sure which one to choose? Use `arm64-v8a`.
+            > **Catatan / Note:**
+            > Tidak tahu pilih yang mana? Gunakan `arm64-v8a`. / Not sure which one to choose? Download `arm64-v8a`.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

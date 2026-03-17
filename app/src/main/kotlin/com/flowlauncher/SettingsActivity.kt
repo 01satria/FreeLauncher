@@ -77,7 +77,16 @@ class SettingsActivity : AppCompatActivity() {
                     if (v.letterSpacing > 0) v.setTextColor(sub) else v.setTextColor(text)
                     FontHelper.applyFont(this, prefs, v)
                 }
-
+                is NumberPicker -> {
+                    // Try to style the internal EditText of NumberPicker
+                    for (j in 0 until v.childCount) {
+                        val child = v.getChildAt(j)
+                        if (child is EditText) {
+                            child.setTextColor(text)
+                            FontHelper.applyFont(this, prefs, child)
+                        }
+                    }
+                }
 // github.com/01satria
                 is android.view.ViewGroup -> applyTextColors(v, text, sub)
             }
@@ -127,20 +136,21 @@ class SettingsActivity : AppCompatActivity() {
         binding.switch24Hour.setOnCheckedChangeListener { _, c -> prefs.use24Hour = c }
         binding.switchShowDate.isChecked = prefs.showDate
         binding.switchShowDate.setOnCheckedChangeListener { _, c -> prefs.showDate = c }
-        binding.switchScreenTime.isChecked = prefs.showScreenTime
-        binding.switchScreenTime.setOnCheckedChangeListener { _, c -> prefs.showScreenTime = c }
+        binding.switchShowHomeLabels.isChecked = prefs.showHomeLabels
+        binding.switchShowHomeLabels.setOnCheckedChangeListener { _, c -> prefs.showHomeLabels = c }
 
         binding.switchShowClock.isChecked = prefs.showClock
         binding.switchShowClock.setOnCheckedChangeListener { _, c -> prefs.showClock = c }
         binding.switchShowNextEvent.isChecked = prefs.showNextEvent
         binding.switchShowNextEvent.setOnCheckedChangeListener { _, c -> prefs.showNextEvent = c }
-        binding.switchShowHomeLabels.isChecked = prefs.showHomeLabels
-        binding.switchShowHomeLabels.setOnCheckedChangeListener { _, c -> prefs.showHomeLabels = c }
+        binding.switchScreenTime.isChecked = prefs.showScreenTime
+        binding.switchScreenTime.setOnCheckedChangeListener { _, c -> prefs.showScreenTime = c }
 
         binding.npClockSize.minValue = 40
         binding.npClockSize.maxValue = 120
         binding.npClockSize.value    = prefs.clockFontSize
         binding.npClockSize.setOnValueChangedListener { _, _, new -> prefs.clockFontSize = new }
+        hideNumberPickerDividers(binding.npClockSize)
 
         // Grant Usage Access — now a tappable row
         binding.btnGrantUsage.setOnClickListener {
@@ -157,6 +167,7 @@ class SettingsActivity : AppCompatActivity() {
         binding.npHomeApps.maxValue = 10
         binding.npHomeApps.value    = prefs.homeAppCount
         binding.npHomeApps.setOnValueChangedListener { _, _, new -> prefs.homeAppCount = new }
+        hideNumberPickerDividers(binding.npHomeApps)
 
         // Hidden apps
         binding.btnManageHidden.setOnClickListener {
@@ -180,6 +191,23 @@ class SettingsActivity : AppCompatActivity() {
                 }
                 .setNegativeButton("Cancel", null)
                 .show()
+        }
+    }
+
+    private fun hideNumberPickerDividers(np: NumberPicker) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            np.selectionDividerHeight = 0
+        } else {
+            try {
+                val pickerFields = NumberPicker::class.java.declaredFields
+                for (pf in pickerFields) {
+                    if (pf.name == "mSelectionDivider") {
+                        pf.isAccessible = true
+                        pf.set(np, null)
+                        break
+                    }
+                }
+            } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
