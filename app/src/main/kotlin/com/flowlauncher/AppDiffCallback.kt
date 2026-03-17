@@ -16,3 +16,4 @@ class AppDiffCallback(
         // Note: icon state not compared here because icons are managed by
         // AppRepository.iconCache — not stored in AppInfo.
 }
+// github.com/01satria

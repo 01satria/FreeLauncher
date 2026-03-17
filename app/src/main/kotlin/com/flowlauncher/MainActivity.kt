@@ -435,6 +435,8 @@ class MainActivity : AppCompatActivity() {
             // Drawer list: bottom padding = nav bar
             binding.rvDrawerApps.setPadding(0, 0, 0, navBar + 16.dp())
 
+// github.com/01satria
+
             insets
         }
         ViewCompat.requestApplyInsets(binding.mainRoot)

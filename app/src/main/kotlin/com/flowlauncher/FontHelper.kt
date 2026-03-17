@@ -18,6 +18,8 @@ object FontHelper {
                 }
             }
             pixelTypeface ?: Typeface.DEFAULT
+
+// github.com/01satria
         } else {
             Typeface.DEFAULT
         }

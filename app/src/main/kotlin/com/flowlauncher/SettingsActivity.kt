@@ -77,6 +77,8 @@ class SettingsActivity : AppCompatActivity() {
                     if (v.letterSpacing > 0) v.setTextColor(sub) else v.setTextColor(text)
                     FontHelper.applyFont(this, prefs, v)
                 }
+
+// github.com/01satria
                 is android.view.ViewGroup -> applyTextColors(v, text, sub)
             }
         }

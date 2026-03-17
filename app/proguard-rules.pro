@@ -1,3 +1,4 @@
+# github.com/01satria
 -keep class com.flowlauncher.** { *; }
 -keep class androidx.viewbinding.** { *; }
 -keepattributes *Annotation*

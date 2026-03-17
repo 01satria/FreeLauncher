@@ -11,6 +11,8 @@ on:
         required: true
         default: '1.0.0'
 
+
+# github.com/01satria
 jobs:
   build:
     name: Build & Release APK
@@ -92,16 +94,16 @@ jobs:
           body: |
             ## Flow Launcher ${{ github.ref_name }}
 
-            ### Pilih APK sesuai HP kamu:
-            | File | Untuk |
-            |------|-------|
-            | `*-arm64-v8a.apk` | ✅ **Rekomendasi** — HP modern 64-bit (2016+) |
-            | `*-armeabi-v7a.apk` | HP lama 32-bit |
+            ### Pilih APK sesuai HP kamu / Choose the right APK for your phone:
+            | File | Untuk / For |
+            |------|-------------|
+            | `*-arm64-v8a.apk` | ✅ **Rekomendasi / Recommended** — HP modern 64-bit / Modern 64-bit phones (2016+) |
+            | `*-armeabi-v7a.apk` | HP lama 32-bit / Older 32-bit phones |
             | `*-x86_64.apk` | Emulator 64-bit |
             | `*-x86.apk` | Emulator 32-bit |
-            | `*-universal.apk` | Semua device (file lebih besar) |
+            | `*-universal.apk` | Semua device (file lebih besar) / All devices (larger file) |
 
-            > Tidak tahu pilih yang mana? Gunakan `arm64-v8a`.
+            > Tidak tahu pilih yang mana? Gunakan `arm64-v8a`. / Not sure which one to choose? Use `arm64-v8a`.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

@@ -58,6 +58,8 @@ class FocusActivity : AppCompatActivity() {
         }
     }
 
+
+// github.com/01satria
     private fun setDuration(mins: Int) {
         if (isRunning) return
         workMinutes = mins

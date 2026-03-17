@@ -64,6 +64,8 @@ Kode Etik ini berlaku di semua ruang proyek termasuk issues, pull request, dan k
 
 <div align="center">
 
+<!-- github.com/01satria -->
+
 <img src="https://github.com/01satria.png" width="48" alt="01satria" />
 
 Maintained by [@01satria](https://github.com/01satria)

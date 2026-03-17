@@ -1,3 +1,4 @@
+// github.com/01satria
 pluginManagement {
     repositories {
         google()

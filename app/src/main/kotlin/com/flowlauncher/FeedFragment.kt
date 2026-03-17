@@ -356,6 +356,8 @@ class FeedFragment : Fragment() {
     }
 
     private fun refreshTasks() {
+
+// github.com/01satria
         val todos = prefs.todoItems
         todoAdapter.setItems(todos)
         _b?.tvTasksEmpty?.visibility = if (todos.isEmpty()) View.VISIBLE else View.GONE

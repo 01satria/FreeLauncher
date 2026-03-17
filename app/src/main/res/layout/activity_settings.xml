@@ -35,6 +35,8 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Back" />
 
+
+<!-- github.com/01satria -->
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

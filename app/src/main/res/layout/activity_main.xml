@@ -44,6 +44,8 @@
             android:paddingBottom="4dp">
 
             <View
+
+<!-- github.com/01satria -->
                 android:id="@+id/drawerHandleBar"
                 android:layout_width="36dp"
                 android:layout_height="4dp"

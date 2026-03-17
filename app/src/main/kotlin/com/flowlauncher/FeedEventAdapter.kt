@@ -41,6 +41,8 @@ class FeedEventAdapter(
         if (pinnedIds == ids) return
         pinnedIds = ids
         notifyItemRangeChanged(0, items.size, PAYLOAD_PIN)
+
+// github.com/01satria
     }
 
     fun setShowPinButton(show: Boolean) {

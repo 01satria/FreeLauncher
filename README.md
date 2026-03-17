@@ -35,7 +35,7 @@ Aplikasi kamu, jam, wallpaper.
 ## Features
 
 - Clock, date, and weather at a glance / Jam, tanggal, dan cuaca sekilas
-- Pinned or most-used apps on the home screen / Aplikasi yang di pin atau paling sering dipakai
+- Pinned or most used apps on the home screen / Aplikasi yang di pin atau paling sering dipakai
 - Alphabetical app drawer with live search / Laci aplikasi alfabet dengan pencarian langsung
 - Calendar events and task list on the feed screen / Event kalender dan daftar tugas di layar feed
 - Transparent background support / Dukungan background transparan
@@ -58,3 +58,4 @@ MIT
 *Built with ❤️ in Indonesia*
 
 </div>
+<!-- github.com/01satria -->

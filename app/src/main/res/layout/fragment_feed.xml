@@ -16,6 +16,8 @@
         android:paddingBottom="64dp"
         android:paddingHorizontal="20dp">
 
+<!-- github.com/01satria -->
+
         <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
