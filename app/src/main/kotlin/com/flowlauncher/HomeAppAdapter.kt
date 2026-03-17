@@ -111,6 +111,7 @@ class HomeAppAdapter(
                     layoutST?.visibility = View.GONE
                 }
             } else {
+                label.text = if (app.label.length > 9) app.label.substring(0, 9) else app.label
                 label.visibility = if (showLabels) View.VISIBLE else View.INVISIBLE
                 label.gravity = Gravity.CENTER
                 FontHelper.applyFont(itemView.context, prefs, label)
