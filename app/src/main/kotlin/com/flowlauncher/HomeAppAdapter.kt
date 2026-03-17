@@ -30,6 +30,7 @@ class HomeAppAdapter(
     private var cachedPrefs: Prefs? = null
     private var isLightTheme: Boolean = false
     private var mode = MODE_LIST
+    var showLabels: Boolean = true
 
     fun setMode(newMode: Int) {
         if (mode == newMode) return
@@ -90,6 +91,7 @@ class HomeAppAdapter(
             label.setTextColor(textPrimary)
 
             if (mode == MODE_LIST) {
+                label.visibility = View.VISIBLE
                 label.gravity = Gravity.START
                 FontHelper.applyFont(itemView.context, prefs, label)
                 
@@ -109,16 +111,18 @@ class HomeAppAdapter(
                     layoutST?.visibility = View.GONE
                 }
             } else {
+                label.visibility = if (showLabels) View.VISIBLE else View.GONE
                 label.gravity = Gravity.CENTER
                 FontHelper.applyFont(itemView.context, prefs, label)
                 
                 icon?.let { iv ->
                     val bmp = AppRepository.getIcon(app.packageName)
                     iv.setImageBitmap(bmp)
-                    // Nothing style: subtle tint/alpha or grayscale if needed
-                    // For now keeping original but can add color filter if requested
                     if (isLightTheme) iv.alpha = 0.8f
                 }
+                
+                // Maximize icon size in grid: reduce root item padding
+                (itemView as? LinearLayout)?.setPadding(4, 8, 4, 8)
             }
 
             itemView.setOnClickListener { onAppClick(app) }

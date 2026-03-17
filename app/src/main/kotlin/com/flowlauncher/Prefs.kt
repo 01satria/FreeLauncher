@@ -42,6 +42,10 @@ class Prefs(context: Context) {
         get() = prefs.getBoolean("show_next_event", true)
         set(v) = prefs.edit().putBoolean("show_next_event", v).apply()
 
+    var showHomeLabels: Boolean
+        get() = prefs.getBoolean("show_home_labels", true)
+        set(v) = prefs.edit().putBoolean("show_home_labels", v).apply()
+
     var alignment: String
         get() = prefs.getString("alignment", ALIGN_LEFT)!!
         set(v) = prefs.edit().putString("alignment", v).apply()

@@ -132,6 +132,8 @@ class SettingsActivity : AppCompatActivity() {
         binding.switchShowClock.setOnCheckedChangeListener { _, c -> prefs.showClock = c }
         binding.switchShowNextEvent.isChecked = prefs.showNextEvent
         binding.switchShowNextEvent.setOnCheckedChangeListener { _, c -> prefs.showNextEvent = c }
+        binding.switchShowHomeLabels.isChecked = prefs.showHomeLabels
+        binding.switchShowHomeLabels.setOnCheckedChangeListener { _, c -> prefs.showHomeLabels = c }
 
         binding.npClockSize.minValue = 40
         binding.npClockSize.maxValue = 120

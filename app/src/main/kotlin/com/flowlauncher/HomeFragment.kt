@@ -237,6 +237,7 @@ class HomeFragment : Fragment() {
             }
             
             homeAdapter.showScreenTime = prefs.showScreenTime
+            homeAdapter.showLabels     = prefs.showHomeLabels
             homeAdapter.setApps(homeApps)
 
             val totalMin = apps.sumOf { it.screenTimeMinutes }
