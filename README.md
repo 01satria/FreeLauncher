@@ -7,7 +7,6 @@
 ![Platform](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white&style=flat-square)
 ![Min SDK](https://img.shields.io/badge/min_sdk-23-4A90D9?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)
-![Build](https://img.shields.io/github/actions/workflow/status/01satria/FreeLauncher/release.yml?label=build&style=flat-square)
 
 **A minimal Android home screen.**
 Your apps, your clock, your wallpaper.
