@@ -420,6 +420,105 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- WALLPAPER -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="WALLPAPER"
+            android:textColor="#44FFFFFF"
+            android:textSize="10sp"
+            android:letterSpacing="0.15"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/cardWallpaper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_nothing_card"
+            android:layout_marginBottom="28dp">
+
+            <!-- Home Screen Wallpaper -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Home Screen"
+                        android:textColor="#FFFFFF"
+                        android:textSize="15sp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Set home screen wallpaper"
+                        android:textColor="#55FFFFFF"
+                        android:textSize="11sp"
+                        android:letterSpacing="0.01" />
+                </LinearLayout>
+                <ImageButton
+                    android:id="@+id/btnSetHomeWallpaper"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_back"
+                    android:rotation="180"
+                    android:tint="#55FFFFFF"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Set home wallpaper" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#0FFFFFFF" android:layout_marginHorizontal="18dp"/>
+
+            <!-- Lock Screen Wallpaper -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Lock Screen"
+                        android:textColor="#FFFFFF"
+                        android:textSize="15sp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Set lock screen wallpaper"
+                        android:textColor="#55FFFFFF"
+                        android:textSize="11sp"
+                        android:letterSpacing="0.01" />
+                </LinearLayout>
+                <ImageButton
+                    android:id="@+id/btnSetLockWallpaper"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_back"
+                    android:rotation="180"
+                    android:tint="#55FFFFFF"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Set lock wallpaper" />
+            </LinearLayout>
+
+        </LinearLayout>
+
         <TextView
             android:id="@+id/tvVersion"
             android:layout_width="match_parent"

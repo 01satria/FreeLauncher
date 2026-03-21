@@ -1,16 +1,19 @@
 package com.flowlauncher
 
 import android.Manifest
+import android.app.WallpaperManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Geocoder
 import android.location.LocationManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -23,6 +26,16 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var prefs: Prefs
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
+    // Which wallpaper flag to set after image pick
+    private var pendingWallpaperFlag = 0
+
+    private val wallpaperPicker = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri ?: return@registerForActivityResult
+        applyWallpaper(uri, pendingWallpaperFlag)
+    }
 
     companion object { private const val REQ_LOCATION = 42 }
 
@@ -55,7 +68,7 @@ class SettingsActivity : AppCompatActivity() {
         val cardRadius  = 16 * resources.displayMetrics.density
 
         listOf(binding.cardAppearance, binding.cardClock, binding.cardHome,
-               binding.cardWeather, binding.cardApps).forEach { card ->
+               binding.cardWeather, binding.cardApps, binding.cardWallpaper).forEach { card ->
             card.background = android.graphics.drawable.GradientDrawable().apply {
                 setColor(cardBg)
                 setStroke((1 * resources.displayMetrics.density).toInt(), cardStroke)
@@ -192,6 +205,16 @@ class SettingsActivity : AppCompatActivity() {
                 .setNegativeButton("Cancel", null)
                 .show()
         }
+
+        // Wallpaper
+        binding.btnSetHomeWallpaper.setOnClickListener {
+            pickWallpaper(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                WallpaperManager.FLAG_SYSTEM else 0)
+        }
+        binding.btnSetLockWallpaper.setOnClickListener {
+            pickWallpaper(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                WallpaperManager.FLAG_LOCK else 0)
+        }
     }
 
     private fun hideNumberPickerDividers(np: NumberPicker) {
@@ -318,6 +341,39 @@ class SettingsActivity : AppCompatActivity() {
         } finally {
             lm.removeUpdates(listener)
             channel.close()
+        }
+    }
+
+    private fun pickWallpaper(flag: Int) {
+        pendingWallpaperFlag = flag
+        wallpaperPicker.launch("image/*")
+    }
+
+    private fun applyWallpaper(uri: Uri, flag: Int) {
+        scope.launch {
+            try {
+                val wm = WallpaperManager.getInstance(this@SettingsActivity)
+                val stream = contentResolver.openInputStream(uri) ?: run {
+                    Toast.makeText(this@SettingsActivity, "Could not open image", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                stream.use { s ->
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && flag != 0) {
+                        wm.setStream(s, null, true, flag)
+                    } else {
+                        // Android < 7: no FLAG support — sets both home & lock
+                        wm.setStream(s)
+                    }
+                }
+                val label = when {
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.N -> "Wallpaper set!"
+                    flag == WallpaperManager.FLAG_LOCK -> "Lock screen wallpaper set!"
+                    else -> "Home screen wallpaper set!"
+                }
+                Toast.makeText(this@SettingsActivity, label, Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@SettingsActivity, "Failed to set wallpaper", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

@@ -35,6 +35,7 @@ class FeedFragment : Fragment() {
     private var searchJob : Job? = null
     private var eventsExpanded = true
     private var currentQuery   = ""
+    private var lastTickDay    = -1
 
     // Section backgrounds are set via XML (bg_nothing_card) — no dynamic GradientDrawable needed
 
@@ -83,12 +84,13 @@ class FeedFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         prefs = Prefs(requireContext())
+        lastTickDay = java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_YEAR)
         applyTheme()
         if (::todoAdapter.isInitialized) refreshTasks()
         refreshEvents()
+        refreshPinnedEvents()
         refreshScreenTime()
         startCountdownTicker()
-        if (!eventsExpanded) refreshPinnedEvents()
     }
 
     override fun onPause() {
@@ -525,20 +527,29 @@ class FeedFragment : Fragment() {
             while (isActive) {
                 delay(30_000L)
                 if (_b == null || !CalendarHelper.hasPermission(requireContext())) continue
-                
+
                 // 1. Refresh UI countdown components (smooth 30s update)
                 if (eventAdapter.itemCount > 0)
                     eventAdapter.notifyItemRangeChanged(0, eventAdapter.itemCount, FeedEventAdapter.PAYLOAD_TICK)
                 if (pinnedAdapter.itemCount > 0)
                     pinnedAdapter.notifyItemRangeChanged(0, pinnedAdapter.itemCount, FeedEventAdapter.PAYLOAD_TICK)
 
-                // 2. Periodically refresh data from Calendar provider (every 5 mins)
-                // This ensures we pick up external changes and update instances for recurring events.
+                // 2. Detect day boundary — force-refresh on midnight rollover
+                val today = java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_YEAR)
+                if (today != lastTickDay) {
+                    lastTickDay = today
+                    counter = 0
+                    refreshEvents()
+                    refreshPinnedEvents()
+                    continue
+                }
+
+                // 3. Periodic refresh every ~2 min to pick up external calendar changes
                 counter++
-                if (counter >= 10) { // 10 * 30s = 5m
+                if (counter >= 4) { // 4 * 30s = 2 min
                     counter = 0
                     if (currentQuery.isBlank()) refreshEvents()
-                    if (!eventsExpanded) refreshPinnedEvents()
+                    refreshPinnedEvents()
                 }
             }
         }
