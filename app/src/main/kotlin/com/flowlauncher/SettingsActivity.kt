@@ -353,25 +353,35 @@ class SettingsActivity : AppCompatActivity() {
         scope.launch {
             try {
                 val wm = WallpaperManager.getInstance(this@SettingsActivity)
-                val stream = contentResolver.openInputStream(uri) ?: run {
-                    Toast.makeText(this@SettingsActivity, "Could not open image", Toast.LENGTH_SHORT).show()
-                    return@launch
-                }
-                stream.use { s ->
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && flag != 0) {
-                        wm.setStream(s, null, true, flag)
-                    } else {
-                        // Android < 7: no FLAG support — sets both home & lock
-                        wm.setStream(s)
+                val success = withContext(Dispatchers.IO) {
+                    val stream = contentResolver.openInputStream(uri) ?: return@withContext false
+                    try {
+                        stream.use { s ->
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && flag != 0) {
+                                wm.setStream(s, null, true, flag)
+                            } else {
+                                wm.setStream(s)
+                            }
+                        }
+                        true
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        false
                     }
                 }
-                val label = when {
-                    Build.VERSION.SDK_INT < Build.VERSION_CODES.N -> "Wallpaper set!"
-                    flag == WallpaperManager.FLAG_LOCK -> "Lock screen wallpaper set!"
-                    else -> "Home screen wallpaper set!"
+
+                if (success) {
+                    val label = when {
+                        Build.VERSION.SDK_INT < Build.VERSION_CODES.N -> "Wallpaper set!"
+                        flag == WallpaperManager.FLAG_LOCK -> "Lock screen wallpaper set!"
+                        else -> "Home screen wallpaper set!"
+                    }
+                    Toast.makeText(this@SettingsActivity, label, Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@SettingsActivity, "Failed to set wallpaper", Toast.LENGTH_SHORT).show()
                 }
-                Toast.makeText(this@SettingsActivity, label, Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
+                e.printStackTrace()
                 Toast.makeText(this@SettingsActivity, "Failed to set wallpaper", Toast.LENGTH_SHORT).show()
             }
         }
